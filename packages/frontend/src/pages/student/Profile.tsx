@@ -8,6 +8,8 @@ import {
   CheckCircle, Clock, Calendar,
   Shield, Crown, Star, Sparkles
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 interface UserProfile {
   _id: string;
@@ -76,6 +78,7 @@ export const Profile: React.FC = () => {
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
+      toast.error('Failed to load profile');
     } finally {
       setLoading(false);
     }
@@ -83,7 +86,7 @@ export const Profile: React.FC = () => {
 
   const handleUpdateProfile = async () => {
     if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-      setError('New passwords do not match');
+      toast.error('New passwords do not match');
       return;
     }
 
@@ -105,10 +108,12 @@ export const Profile: React.FC = () => {
       await checkAuth();
       await fetchProfile();
       setIsEditing(false);
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      setError(error.response?.data?.message || 'Failed to update profile');
+      const errorMsg = error.response?.data?.message || 'Failed to update profile';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSaveLoading(false);
     }
@@ -135,11 +140,7 @@ export const Profile: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading profile..." />;
   }
 
   if (!profile) {
@@ -457,3 +458,5 @@ export const Profile: React.FC = () => {
     </div>
   );
 };
+
+export default Profile;

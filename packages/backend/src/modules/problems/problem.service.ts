@@ -28,6 +28,13 @@ export class ProblemService {
     return problem as IProblem | null;
   }
 
+  static async getNextProblemNumber(): Promise<number> {
+    const lastProblem = await Problem.findOne({})
+      .sort({ problemNumber: -1 })
+      .select('problemNumber');
+    return lastProblem ? lastProblem.problemNumber + 1 : 1;
+  }
+
   static async getProblems(filters: {
     difficulty?: string;
     tag?: string;
@@ -50,10 +57,10 @@ export class ProblemService {
     const skip = (page - 1) * limit;
     const [problems, total] = await Promise.all([
       Problem.find(query)
-        .sort({ createdAt: -1 })
+        .sort({ problemNumber: 1 })
         .skip(skip)
         .limit(limit)
-        .select('title slug difficulty tags createdAt isPublished starterCode')
+        .select('title slug difficulty tags createdAt isPublished starterCode problemNumber')
         .lean(),
       Problem.countDocuments(query),
     ]);
@@ -71,7 +78,6 @@ export class ProblemService {
     return !!result;
   }
 
-  // ---------- SUBMIT SOLUTION ----------
   static async submitSolution(
     problemId: string,
     userId: string,
@@ -99,7 +105,6 @@ export class ProblemService {
 
     console.log(`🔍 Running ${testCases.length} test cases... (isSubmission: ${isSubmission})`);
 
-    // Run ALL test cases
     const testResults: any[] = [];
     let passedTests = 0;
     let totalTests = testCases.length;
@@ -147,7 +152,6 @@ export class ProblemService {
         }
 
         testResults.push(result);
-
       } catch (error: any) {
         result.got = 'Error';
         result.passed = false;
@@ -171,7 +175,6 @@ export class ProblemService {
       errorMessage = `${totalTests - passedTests} test case(s) failed`;
     }
 
-    // ✅ ONLY save submission if isSubmission is true
     let submission = null;
     if (isSubmission) {
       console.log('💾 Saving submission to database...');
@@ -190,7 +193,6 @@ export class ProblemService {
         submittedAt: new Date(),
       });
 
-      // ✅ Only award XP on actual submission
       if (status === 'accepted') {
         const xpGain = this.getXpForDifficulty(problem.difficulty);
         const user = await User.findById(userId);

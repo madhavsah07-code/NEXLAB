@@ -3,19 +3,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Terminal, ChevronDown, X, Copy, Check, Maximize2, Minimize2, AlertCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import toast from 'react-hot-toast';
 
-// ✅ Lazy load Monaco Editor - only loads when Sandbox is visited
+// Lazy load Monaco Editor
 const MonacoEditor = React.lazy(() => import('@monaco-editor/react'));
 
-// ✅ Setup Monaco only when the component mounts (user visits Sandbox)
-const setupMonaco = () => {
-  // Dynamic import to avoid loading Monaco on pages that don't need it
-  import('../../lib/monaco-config').then(({ setupMonaco }) => {
-    setupMonaco();
-  });
-};
+// Setup Monaco
+import { setupMonaco } from '../../lib/monaco-config';
 
-// ✅ Correct CDN URL for Pyodide
+// Correct CDN URL for Pyodide
 const PYODIDE_INDEX_URL = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/';
 
 interface Language {
@@ -35,11 +32,6 @@ interface ExecutionResult {
 }
 
 export const Sandbox: React.FC = () => {
-  // ✅ Setup Monaco when Sandbox mounts
-  useEffect(() => {
-    setupMonaco();
-  }, []);
-
   const [languages] = useState<Language[]>([
     {
       id: 'javascript',
@@ -81,7 +73,6 @@ print(f"Sum: {x + y}")`
   const [isLoading, setIsLoading] = useState(true);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [editorError, setEditorError] = useState(false);
   const [isOutputMaximized, setIsOutputMaximized] = useState(false);
   const [pyodide, setPyodide] = useState<any>(null);
   const [pyodideLoading, setPyodideLoading] = useState(false);
@@ -89,12 +80,32 @@ print(f"Sum: {x + y}")`
   const [isPyodideLoaded, setIsPyodideLoaded] = useState(false);
   const [editorWidth, setEditorWidth] = useState(60);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Monaco loading states
+  const [isMonacoReady, setIsMonacoReady] = useState(false);
+  const [monacoError, setMonacoError] = useState(false);
 
   const outputRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Parse input utility
+  // Load Monaco
+  useEffect(() => {
+    const loadMonaco = async () => {
+      try {
+        await setupMonaco();
+        setIsMonacoReady(true);
+      } catch (error: any) {
+        console.error('Failed to load Monaco:', error);
+        setMonacoError(true);
+        setIsMonacoReady(true);
+        toast.error('Code editor failed to load. Using fallback editor.');
+      }
+    };
+    loadMonaco();
+  }, []);
+
+  // Parse input utility
   const parseInput = (input: string): any => {
     if (!input || !input.trim()) return '';
     
@@ -135,7 +146,7 @@ print(f"Sum: {x + y}")`
     return isNaN(num) ? trimmed : num;
   };
 
-  // ✅ Load Pyodide
+  // Load Pyodide
   useEffect(() => {
     const initPyodide = async () => {
       setPyodideLoading(true);
@@ -189,6 +200,7 @@ print(f"Sum: {x + y}")`
       } catch (error: any) {
         console.error('❌ Failed to load Pyodide:', error);
         setPyodideError(error.message || 'Failed to load Python runtime. Please refresh and try again.');
+        toast.error('Python runtime failed to load. Some features may be limited.');
       } finally {
         setPyodideLoading(false);
       }
@@ -258,7 +270,7 @@ print(f"Sum: {x + y}")`
     setIsLanguageDropdownOpen(false);
   };
 
-  // ✅ Execute JavaScript
+  // Execute JavaScript
   const executeJavaScript = (code: string, input: string): Promise<{ output: string; error: string; success: boolean }> => {
     return new Promise((resolve) => {
       let capturedOutput = '';
@@ -338,7 +350,7 @@ print(f"Sum: {x + y}")`
     });
   };
 
-  // ✅ Execute Python
+  // Execute Python
   const executePython = async (code: string, input: string): Promise<{ output: string; error: string; success: boolean }> => {
     if (!isPyodideLoaded || !pyodide) {
       return {
@@ -412,10 +424,9 @@ sys.stderr = StringIO()
     }
   };
 
-  // ✅ Execute code based on language
   const handleExecute = async () => {
     if (!code.trim()) {
-      alert('Please write some code first.');
+      toast.error('Please write some code first.');
       return;
     }
 
@@ -450,7 +461,14 @@ sys.stderr = StringIO()
         language: selectedLanguage,
         executionTime: `${executionTime}s`,
       });
+
+      if (success) {
+        toast.success('✅ Code executed successfully!');
+      } else {
+        toast.error(`❌ ${error || 'Execution failed'}`);
+      }
     } catch (error: any) {
+      toast.error(error.message || 'Execution failed');
       setResult({
         success: false,
         output: '',
@@ -468,16 +486,12 @@ sys.stderr = StringIO()
     const text = result?.output || result?.error || '';
     navigator.clipboard.writeText(text);
     setCopied(true);
+    toast.success('Output copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleClearOutput = () => {
     setResult(null);
-  };
-
-  const handleEditorError = () => {
-    setEditorError(true);
-    console.warn('Monaco Editor failed to load, using fallback editor');
   };
 
   const toggleOutputMaximize = () => {
@@ -493,11 +507,7 @@ sys.stderr = StringIO()
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[600px] bg-[#0D0F0F]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading sandbox..." />;
   }
 
   const currentLanguage = languages.find(l => l.id === selectedLanguage);
@@ -590,13 +600,9 @@ sys.stderr = StringIO()
                 </div>
 
                 <div className="flex-1 min-h-0 min-w-0 bg-[#1E1E1E]">
-                  {!editorError ? (
+                  {!monacoError && isMonacoReady ? (
                     <React.Suspense
-                      fallback={
-                        <div className="flex items-center justify-center h-full bg-[#1E1E1E]">
-                          <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#10B981] border-t-transparent" />
-                        </div>
-                      }
+                      fallback={<LoadingSpinner size="sm" text="Loading editor..." />}
                     >
                       <MonacoEditor
                         height="100%"
@@ -617,13 +623,14 @@ sys.stderr = StringIO()
                           quickSuggestions: true,
                           padding: { top: 12, bottom: 12 },
                         }}
+                        loading={<LoadingSpinner size="sm" text="Loading editor..." />}
                       />
                     </React.Suspense>
                   ) : (
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-full bg-[#1E1E1E] text-[#D4D4D4] font-mono text-sm p-4 resize-none focus:outline-none border-0"
+                      className="w-full h-full bg-[#1E1E1E] text-[#D4D4D4] font-mono text-sm p-4 resize-none focus:outline-none"
                       placeholder="// Write your code here"
                       spellCheck={false}
                     />

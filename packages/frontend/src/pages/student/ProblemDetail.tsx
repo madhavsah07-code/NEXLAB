@@ -8,11 +8,13 @@ import {
   XCircle, Clock, AlertCircle, Terminal,
   ChevronRight, ChevronLeft, Settings, Maximize2, Minimize2, X,
   GripVertical, GripHorizontal, FileText, History, Layers,
-  ChevronDown as ChevronDownIcon
+  ChevronDown as ChevronDownIcon, Hash
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import Editor from '@monaco-editor/react';
+import toast from 'react-hot-toast';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 // Import components
 import { StatusBar } from '../../components/StatusBar';
@@ -20,20 +22,13 @@ import { TestCaseConsole } from '../../components/TestCaseConsole';
 import { SubmissionHistory } from '../../components/SubmissionHistory';
 import { CodeHistory } from '../../components/CodeHistory';
 
-// ❌ Remove global setupMonaco import
-// import { setupMonaco } from '../../lib/monaco-config';
+// Setup Monaco
+import { setupMonaco } from '../../lib/monaco-config';
 
-// ✅ Setup Monaco only when ProblemDetail mounts
-const setupMonaco = () => {
-  import('../../lib/monaco-config').then(({ setupMonaco }) => {
-    setupMonaco();
-  });
-};
-
-// ✅ Correct CDN URL for Pyodide
+// Correct CDN URL for Pyodide
 const PYODIDE_INDEX_URL = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/';
 
-// ✅ Language configurations - Only JavaScript and Python
+// Language configurations - Only JavaScript and Python
 const SUPPORTED_LANGUAGES = [
   { 
     id: 'javascript', 
@@ -65,6 +60,7 @@ var sumOfTwoNumbers = function(a, b) {
 
 interface Problem {
   _id: string;
+  problemNumber: number;
   title: string;
   slug: string;
   difficulty: 'easy' | 'medium' | 'hard';
@@ -137,11 +133,6 @@ interface Submission {
 }
 
 export const ProblemDetail: React.FC = () => {
-  // ✅ Setup Monaco when ProblemDetail mounts
-  useEffect(() => {
-    setupMonaco();
-  }, []);
-
   const { slug } = useParams();
   const navigate = useNavigate();
   const [problem, setProblem] = useState<Problem | null>(null);
@@ -167,6 +158,10 @@ export const ProblemDetail: React.FC = () => {
   const [isPyodideLoaded, setIsPyodideLoaded] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   
+  // Monaco loading states
+  const [isMonacoReady, setIsMonacoReady] = useState(false);
+  const [monacoError, setMonacoError] = useState<string | null>(null);
+  
   // Split view states
   const [splitPosition, setSplitPosition] = useState(60);
   const [isDragging, setIsDragging] = useState(false);
@@ -191,7 +186,23 @@ export const ProblemDetail: React.FC = () => {
     });
   }, [allSubmissions, problem]);
 
-  // ✅ Load Pyodide using the correct CDN URL
+  // Load Monaco
+  useEffect(() => {
+    const loadMonaco = async () => {
+      try {
+        await setupMonaco();
+        setIsMonacoReady(true);
+      } catch (error: any) {
+        console.error('Failed to load Monaco:', error);
+        setMonacoError(error.message || 'Failed to load code editor');
+        setIsMonacoReady(true);
+        toast.error('Code editor failed to load. Using fallback editor.');
+      }
+    };
+    loadMonaco();
+  }, []);
+
+  // Load Pyodide
   useEffect(() => {
     const initPyodide = async () => {
       setPyodideLoading(true);
@@ -245,6 +256,7 @@ export const ProblemDetail: React.FC = () => {
       } catch (error: any) {
         console.error('❌ Failed to load Pyodide:', error);
         setPyodideError(error.message || 'Failed to load Python runtime. Please refresh and try again.');
+        toast.error('Python runtime failed to load. Some features may be limited.');
       } finally {
         setPyodideLoading(false);
       }
@@ -276,7 +288,7 @@ export const ProblemDetail: React.FC = () => {
     }
   }, [code, slug, selectedLanguage]);
 
-  // ✅ Get starter code for a specific language
+  // Get starter code for a specific language
   const getStarterCodeForLanguage = (problem: Problem | null, language: string): string => {
     if (!problem) return '';
     
@@ -295,7 +307,7 @@ export const ProblemDetail: React.FC = () => {
     return langConfig?.sampleStarter || '';
   };
 
-  // ✅ Load language-specific code from localStorage or problem data
+  // Load language-specific code from localStorage or problem data
   useEffect(() => {
     if (slug && selectedLanguage) {
       const savedCode = localStorage.getItem(`code_${slug}_${selectedLanguage}`);
@@ -308,7 +320,7 @@ export const ProblemDetail: React.FC = () => {
     }
   }, [selectedLanguage, slug, problem]);
 
-  // ✅ Handle click outside dropdown
+  // Handle click outside dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -335,6 +347,7 @@ export const ProblemDetail: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching problem:', error);
+      toast.error('Failed to load problem');
       navigate('/problems');
     } finally {
       setLoading(false);
@@ -387,19 +400,17 @@ export const ProblemDetail: React.FC = () => {
 
   const currentLanguage = SUPPORTED_LANGUAGES.find(l => l.id === selectedLanguage) || SUPPORTED_LANGUAGES[0];
 
-  // ✅ FIXED: Universal Input Parser - Handles all input types including single element arrays
+  // Universal Input Parser
   const parseInput = (input: string): any => {
     if (!input || !input.trim()) return '';
     
     const trimmed = input.trim();
     
-    // Check if it's a quoted string (starts and ends with quotes)
     if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || 
         (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
       return trimmed.slice(1, -1);
     }
     
-    // If it starts with '[' and ends with ']', it's an array format
     if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
       const content = trimmed.slice(1, -1).trim();
       if (!content) return [];
@@ -414,8 +425,6 @@ export const ProblemDetail: React.FC = () => {
       });
     }
     
-    // ✅ SPECIAL CASE: Check if this is a list of numbers for array problems
-    // If it contains multiple numbers separated by commas, and looks like array input
     if (trimmed.includes(',')) {
       const parts = trimmed.split(',').map((val: string) => {
         const v = val.trim();
@@ -423,66 +432,50 @@ export const ProblemDetail: React.FC = () => {
         return isNaN(num) ? v : num;
       });
       
-      // ✅ If all parts are numbers, return as array
       if (parts.every((p: any) => typeof p === 'number')) {
         return parts;
       }
       
-      // Otherwise return as individual arguments
       return parts;
     }
     
-    // ✅ SPECIAL CASE: Single number - Check if it should be an array
-    // This happens for test cases like [1] which gets parsed as "1"
-    // We need to check the problem context to determine if this should be an array
     const num = Number(trimmed);
     if (!isNaN(num)) {
-      // For array problems, a single number should be treated as an array with one element
-      // We'll detect this based on the function signature
       return num;
     }
     
     return trimmed;
   };
 
-  // ✅ Helper to determine if code expects an array parameter
   const isArrayFunction = (code: string): boolean => {
     const arrayKeywords = ['[]', 'arr', 'array', 'nums', 'list'];
     return arrayKeywords.some(keyword => code.includes(keyword));
   };
 
-  // ✅ Build argument string based on input type and function signature
   const buildArgString = (parsedInput: any, code: string): string => {
-    // Check if parsed input is a number (single value)
     const isSingleNumber = typeof parsedInput === 'number';
     const isArrayInput = Array.isArray(parsedInput);
-    
-    // Check if function expects an array
     const expectsArray = isArrayFunction(code);
     
-    // ✅ For array problems with a single number, wrap it in an array
     if (isSingleNumber && expectsArray) {
       return JSON.stringify([parsedInput]);
     }
     
     if (isArrayInput && expectsArray) {
-      // ✅ For array problems, pass as a single array argument
       return JSON.stringify(parsedInput);
     } else if (isArrayInput && parsedInput.length > 1) {
-      // Multiple arguments: join with commas
       return parsedInput.map((v: any) => {
         if (typeof v === 'string') return `"${v}"`;
         return String(v);
       }).join(', ');
     } else if (isArrayInput && parsedInput.length === 1) {
-      // Single element array
       return JSON.stringify(parsedInput);
     } else {
       return typeof parsedInput === 'string' ? `"${parsedInput}"` : String(parsedInput);
     }
   };
 
-  // ✅ FIXED: Execute JavaScript with proper output capture and argument handling
+  // Execute JavaScript
   const executeJavaScript = (code: string, input: string): Promise<{ output: string; error: string }> => {
     return new Promise((resolve) => {
       let output = '';
@@ -505,13 +498,9 @@ export const ProblemDetail: React.FC = () => {
           error += args.map(arg => String(arg)).join(' ') + '\n';
         };
 
-        // ✅ Parse input
         const parsedInput = parseInput(input);
-        
-        // ✅ Build argument string
         const argStr = buildArgString(parsedInput, code);
 
-        // ✅ Detect function name
         const functionMatch = code.match(/function\s+(\w+)\s*\(/);
         const varMatch = code.match(/(?:var|let|const)\s+(\w+)\s*=\s*function/);
         const arrowMatch = code.match(/(?:var|let|const)\s+(\w+)\s*=\s*\(/);
@@ -560,7 +549,7 @@ export const ProblemDetail: React.FC = () => {
     });
   };
 
-  // ✅ FIXED: Execute Python with proper output capture and argument handling
+  // Execute Python
   const executePython = async (code: string, input: string): Promise<{ output: string; error: string }> => {
     if (!isPyodideLoaded || !pyodide) {
       return {
@@ -570,13 +559,9 @@ export const ProblemDetail: React.FC = () => {
     }
 
     try {
-      // ✅ Parse input
       const parsedInput = parseInput(input);
-      
-      // ✅ Build argument string
       const argStr = buildArgString(parsedInput, code);
 
-      // ✅ Detect function name
       const functionMatch = code.match(/def\s+(\w+)\s*\(/);
       const functionName = functionMatch?.[1] || null;
 
@@ -630,7 +615,6 @@ sys.stderr = StringIO()
     }
   };
 
-  // ✅ Execute code based on language
   const executeCode = async (code: string, input: string, language: string): Promise<{ output: string; error: string }> => {
     switch (language) {
       case 'javascript':
@@ -642,7 +626,6 @@ sys.stderr = StringIO()
     }
   };
 
-  // ✅ Execute code against test cases
   const executeCodeClientSide = async (
     code: string,
     testCases: any[],
@@ -690,7 +673,6 @@ sys.stderr = StringIO()
         const actualOutput = execResult.output.trim();
         let expectedOutput = testCase.expectedOutput.trim();
 
-        // ✅ Remove quotes from expected if present
         if ((expectedOutput.startsWith('"') && expectedOutput.endsWith('"')) || 
             (expectedOutput.startsWith("'") && expectedOutput.endsWith("'"))) {
           expectedOutput = expectedOutput.slice(1, -1);
@@ -698,7 +680,6 @@ sys.stderr = StringIO()
 
         result.got = actualOutput;
 
-        // ✅ Compare normalized values
         if (actualOutput === expectedOutput) {
           result.passed = true;
           passedTests++;
@@ -740,9 +721,9 @@ sys.stderr = StringIO()
     };
   };
 
-  // ✅ Run code (does NOT count as submission)
   const handleRunCode = async () => {
     if (!code.trim()) {
+      toast.error('Please write your solution first.');
       setResult({
         status: 'runtime_error',
         passedTests: 0,
@@ -774,11 +755,18 @@ sys.stderr = StringIO()
         isSubmission: false,
       });
       
+      if (execResult.status === 'accepted') {
+        toast.success('✅ All test cases passed!');
+      } else if (execResult.status === 'wrong_answer') {
+        toast.error('❌ Some tests failed. Check the results below.');
+      }
+      
       if (outputRef.current) {
         outputRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } catch (error: any) {
       console.error('Error running code:', error);
+      toast.error('Failed to execute code');
       setResult({
         status: 'runtime_error',
         passedTests: 0,
@@ -794,9 +782,18 @@ sys.stderr = StringIO()
     }
   };
 
-  // ✅ Submit code (DOES count as submission)
+  const getXpForDifficulty = (difficulty: string): number => {
+    const map: Record<string, number> = {
+      easy: 15,
+      medium: 30,
+      hard: 50,
+    };
+    return map[difficulty] || 15;
+  };
+
   const handleSubmit = async () => {
     if (!code.trim()) {
+      toast.error('Please write your solution first.');
       setResult({
         status: 'runtime_error',
         passedTests: 0,
@@ -847,11 +844,19 @@ sys.stderr = StringIO()
       await fetchSubmissions();
       setActiveTab('results');
       
+      if (execResult.status === 'accepted') {
+        const xpGain = getXpForDifficulty(problem.difficulty);
+        toast.success(`🎉 Accepted! +${xpGain} XP earned!`);
+      } else {
+        toast.error(`❌ ${execResult.errorMessage || 'Submission failed'}`);
+      }
+      
       if (outputRef.current) {
         outputRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } catch (error: any) {
       console.error('Error submitting:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit');
       setResult({
         status: 'runtime_error',
         passedTests: 0,
@@ -870,6 +875,7 @@ sys.stderr = StringIO()
   const handleCopyCode = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
+    toast.success('Code copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -961,11 +967,7 @@ sys.stderr = StringIO()
   const allVisiblePassed = hasResults && getPassedVisibleCount() === getTotalVisibleCount();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-screen bg-[#0D0F0F]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading problem..." />;
   }
 
   if (!problem) {
@@ -988,7 +990,13 @@ sys.stderr = StringIO()
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-base font-bold text-[#EDEFEE]">{problem.title}</h1>
+            <h1 className="text-base font-bold text-[#EDEFEE] flex items-center gap-2">
+              <span className="text-[#5C6360] font-mono text-sm bg-[#0D0F0F] px-2 py-0.5 rounded border border-[#2A302E] flex items-center gap-1">
+                <Hash className="w-3 h-3" />
+                {problem.problemNumber}
+              </span>
+              {problem.title}
+            </h1>
             <div className="flex items-center gap-2 text-xs">
               <span className={`${difficultyInfo.text} font-medium`}>
                 {difficultyInfo.label}
@@ -1090,6 +1098,10 @@ sys.stderr = StringIO()
             <div className="space-y-6">
               {/* Problem Statistics */}
               <div className="flex items-center gap-6 text-sm text-[#5C6360] pb-4 border-b border-[#2A302E]">
+                <div className="flex items-center gap-1">
+                  <Hash className="w-4 h-4 text-[#5C6360]" />
+                  <span className="font-medium text-[#EDEFEE]">#{problem.problemNumber}</span>
+                </div>
                 <div>
                   <span className="font-medium text-[#EDEFEE]">{problem.acceptanceRate || 45.6}%</span>
                   <span className="ml-1">Acceptance</span>
@@ -1263,27 +1275,39 @@ sys.stderr = StringIO()
 
             {/* Code Editor */}
             <div className="flex-1 min-h-0 bg-[#1E1E1E]">
-              <Editor
-                height="100%"
-                language={currentLanguage.monacoLanguage}
-                value={code}
-                onChange={(value) => setCode(value || '')}
-                theme="vs-dark"
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: fontSize,
-                  lineNumbers: 'on',
-                  automaticLayout: true,
-                  tabSize: 2,
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  suggestOnTriggerCharacters: true,
-                  quickSuggestions: true,
-                  acceptSuggestionOnCommitCharacter: true,
-                  acceptSuggestionOnEnter: 'on',
-                  renderWhitespace: 'selection',
-                }}
-              />
+              {isMonacoReady ? (
+                <Editor
+                  height="100%"
+                  language={currentLanguage.monacoLanguage}
+                  value={code}
+                  onChange={(value) => setCode(value || '')}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: fontSize,
+                    lineNumbers: 'on',
+                    automaticLayout: true,
+                    tabSize: 2,
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on',
+                    suggestOnTriggerCharacters: true,
+                    quickSuggestions: true,
+                    acceptSuggestionOnCommitCharacter: true,
+                    acceptSuggestionOnEnter: 'on',
+                    renderWhitespace: 'selection',
+                    padding: { top: 12, bottom: 12 },
+                  }}
+                  loading={<LoadingSpinner size="sm" text="Loading editor..." />}
+                />
+              ) : (
+                <textarea
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="w-full h-full bg-[#1E1E1E] text-[#D4D4D4] font-mono text-sm p-4 resize-none focus:outline-none"
+                  placeholder="// Write your code here"
+                  spellCheck={false}
+                />
+              )}
             </div>
 
             {/* Vertical Drag Handle */}
@@ -1421,7 +1445,7 @@ sys.stderr = StringIO()
   );
 };
 
-// ✅ Results Tab Component
+// Results Tab Component
 const ResultsTab: React.FC<{
   result: SubmissionResult | null;
   visibleTestCases: any[];

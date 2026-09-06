@@ -10,6 +10,7 @@ export interface ITestCase {
 
 export interface IProblem extends Document {
   _id: Types.ObjectId;
+  problemNumber: number;
   title: string;
   slug: string;
   difficulty: 'easy' | 'medium' | 'hard';
@@ -25,7 +26,7 @@ export interface IProblem extends Document {
     javascript: string;
     python: string;
     java: string;
-  }; // ✅ Changed to object with language-specific code
+  };
   solutionCode: string;
   hints: string[];
   tags: string[];
@@ -64,15 +65,20 @@ const ExampleSchema = new Schema({
   explanation: { type: String },
 });
 
-// ✅ Updated ProblemSchema with language-specific starter code
 const ProblemSchema = new Schema<IProblem>(
   {
+    problemNumber: {
+      type: Number,
+      unique: true,
+      index: true,
+      required: true,
+    },
     title: { type: String, required: true, trim: true },
     slug: { type: String, unique: true, lowercase: true, sparse: true },
-    difficulty: { 
-      type: String, 
-      enum: ['easy', 'medium', 'hard'], 
-      required: true 
+    difficulty: {
+      type: String,
+      enum: ['easy', 'medium', 'hard'],
+      required: true,
     },
     description: { type: String, required: true },
     examples: [ExampleSchema],
@@ -93,6 +99,24 @@ const ProblemSchema = new Schema<IProblem>(
   },
   { timestamps: true }
 );
+
+// Auto-generate problem number before saving
+ProblemSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    try {
+      const ProblemModel = mongoose.model('Problem');
+      const lastProblem = await ProblemModel.findOne({})
+        .sort({ problemNumber: -1 })
+        .select('problemNumber');
+      
+      this.problemNumber = lastProblem ? lastProblem.problemNumber + 1 : 1;
+    } catch (error) {
+      console.error('Error generating problem number:', error);
+      this.problemNumber = 1;
+    }
+  }
+  next();
+});
 
 // Auto-generate slug from title
 ProblemSchema.pre('save', function(next) {
@@ -122,10 +146,10 @@ const ProblemSubmissionSchema = new Schema<IProblemSubmission>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     language: { type: String, required: true },
     code: { type: String, required: true },
-    status: { 
-      type: String, 
+    status: {
+      type: String,
       enum: ['pending', 'accepted', 'wrong_answer', 'time_limit', 'memory_limit', 'runtime_error', 'compile_error'],
-      default: 'pending'
+      default: 'pending',
     },
     passedTests: { type: Number, default: 0 },
     totalTests: { type: Number, default: 0 },

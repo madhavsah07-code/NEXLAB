@@ -71,7 +71,7 @@ export class ProblemController {
 
       res.status(201).json({
         success: true,
-        message: 'Problem created successfully',
+        message: `Problem #${problem.problemNumber} created successfully`,
         data: problem,
       });
     } catch (error: any) {
@@ -108,7 +108,7 @@ export class ProblemController {
       const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
       const [problems, total] = await Promise.all([
         Problem.find(query)
-          .sort({ createdAt: -1 })
+          .sort({ problemNumber: 1 }) // Sort by problem number
           .skip(skip)
           .limit(parseInt(limit as string) || 20)
           .lean(),
@@ -117,6 +117,7 @@ export class ProblemController {
 
       const formattedProblems = problems.map((p: any) => ({
         _id: p._id,
+        problemNumber: p.problemNumber || 0,
         title: p.title || '',
         slug: p.slug || p._id.toString(),
         difficulty: p.difficulty || 'easy',
@@ -164,7 +165,7 @@ export class ProblemController {
       const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
       const [problems, total] = await Promise.all([
         Problem.find(query)
-          .sort({ createdAt: -1 })
+          .sort({ problemNumber: 1 })
           .skip(skip)
           .limit(parseInt(limit as string))
           .populate('createdBy', 'name')
@@ -215,6 +216,7 @@ export class ProblemController {
 
       const problemData = {
         ...problem,
+        problemNumber: problem.problemNumber,
         testCases: problem.testCases?.map((tc: any) => ({
           input: tc.input,
           expectedOutput: tc.expectedOutput,
@@ -267,7 +269,22 @@ export class ProblemController {
     }
   }
 
-  // ✅ UPDATED: Submit Solution with client-side result support
+  static async getNextProblemNumber(req: Request, res: Response) {
+    try {
+      const nextNumber = await ProblemService.getNextProblemNumber();
+      res.status(200).json({
+        success: true,
+        data: nextNumber,
+      });
+    } catch (error: any) {
+      console.error('Get next problem number error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to get next problem number',
+      });
+    }
+  }
+
   static async submitSolution(req: Request, res: Response) {
     try {
       const { slug } = req.params;
@@ -301,11 +318,9 @@ export class ProblemController {
 
       let result;
 
-      // ✅ If client provided result and this is a submission, use it
       if (clientResult && isSubmission) {
         console.log('📊 Using client-side execution result');
 
-        // ✅ Save submission to database with client-side result
         const submission = await ProblemSubmission.create({
           problemId: new Types.ObjectId(problem._id),
           userId: new Types.ObjectId(userId),
@@ -320,7 +335,6 @@ export class ProblemController {
           submittedAt: new Date(),
         });
 
-        // ✅ Award XP if accepted
         if (clientResult.status === 'accepted') {
           const xpGain = ProblemService.getXpForDifficulty(problem.difficulty);
           const user = await User.findById(userId);
@@ -351,14 +365,12 @@ export class ProblemController {
           },
         };
       } else if (clientResult && !isSubmission) {
-        // Run mode with client-side execution - just return results without saving
         result = {
           ...clientResult,
           isSubmission: false,
           submission: null,
         };
       } else {
-        // Fallback to server-side execution
         console.log('💻 Using server-side execution (fallback)');
         result = await ProblemService.submitSolution(
           problem._id.toString(),

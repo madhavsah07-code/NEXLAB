@@ -28,6 +28,9 @@ router.get('/:slug', authenticate, ProblemController.getProblem);
 router.post('/:slug/submit', authenticate, ProblemController.submitSolution);
 
 // ---------- Admin Routes ----------
+// Get next problem number (admin only)
+router.get('/next-number', authenticate, isAdmin, ProblemController.getNextProblemNumber);
+
 // Get all problems for admin (including unpublished)
 router.get('/admin/all', authenticate, isAdmin, ProblemController.getAdminProblems);
 

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from '../lib/api';
 import { IUser } from '@nexlab/shared';
+import toast from 'react-hot-toast';
 
 interface AuthState {
   user: IUser | null;
@@ -27,12 +28,15 @@ export const useAuthStore = create<AuthState>()(
             userData._id = userData.id;
           }
           set({ user: userData });
+          toast.success(`Welcome back, ${userData.name}! 👋`);
           return { success: true };
         } catch (error: any) {
           console.error('Login error:', error);
+          const message = error.response?.data?.message || 'Login failed';
+          toast.error(message);
           return { 
             success: false, 
-            message: error.response?.data?.message || 'Login failed' 
+            message 
           };
         }
       },
@@ -45,12 +49,15 @@ export const useAuthStore = create<AuthState>()(
             userData._id = userData.id;
           }
           set({ user: userData });
+          toast.success(`Welcome to NexLab, ${name}! 🎉`);
           return { success: true };
         } catch (error: any) {
           console.error('Registration error:', error);
+          const message = error.response?.data?.message || 'Registration failed';
+          toast.error(message);
           return { 
             success: false, 
-            message: error.response?.data?.message || 'Registration failed' 
+            message 
           };
         }
       },
@@ -58,6 +65,7 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           await api.post('/auth/logout');
+          toast.success('Logged out successfully');
         } catch (error) {
           console.error('Logout error:', error);
         }
@@ -106,5 +114,11 @@ export const useAuthStore = create<AuthState>()(
 if (typeof window !== 'undefined') {
   window.addEventListener('auth:unauthorized', () => {
     useAuthStore.getState().setUser(null);
+    toast.error('Session expired. Please login again.');
+  });
+
+  // Listen for rate limit events
+  window.addEventListener('auth:rate_limited', () => {
+    toast.error('⏳ Too many requests. Please wait a moment.');
   });
 }

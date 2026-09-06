@@ -50,11 +50,9 @@ export interface ProblemImportData {
 
 export class ProblemImportService {
   
-  // ---------- Validate a single problem ----------
   static validateProblem(data: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // Required fields
     if (!data.title || typeof data.title !== 'string' || data.title.length < 3) {
       errors.push('Title must be at least 3 characters');
     }
@@ -68,7 +66,6 @@ export class ProblemImportService {
       errors.push('At least one test case is required');
     }
 
-    // Validate test cases
     if (data.testCases && Array.isArray(data.testCases)) {
       data.testCases.forEach((tc: any, index: number) => {
         if (!tc.input) {
@@ -80,7 +77,6 @@ export class ProblemImportService {
       });
     }
 
-    // Validate examples
     if (data.examples && Array.isArray(data.examples)) {
       data.examples.forEach((ex: any, index: number) => {
         if (!ex.input) {
@@ -92,7 +88,6 @@ export class ProblemImportService {
       });
     }
 
-    // Validate starterCode
     if (data.starterCode) {
       if (typeof data.starterCode !== 'object' || Array.isArray(data.starterCode)) {
         errors.push('starterCode must be an object with language keys');
@@ -112,19 +107,23 @@ export class ProblemImportService {
     return { valid: errors.length === 0, errors };
   }
 
-  // ---------- Import single problem ----------
+  static async getNextProblemNumber(): Promise<number> {
+    const lastProblem = await Problem.findOne({})
+      .sort({ problemNumber: -1 })
+      .select('problemNumber');
+    return lastProblem ? lastProblem.problemNumber + 1 : 1;
+  }
+
   static async importProblem(
     data: ProblemImportData,
     createdBy: string
   ): Promise<{ success: boolean; problem?: any; error?: string }> {
     try {
-      // Validate
       const validation = this.validateProblem(data);
       if (!validation.valid) {
         return { success: false, error: validation.errors.join('; ') };
       }
 
-      // Check for duplicate title
       const existing = await Problem.findOne({ 
         title: { $regex: new RegExp(`^${data.title}$`, 'i') } 
       });
@@ -132,16 +131,17 @@ export class ProblemImportService {
         return { success: false, error: `Problem with title "${data.title}" already exists` };
       }
 
-      // ✅ Build starterCode object with defaults
+      const nextNumber = await this.getNextProblemNumber();
+
       const starterCode = {
         javascript: data.starterCode?.javascript || '',
         python: data.starterCode?.python || '',
         java: data.starterCode?.java || '',
       };
 
-      // Create problem
       const problemData = {
         title: data.title,
+        problemNumber: nextNumber,
         difficulty: data.difficulty,
         description: data.description,
         examples: data.examples || [],
@@ -168,7 +168,6 @@ export class ProblemImportService {
     }
   }
 
-  // ---------- Import multiple problems ----------
   static async importProblems(
     problems: ProblemImportData[],
     createdBy: string
@@ -204,7 +203,6 @@ export class ProblemImportService {
     return result;
   }
 
-  // ---------- Generate template JSON ----------
   static generateTemplate(): ProblemImportData {
     return {
       title: "Example Problem",
@@ -280,7 +278,6 @@ var addTwoNumbers = function(a, b) {
     };
   }
 
-  // ---------- Validate JSON structure ----------
   static validateJSONStructure(jsonData: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
@@ -289,7 +286,6 @@ var addTwoNumbers = function(a, b) {
       return { valid: false, errors };
     }
 
-    // Check if it's an array or single object
     const problems = Array.isArray(jsonData) ? jsonData : [jsonData];
 
     if (problems.length === 0) {
@@ -297,7 +293,6 @@ var addTwoNumbers = function(a, b) {
       return { valid: false, errors };
     }
 
-    // Validate each problem
     problems.forEach((problem: any, index: number) => {
       const validation = this.validateProblem(problem);
       if (!validation.valid) {
@@ -308,7 +303,6 @@ var addTwoNumbers = function(a, b) {
     return { valid: errors.length === 0, errors };
   }
 
-  // ---------- Parse and import from JSON string ----------
   static async importFromJSONString(
     jsonString: string,
     createdBy: string
@@ -317,7 +311,6 @@ var addTwoNumbers = function(a, b) {
       const data = JSON.parse(jsonString);
       const problems = Array.isArray(data) ? data : [data];
       
-      // Validate structure
       const validation = this.validateJSONStructure(data);
       if (!validation.valid) {
         return {
@@ -353,7 +346,6 @@ var addTwoNumbers = function(a, b) {
     }
   }
 
-  // ---------- Export problems as JSON ----------
   static async exportProblems(problemIds?: string[]): Promise<any[]> {
     const query: any = {};
     if (problemIds && problemIds.length > 0) {

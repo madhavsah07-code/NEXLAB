@@ -5,21 +5,23 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Plus, Trash2, X, Code2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, X, Code2, Hash } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
+import toast from 'react-hot-toast';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
-// ✅ Lazy load Monaco Editor only when needed
+// Lazy load Monaco Editor only when needed
 const MonacoEditor = React.lazy(() => import('@monaco-editor/react'));
 
-// ✅ Setup Monaco only when ProblemForm mounts
+// Setup Monaco only when ProblemForm mounts
 const setupMonaco = () => {
   import('../../lib/monaco-config').then(({ setupMonaco }) => {
     setupMonaco();
   });
 };
 
-// ✅ Updated schema with JavaScript and Python only
+// Updated schema with JavaScript and Python only
 const problemSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
   difficulty: z.enum(['easy', 'medium', 'hard']),
@@ -38,6 +40,7 @@ const problemSchema = z.object({
   starterCode: z.object({
     javascript: z.string().default(''),
     python: z.string().default(''),
+    java: z.string().default(''),
   }),
   solutionCode: z.string().default(''),
   hints: z.array(z.string()).default([]),
@@ -48,7 +51,7 @@ const problemSchema = z.object({
 
 type ProblemFormData = z.infer<typeof problemSchema>;
 
-// ✅ Default starter code for JavaScript and Python
+// Default starter code for JavaScript, Python, and Java
 const DEFAULT_STARTER_CODE = {
   javascript: `/**
  * @param {number} a
@@ -61,11 +64,21 @@ var sumOfTwoNumbers = function(a, b) {
 };`,
   python: `def sum_of_two_numbers(a: int, b: int) -> int:
     # Write your solution here
-    return 0`
+    return 0`,
+  java: `public class Main {
+    public static int sumOfTwoNumbers(int a, int b) {
+        // Write your solution here
+        return 0;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(sumOfTwoNumbers(5, 10));
+    }
+}`
 };
 
 export const ProblemForm: React.FC = () => {
-  // ✅ Setup Monaco when ProblemForm mounts
+  // Setup Monaco when ProblemForm mounts
   useEffect(() => {
     setupMonaco();
   }, []);
@@ -74,7 +87,9 @@ export const ProblemForm: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!problemId);
-  const [activeLanguageTab, setActiveLanguageTab] = useState<'javascript' | 'python'>('javascript');
+  const [activeLanguageTab, setActiveLanguageTab] = useState<'javascript' | 'python' | 'java'>('javascript');
+  const [nextProblemNumber, setNextProblemNumber] = useState<number | null>(null);
+  const [currentProblemNumber, setCurrentProblemNumber] = useState<number | null>(null);
 
   const { register, control, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<ProblemFormData>({
     resolver: zodResolver(problemSchema),
@@ -109,6 +124,21 @@ export const ProblemForm: React.FC = () => {
   const constraints = watch('constraints') || [];
   const starterCode = watch('starterCode');
 
+  // Fetch next problem number for new problems
+  useEffect(() => {
+    if (!problemId) {
+      const fetchNextNumber = async () => {
+        try {
+          const response = await api.get('/problems/next-number');
+          setNextProblemNumber(response.data.data);
+        } catch (error) {
+          console.error('Error fetching next problem number:', error);
+        }
+      };
+      fetchNextNumber();
+    }
+  }, [problemId]);
+
   useEffect(() => {
     if (problemId) {
       fetchProblem();
@@ -121,9 +151,12 @@ export const ProblemForm: React.FC = () => {
       const response = await api.get(`/problems/admin/${problemId}`);
       const problem = response.data.data;
       
+      setCurrentProblemNumber(problem.problemNumber);
+      
       const starterCode = {
         javascript: problem.starterCode?.javascript || DEFAULT_STARTER_CODE.javascript,
         python: problem.starterCode?.python || DEFAULT_STARTER_CODE.python,
+        java: problem.starterCode?.java || DEFAULT_STARTER_CODE.java,
       };
       
       reset({
@@ -142,6 +175,7 @@ export const ProblemForm: React.FC = () => {
       });
     } catch (error) {
       console.error('Error fetching problem:', error);
+      toast.error('Failed to load problem');
       navigate('/admin/problems');
     } finally {
       setFetching(false);
@@ -153,13 +187,15 @@ export const ProblemForm: React.FC = () => {
     try {
       if (problemId) {
         await api.put(`/problems/${problemId}`, data);
+        toast.success('Problem updated successfully!');
       } else {
-        await api.post('/problems', data);
+        const response = await api.post('/problems', data);
+        toast.success(`Problem #${response.data.data.problemNumber} created successfully!`);
       }
       navigate('/admin/problems');
     } catch (error: any) {
       console.error('Error saving problem:', error);
-      alert(error.response?.data?.message || 'Failed to save problem. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to save problem. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -202,11 +238,7 @@ export const ProblemForm: React.FC = () => {
   };
 
   if (fetching) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading problem..." />;
   }
 
   return (
@@ -224,6 +256,31 @@ export const ProblemForm: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Problem Number Display */}
+        {!problemId && nextProblemNumber && (
+          <div className="bg-[#10B981]/5 border border-[#10B981]/20 rounded-xl p-4 flex items-center gap-3">
+            <Hash className="w-5 h-5 text-[#10B981]" />
+            <div>
+              <p className="text-sm text-[#9CA3A0]">
+                Next Problem Number: <span className="font-bold text-[#10B981] text-lg">#{nextProblemNumber}</span>
+              </p>
+              <p className="text-xs text-[#5C6360]">This number will be auto-assigned when you create the problem.</p>
+            </div>
+          </div>
+        )}
+
+        {problemId && currentProblemNumber && (
+          <div className="bg-[#60A5FA]/5 border border-[#60A5FA]/20 rounded-xl p-4 flex items-center gap-3">
+            <Hash className="w-5 h-5 text-[#60A5FA]" />
+            <div>
+              <p className="text-sm text-[#9CA3A0]">
+                Problem Number: <span className="font-bold text-[#60A5FA] text-lg">#{currentProblemNumber}</span>
+              </p>
+              <p className="text-xs text-[#5C6360]">This number is permanently assigned to this problem.</p>
+            </div>
+          </div>
+        )}
+
         {/* Basic Info */}
         <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
           <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Basic Information</h2>
@@ -439,9 +496,9 @@ export const ProblemForm: React.FC = () => {
           </h2>
           <p className="text-sm text-[#9CA3A0] mb-4">Provide starter code for each language</p>
 
-          {/* Language Tabs - Only JavaScript and Python */}
+          {/* Language Tabs */}
           <div className="flex gap-2 mb-4 border-b border-[#2A302E]">
-            {['javascript', 'python'].map((lang) => (
+            {['javascript', 'python', 'java'].map((lang) => (
               <button
                 key={lang}
                 type="button"

@@ -7,6 +7,8 @@ import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../stores/authStore';
 import CoursePreviewModal from '../../components/CoursePreviewModal';
+import toast from 'react-hot-toast';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 interface Course {
   _id: string;
@@ -60,6 +62,7 @@ export const StudentCourses: React.FC = () => {
       setCategories(uniqueCategories);
     } catch (error) {
       console.error('Error fetching courses:', error);
+      toast.error('Failed to load courses');
     } finally {
       setLoading(false);
     }
@@ -72,9 +75,9 @@ export const StudentCourses: React.FC = () => {
       await checkAuth();
       await fetchCourses();
       setIsModalOpen(false);
-      alert('✅ Successfully enrolled in course! 🎉');
+      toast.success('✅ Successfully enrolled in course! 🎉');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to enroll');
+      toast.error(error.response?.data?.message || 'Failed to enroll');
     } finally {
       setEnrolling(null);
     }
@@ -85,7 +88,6 @@ export const StudentCourses: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // ✅ Handle course card click - navigate to course if enrolled
   const handleCourseClick = (course: Course) => {
     if (isUserEnrolled(course)) {
       navigate(`/course/${course._id}`);
@@ -134,11 +136,7 @@ export const StudentCourses: React.FC = () => {
   const hasActiveFilters = searchTerm || filterLevel || filterCategory;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading courses..." />;
   }
 
   return (
@@ -280,7 +278,7 @@ export const StudentCourses: React.FC = () => {
                     <BookOpen className="w-12 h-12 text-[#10B981] opacity-40 fallback-icon" />
                   )}
                   
-                  {/* Rating Badge - Keep at top right */}
+                  {/* Rating Badge */}
                   {course.rating && course.rating > 0 && (
                     <div className="absolute top-3 right-3 flex items-center gap-1 bg-[#0D0F0F]/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-[#2A302E]">
                       <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
@@ -342,7 +340,6 @@ export const StudentCourses: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* ✅ Updated Action Buttons - Full width, side by side */}
                   <div className="mt-4 pt-4 border-t border-[#2A302E]">
                     {isEnrolled ? (
                       <div className="flex gap-2">

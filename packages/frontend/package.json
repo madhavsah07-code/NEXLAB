@@ -13,6 +13,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@nexlab/shared": "file:../shared",
     "axios": "^1.6.2",
+    "dompurify": "^3.4.8",
     "lucide-react": "^0.294.0",
     "monaco-editor": "^0.45.0",
     "pyodide": "^314.0.6",
@@ -20,11 +21,13 @@
     "react-calendar-heatmap": "^1.10.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^6.21.3",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
     "@types/react": "^18.2.43",
     "@types/react-calendar-heatmap": "^1.9.0",
     "@types/react-dom": "^18.2.17",

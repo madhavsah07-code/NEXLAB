@@ -4,9 +4,12 @@ import { Search, CheckCircle, Clock, AlertCircle, Code2, TrendingUp } from 'luci
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../stores/authStore';
+import toast from 'react-hot-toast';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 interface Problem {
   _id: string;
+  problemNumber: number;
   title: string;
   slug: string;
   difficulty: 'easy' | 'medium' | 'hard';
@@ -84,6 +87,7 @@ export const ProblemsList: React.FC = () => {
       
       const formattedProblems = problemsData.map((p: any) => ({
         _id: p._id || p.id,
+        problemNumber: p.problemNumber || 0,
         title: p.title || 'Untitled Problem',
         slug: p.slug || p._id || p.id || 'problem',
         difficulty: p.difficulty || 'easy',
@@ -100,6 +104,7 @@ export const ProblemsList: React.FC = () => {
       setTotalPages(Math.ceil((data.pagination?.total || formattedProblems.length) / 20) || 1);
     } catch (error) {
       console.error('Error fetching problems:', error);
+      toast.error('Failed to load problems');
     } finally {
       setLoading(false);
     }
@@ -145,11 +150,7 @@ export const ProblemsList: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 bg-[#0D0F0F]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading problems..." />;
   }
 
   return (
@@ -176,7 +177,7 @@ export const ProblemsList: React.FC = () => {
           </div>
         </div>
 
-        {/* Filters - Responsive */}
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
@@ -229,7 +230,7 @@ export const ProblemsList: React.FC = () => {
           </div>
         </div>
 
-        {/* Problems Table - Responsive */}
+        {/* Problems Table */}
         {problems.length === 0 ? (
           <div className="bg-[#1A1D1E] border border-[#2A302E] rounded-xl p-8 sm:p-12 text-center">
             <Code2 className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C6360] mx-auto mb-4 opacity-40" />
@@ -238,9 +239,12 @@ export const ProblemsList: React.FC = () => {
         ) : (
           <div className="bg-[#1A1D1E] border border-[#2A302E] rounded-xl overflow-hidden">
             <div className="table-wrapper">
-              <table className="w-full min-w-[600px]">
+              <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="border-b border-[#2A302E] bg-[#0D0F0F]">
+                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                      #
+                    </th>
                     <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
                       Problem
                     </th>
@@ -265,6 +269,11 @@ export const ProblemsList: React.FC = () => {
 
                     return (
                       <tr key={problem._id} className="border-b border-[#2A302E] hover:bg-[#1E2322] transition-colors">
+                        <td className="py-2 sm:py-3 px-2 sm:px-4">
+                          <span className="text-sm text-[#5C6360] font-mono">
+                            {problem.problemNumber}
+                          </span>
+                        </td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4">
                           <Link 
                             to={`/problems/${problem.slug}`}
@@ -361,6 +370,7 @@ export const ProblemsList: React.FC = () => {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
+                      <span className="text-sm text-[#5C6360] font-mono">#{p.problemNumber}</span>
                       <span className={`text-sm font-medium ${
                         p.difficulty === 'easy' ? 'text-[#10B981]' :
                         p.difficulty === 'medium' ? 'text-[#FBBF24]' :
@@ -381,3 +391,5 @@ export const ProblemsList: React.FC = () => {
     </div>
   );
 };
+
+export default ProblemsList;

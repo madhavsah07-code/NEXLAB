@@ -10,9 +10,12 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
+import toast from 'react-hot-toast';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 interface Problem {
   _id: string;
+  problemNumber: number;
   title: string;
   slug: string;
   difficulty: 'easy' | 'medium' | 'hard';
@@ -53,6 +56,7 @@ export const AdminProblems: React.FC = () => {
       setTotalProblems(data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching problems:', error);
+      toast.error('Failed to load problems');
     } finally {
       setLoading(false);
     }
@@ -63,10 +67,10 @@ export const AdminProblems: React.FC = () => {
     try {
       const response = await api.patch(`/problems/${id}/publish`);
       setProblems(problems.map(p => p._id === id ? response.data.data : p));
-      // Show success toast or notification
+      toast.success(`Problem ${currentStatus ? 'unpublished' : 'published'} successfully`);
     } catch (error) {
       console.error('Error toggling publish:', error);
-      alert('Failed to update problem status');
+      toast.error('Failed to update problem status');
     } finally {
       setActionLoading(null);
     }
@@ -80,10 +84,10 @@ export const AdminProblems: React.FC = () => {
     try {
       await api.delete(`/problems/${id}`);
       setProblems(problems.filter(p => p._id !== id));
-      alert('Problem deleted successfully!');
+      toast.success('Problem deleted successfully!');
     } catch (error) {
       console.error('Error deleting problem:', error);
-      alert('Failed to delete problem');
+      toast.error('Failed to delete problem');
     } finally {
       setActionLoading(null);
     }
@@ -109,9 +113,10 @@ export const AdminProblems: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      toast.success('Problems exported successfully');
     } catch (error) {
       console.error('Error exporting problems:', error);
-      alert('Failed to export problems');
+      toast.error('Failed to export problems');
     } finally {
       setExporting(false);
     }
@@ -159,11 +164,7 @@ export const AdminProblems: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading problems..." />;
   }
 
   return (
@@ -325,6 +326,9 @@ export const AdminProblems: React.FC = () => {
               <thead>
                 <tr className="border-b border-[#2A302E] bg-[#0D0F0F]">
                   <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    #
+                  </th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
                     Problem
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
@@ -357,6 +361,11 @@ export const AdminProblems: React.FC = () => {
                       key={problem._id}
                       className="border-b border-[#2A302E] hover:bg-[#1E2322] transition-colors group"
                     >
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-[#5C6360] font-mono">
+                          #{problem.problemNumber}
+                        </span>
+                      </td>
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium text-[#EDEFEE] group-hover:text-[#10B981] transition-colors">

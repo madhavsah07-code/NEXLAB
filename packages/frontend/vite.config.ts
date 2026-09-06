@@ -1,5 +1,3 @@
-// packages/frontend/vite.config.ts
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -15,23 +13,19 @@ export default defineConfig({
       },
     },
   },
-  // ✅ Ensure workers are properly handled
-  worker: {
-    format: 'es',
-  },
-  optimizeDeps: {
-    include: ['monaco-editor'],
-    exclude: ['@monaco-editor/react'],
-  },
-  // ✅ Build configuration
   build: {
     rollupOptions: {
       output: {
         manualChunks: {
-          // ✅ Separate Monaco into its own chunk
-          'monaco-editor': ['monaco-editor', '@monaco-editor/react'],
+          'monaco': ['@monaco-editor/react', 'monaco-editor'],
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui': ['lucide-react', 'react-hook-form', '@hookform/resolvers'],
         },
       },
     },
+    chunkSizeWarningLimit: 1000,
+  },
+  optimizeDeps: {
+    include: ['@monaco-editor/react', 'monaco-editor'],
   },
 });

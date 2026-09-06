@@ -3,10 +3,9 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
-
-// ❌ Remove global Monaco setup - only load when needed
-// import { setupMonaco } from './lib/monaco-config';
-// setupMonaco();
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ToastProvider } from './components/ToastProvider';
+import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
 // Layouts
 import { RootLayout } from './layouts/RootLayout';
@@ -16,25 +15,35 @@ import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 
-// Student Pages
-import { StudentDashboard } from './pages/student/Dashboard';
-import { StudentCourses } from './pages/student/Courses';
-import { Sandbox } from './pages/student/Sandbox';
-import { Leaderboard } from './pages/student/Leaderboard';
-import { Profile } from './pages/student/Profile';
-import { CoursePlayer } from './pages/student/CoursePlayer';
-import { ProblemsList } from './pages/student/ProblemsList';
-import { ProblemDetail } from './pages/student/ProblemDetail';
+// Student Pages - Lazy loaded for performance
+const StudentDashboard = React.lazy(() => import('./pages/student/Dashboard'));
+const StudentCourses = React.lazy(() => import('./pages/student/Courses'));
+const Sandbox = React.lazy(() => import('./pages/student/Sandbox'));
+const Leaderboard = React.lazy(() => import('./pages/student/Leaderboard'));
+const Profile = React.lazy(() => import('./pages/student/Profile'));
+const CoursePlayer = React.lazy(() => import('./pages/student/CoursePlayer'));
+const ProblemsList = React.lazy(() =>
+  import('./pages/student/ProblemsList').then(({ ProblemsList }) => ({ default: ProblemsList }))
+);
+const ProblemDetail = React.lazy(() => import('./pages/student/ProblemDetail'));
 
-// Admin Pages
-import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { AdminCourses } from './pages/admin/AdminCourses';
-import { CourseForm } from './pages/admin/CourseForm';
-import { AdminUsers } from './pages/admin/AdminUsers';
-import { AdminAnalytics } from './pages/admin/AdminAnalytics';
-import { AdminProblems } from './pages/admin/AdminProblems';
-import { ProblemForm } from './pages/admin/ProblemForm';
-import { AdminBulkImport } from './pages/admin/AdminBulkImport';
+// Admin Pages - Lazy loaded
+const AdminDashboard = React.lazy(() =>
+  import('./pages/admin/AdminDashboard').then(({ AdminDashboard }) => ({ default: AdminDashboard }))
+);
+const AdminCourses = React.lazy(() =>
+  import('./pages/admin/AdminCourses').then(({ AdminCourses }) => ({ default: AdminCourses }))
+);
+const CourseForm = React.lazy(() => import('./pages/admin/CourseForm'));
+const AdminUsers = React.lazy(() =>
+  import('./pages/admin/AdminUsers').then(({ AdminUsers }) => ({ default: AdminUsers }))
+);
+const AdminAnalytics = React.lazy(() => import('./pages/admin/AdminAnalytics'));
+const AdminProblems = React.lazy(() => import('./pages/admin/AdminProblems'));
+const ProblemForm = React.lazy(() => import('./pages/admin/ProblemForm'));
+const AdminBulkImport = React.lazy(() =>
+  import('./pages/admin/AdminBulkImport').then(({ AdminBulkImport }) => ({ default: AdminBulkImport }))
+);
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ 
@@ -44,11 +53,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
   const { user, isLoading } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D0F0F]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (!user) return <Navigate to="/login" replace />;
@@ -57,51 +62,61 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
   return <>{children}</>;
 };
 
+// Lazy loading wrapper
+const LazyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <React.Suspense fallback={<LoadingSpinner fullScreen />}>
+    {children}
+  </React.Suspense>
+);
+
 function App() {
   const { checkAuth } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ToastProvider />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Protected Student Routes */}
-        <Route element={<ProtectedRoute><RootLayout /></ProtectedRoute>}>
-          <Route path="/dashboard" element={<StudentDashboard />} />
-          <Route path="/courses" element={<StudentCourses />} />
-          <Route path="/sandbox" element={<Sandbox />} />
-          <Route path="/problems" element={<ProblemsList />} />
-          <Route path="/problems/:slug" element={<ProblemDetail />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/course/:courseId" element={<CoursePlayer />} />
-        </Route>
+          {/* Protected Student Routes */}
+          <Route element={<ProtectedRoute><RootLayout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<LazyRoute><StudentDashboard /></LazyRoute>} />
+            <Route path="/courses" element={<LazyRoute><StudentCourses /></LazyRoute>} />
+            <Route path="/sandbox" element={<LazyRoute><Sandbox /></LazyRoute>} />
+            <Route path="/problems" element={<LazyRoute><ProblemsList /></LazyRoute>} />
+            <Route path="/problems/:slug" element={<LazyRoute><ProblemDetail /></LazyRoute>} />
+            <Route path="/leaderboard" element={<LazyRoute><Leaderboard /></LazyRoute>} />
+            <Route path="/profile" element={<LazyRoute><Profile /></LazyRoute>} />
+            <Route path="/course/:courseId" element={<LazyRoute><CoursePlayer /></LazyRoute>} />
+          </Route>
 
-        {/* Protected Admin Routes */}
-        <Route element={<ProtectedRoute adminOnly><RootLayout /></ProtectedRoute>}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/courses" element={<AdminCourses />} />
-          <Route path="/admin/courses/create" element={<CourseForm />} />
-          <Route path="/admin/courses/edit/:id" element={<CourseForm />} />
-          <Route path="/admin/problems" element={<AdminProblems />} />
-          <Route path="/admin/problems/create" element={<ProblemForm />} />
-          <Route path="/admin/problems/edit/:problemId" element={<ProblemForm />} />
-          <Route path="/admin/problems/import" element={<AdminBulkImport />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
-        </Route>
+          {/* Protected Admin Routes */}
+          <Route element={<ProtectedRoute adminOnly><RootLayout /></ProtectedRoute>}>
+            <Route path="/admin/dashboard" element={<LazyRoute><AdminDashboard /></LazyRoute>} />
+            <Route path="/admin/courses" element={<LazyRoute><AdminCourses /></LazyRoute>} />
+            <Route path="/admin/courses/create" element={<LazyRoute><CourseForm /></LazyRoute>} />
+            <Route path="/admin/courses/edit/:id" element={<LazyRoute><CourseForm /></LazyRoute>} />
+            <Route path="/admin/problems" element={<LazyRoute><AdminProblems /></LazyRoute>} />
+            <Route path="/admin/problems/create" element={<LazyRoute><ProblemForm /></LazyRoute>} />
+            <Route path="/admin/problems/edit/:problemId" element={<LazyRoute><ProblemForm /></LazyRoute>} />
+            <Route path="/admin/problems/import" element={<LazyRoute><AdminBulkImport /></LazyRoute>} />
+            <Route path="/admin/users" element={<LazyRoute><AdminUsers /></LazyRoute>} />
+            <Route path="/admin/analytics" element={<LazyRoute><AdminAnalytics /></LazyRoute>} />
+          </Route>
 
-        {/* Catch All */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Catch All */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
