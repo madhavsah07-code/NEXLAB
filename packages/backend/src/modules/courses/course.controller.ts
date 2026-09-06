@@ -1,9 +1,13 @@
+// packages/backend/src/modules/courses/course.controller.ts
+
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { Types } from 'mongoose';
 import { CourseService } from './course.service.js';
 import { User } from '../auth/auth.model.js';
 import { ImageKitService } from '../../services/imagekit.service.js';
+import { Course } from './course.model.js';
+import { redisClient } from '../../config/redis.js';
 
 // Import LeaderboardService dynamically to avoid circular dependencies
 const getLeaderboardService = async () => {
@@ -20,17 +24,22 @@ const getLeaderboardService = async () => {
 const createCourseSchema = z.object({
   title: z.string().min(3).max(100),
   description: z.string().min(10),
-  category: z.string(),
+  category: z.string().min(1),
   level: z.enum(['beginner', 'intermediate', 'advanced']),
   price: z.number().min(0).default(0),
   thumbnail: z.string().optional(),
+  coverImage: z.string().optional(),
+  isPublished: z.boolean().optional(),
   lessons: z.array(z.object({
-    title: z.string(),
+    _id: z.string().optional(),
+    title: z.string().min(1, 'Lesson title is required'),
     description: z.string().optional(),
-    videoUrl: z.string().url(),
+    videoUrl: z.string().url('Must be a valid URL'),
     duration: z.number().optional(),
     order: z.number(),
     isFree: z.boolean().default(false),
+    problemIds: z.array(z.string()).default([]),
+    quizId: z.string().nullable().optional(), // ✅ Allow null
   })),
 });
 
@@ -51,9 +60,23 @@ export class CourseController {
         thumbnailUrl = await ImageKitService.uploadImage(buffer, fileName, 'courses');
       }
 
+      // Handle cover image
+      let coverImageUrl = data.coverImage;
+      if (data.coverImage && data.coverImage.startsWith('data:image')) {
+        const base64Data = data.coverImage.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const fileName = `course-cover-${Date.now()}.jpg`;
+        coverImageUrl = await ImageKitService.uploadImage(buffer, fileName, 'courses');
+      }
+
       const course = await CourseService.createCourse({
         ...data,
+        lessons: data.lessons.map((lesson) => ({
+          ...lesson,
+          _id: lesson._id ? new Types.ObjectId(lesson._id) : undefined,
+        })),
         thumbnail: thumbnailUrl,
+        coverImage: coverImageUrl,
         instructor: new Types.ObjectId(req.userId),
       });
 
@@ -147,11 +170,23 @@ export class CourseController {
     }
   }
 
-  // ---------- Update Course ----------
+  // ---------- Update Course ---------- ✅ FIXED
   static async update(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const data = updateCourseSchema.parse(req.body);
+
+      console.log(`📝 Updating course ${id}`);
+      console.log('📦 Received data:', JSON.stringify(data, null, 2));
+
+      // Find the course first to verify it exists
+      const existingCourse = await Course.findById(id);
+      if (!existingCourse) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found',
+        });
+      }
 
       // If thumbnail is a base64 string, upload to ImageKit
       let thumbnailUrl = data.thumbnail;
@@ -162,25 +197,83 @@ export class CourseController {
         thumbnailUrl = await ImageKitService.uploadImage(buffer, fileName, 'courses');
       }
 
-      const course = await CourseService.updateCourse(id, {
-        ...data,
-        thumbnail: thumbnailUrl,
-      });
-      
-      if (!course) {
+      // Handle cover image
+      let coverImageUrl = data.coverImage;
+      if (data.coverImage && data.coverImage.startsWith('data:image')) {
+        const base64Data = data.coverImage.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const fileName = `course-cover-${Date.now()}.jpg`;
+        coverImageUrl = await ImageKitService.uploadImage(buffer, fileName, 'courses');
+      }
+
+      // Prepare update data - preserve existing values if not provided
+      const updateData: any = {
+        title: data.title || existingCourse.title,
+        description: data.description || existingCourse.description,
+        category: data.category || existingCourse.category,
+        level: data.level || existingCourse.level,
+        price: data.price !== undefined ? data.price : existingCourse.price,
+        thumbnail: thumbnailUrl || data.thumbnail || existingCourse.thumbnail,
+        coverImage: coverImageUrl || data.coverImage || existingCourse.coverImage,
+        isPublished: data.isPublished !== undefined ? data.isPublished : existingCourse.isPublished,
+      };
+
+      // Handle lessons - if provided, use them; otherwise keep existing
+      if (data.lessons) {
+        updateData.lessons = data.lessons.map((lesson: any) => ({
+          // Preserve existing _id if present
+          _id: lesson._id || new Types.ObjectId(),
+          title: lesson.title,
+          description: lesson.description || '',
+          videoUrl: lesson.videoUrl,
+          duration: lesson.duration || 0,
+          order: lesson.order,
+          isFree: lesson.isFree || false,
+          problemIds: lesson.problemIds || [],
+          quizId: lesson.quizId || null,
+        }));
+        console.log(`📚 Updating ${updateData.lessons.length} lessons`);
+      } else {
+        // Keep existing lessons
+        updateData.lessons = existingCourse.lessons;
+      }
+
+      console.log('📦 Final update data:', JSON.stringify(updateData, null, 2));
+
+      // ✅ Use findByIdAndUpdate with proper options
+      const updatedCourse = await Course.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { 
+          new: true,
+          runValidators: true,
+        }
+      ).populate('instructor', 'name email');
+
+      if (!updatedCourse) {
         return res.status(404).json({
           success: false,
-          message: 'Course not found',
+          message: 'Course not found after update',
         });
+      }
+
+      console.log(`✅ Course updated successfully: ${updatedCourse.title}`);
+      console.log(`📚 Lessons in updated course: ${updatedCourse.lessons?.length || 0}`);
+
+      // Clear cache
+      try {
+        await redisClient.del('courses:list');
+      } catch (cacheError) {
+        console.warn('⚠️ Cache clear failed:', cacheError);
       }
 
       res.status(200).json({
         success: true,
-        data: course,
+        data: updatedCourse,
         message: 'Course updated successfully',
       });
     } catch (error: any) {
-      console.error('Update course error:', error);
+      console.error('❌ Update course error:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({
           success: false,
@@ -440,7 +533,7 @@ export class CourseController {
         // Save user
         await user.save();
 
-        // ✅ Update Leaderboard - Wrap in try-catch to prevent errors
+        // Update Leaderboard
         try {
           const LeaderboardService = await getLeaderboardService();
           if (LeaderboardService) {
@@ -448,14 +541,13 @@ export class CourseController {
             console.log(`🏆 Leaderboard updated for user ${userId}`);
           }
         } catch (leaderboardError: any) {
-          // Leaderboard update failed - log but don't fail the request
           console.warn('⚠️ Leaderboard update failed (Redis may not be available):', leaderboardError.message);
         }
 
         console.log(`✅ User ${userId} completed lesson ${lessonId} in course ${courseId}`);
         console.log(`📊 XP: ${user.xp}, Level: ${user.level}`);
 
-        // Check for badges (optional achievement system)
+        // Check for badges
         try {
           await this.checkBadges(user);
         } catch (badgeError: any) {
@@ -535,3 +627,5 @@ export class CourseController {
     }
   }
 }
+
+export default CourseController;

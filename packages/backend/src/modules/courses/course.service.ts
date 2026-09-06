@@ -1,3 +1,5 @@
+// packages/backend/src/modules/courses/course.service.ts
+
 import { Types } from 'mongoose';
 import { Course, ICourse } from './course.model.js';
 import { redisClient } from '../../config/redis.js';
@@ -58,11 +60,86 @@ export class CourseService {
       .populate('enrolledStudents', 'name email');
   }
 
-  // Update course
+  // ✅ FIXED: Update course with proper handling of nested arrays
   static async updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null> {
-    const course = await Course.findByIdAndUpdate(id, data, { new: true, runValidators: true });
-    if (course) await this.clearCache();
-    return course;
+    try {
+      // Find the course first
+      const course = await Course.findById(id);
+      if (!course) {
+        console.error(`❌ Course with ID ${id} not found`);
+        return null;
+      }
+
+      console.log(`📝 Updating course: ${course.title} (${id})`);
+      console.log('📦 Update data:', JSON.stringify(data, null, 2));
+
+      // Handle lessons update properly
+      if (data.lessons) {
+        console.log(`📚 Updating ${data.lessons.length} lessons`);
+        
+        // Map lessons to ensure all fields are present
+        const updatedLessons = data.lessons.map((lesson, index) => ({
+          _id: lesson._id || new Types.ObjectId(),
+          title: lesson.title || `Lesson ${index + 1}`,
+          description: lesson.description || '',
+          videoUrl: lesson.videoUrl || '',
+          duration: lesson.duration || 0,
+          order: lesson.order || index + 1,
+          isFree: lesson.isFree || false,
+          problemIds: lesson.problemIds || [],
+        }));
+
+        // Use findOneAndUpdate with proper options
+        const updatedCourse = await Course.findByIdAndUpdate(
+          id,
+          { 
+            $set: {
+              title: data.title,
+              description: data.description,
+              category: data.category,
+              level: data.level,
+              price: data.price,
+              thumbnail: data.thumbnail,
+              coverImage: data.coverImage,
+              isPublished: data.isPublished,
+              lessons: updatedLessons,
+            }
+          },
+          { 
+            new: true,  // Return the updated document
+            runValidators: true,  // Run schema validators
+          }
+        ).populate('instructor', 'name email');
+
+        if (updatedCourse) {
+          console.log(`✅ Course updated successfully: ${updatedCourse.title}`);
+          console.log(`📚 Lessons count: ${updatedCourse.lessons?.length || 0}`);
+        }
+
+        await this.clearCache();
+        return updatedCourse;
+      }
+
+      // If no lessons update, just update other fields
+      const updatedCourse = await Course.findByIdAndUpdate(
+        id,
+        { $set: data },
+        { 
+          new: true,
+          runValidators: true,
+        }
+      ).populate('instructor', 'name email');
+
+      if (updatedCourse) {
+        console.log(`✅ Course updated successfully: ${updatedCourse.title}`);
+      }
+
+      await this.clearCache();
+      return updatedCourse;
+    } catch (error) {
+      console.error('❌ Error updating course:', error);
+      throw error;
+    }
   }
 
   // Delete course

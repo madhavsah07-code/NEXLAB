@@ -11,6 +11,8 @@ export interface ILesson {
   duration?: number;
   order: number;
   isFree?: boolean;
+  problemIds?: string[];
+  quizId?: string | null; // ✅ Allow null
 }
 
 // Main Course schema
@@ -20,7 +22,7 @@ export interface ICourse extends Document {
   slug: string;
   description: string;
   thumbnail?: string;
-  coverImage?: string; // ✅ Added cover image field
+  coverImage?: string;
   category: string;
   level: 'beginner' | 'intermediate' | 'advanced';
   lessons: ILesson[];
@@ -41,15 +43,17 @@ const LessonSchema = new Schema<ILesson>({
   duration: { type: Number, default: 0 },
   order: { type: Number, required: true },
   isFree: { type: Boolean, default: false },
+  problemIds: { type: [String], default: [] },
+  quizId: { type: String, default: null }, // ✅ Allow null
 }, { _id: true });
 
 const CourseSchema = new Schema<ICourse>(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, unique: true, lowercase: true },
+    slug: { type: String, unique: true, lowercase: true, sparse: true },
     description: { type: String, required: true },
-    thumbnail: { type: String }, // Square thumbnail for cards
-    coverImage: { type: String }, // ✅ 16:9 cover image for banners
+    thumbnail: { type: String },
+    coverImage: { type: String },
     category: { type: String, required: true },
     level: { 
       type: String, 
@@ -71,6 +75,24 @@ const CourseSchema = new Schema<ICourse>(
 CourseSchema.pre('save', function(next) {
   if (this.isModified('title') || !this.slug) {
     this.slug = this.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+  next();
+});
+
+// Add pre-findOneAndUpdate hook to handle slug updates
+CourseSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate() as any;
+  if (update.title && !update.slug) {
+    update.slug = update.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+  if (update.$set && update.$set.title) {
+    update.$set.slug = update.$set.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');

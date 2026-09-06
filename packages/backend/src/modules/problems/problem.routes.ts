@@ -8,6 +8,14 @@ import { isAdmin } from '../../shared/middleware/admin.middleware.js';
 
 const router = express.Router();
 
+// ---------- Search Routes ----------
+// Search problems (admin only)
+router.get('/search', authenticate, isAdmin, ProblemController.searchProblems);
+
+// ---------- Public Routes ----------
+// ✅ NEW: Get problem by ID (Public - for students)
+router.get('/public/:problemId', ProblemController.getProblemByIdPublic);
+
 // ---------- Import Routes (Admin Only) ----------
 router.get('/import/template', authenticate, isAdmin, ProblemImportController.getTemplate);
 router.post('/import/validate', authenticate, isAdmin, ProblemImportController.validateJSON);

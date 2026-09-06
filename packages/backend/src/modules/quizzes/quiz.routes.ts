@@ -1,3 +1,5 @@
+// packages/backend/src/modules/quizzes/quiz.routes.ts
+
 import express from 'express';
 import { QuizController } from './quiz.controller.js';
 import { authenticate } from '../../shared/middleware/auth.middleware.js';
@@ -17,6 +19,9 @@ router.get('/attempts', authenticate, QuizController.getAttempts);
 
 // Get quizzes by lesson
 router.get('/lesson/:lessonId', authenticate, QuizController.getQuizzesByLesson);
+
+// Get user quiz stats
+router.get('/:quizId/user-stats', authenticate, QuizController.getUserQuizStats);
 
 // ---------- Admin Routes ----------
 // Create quiz

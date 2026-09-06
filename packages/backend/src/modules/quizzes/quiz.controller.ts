@@ -1,3 +1,5 @@
+// packages/backend/src/modules/quizzes/quiz.controller.ts
+
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { Types } from 'mongoose';
@@ -15,9 +17,12 @@ const createQuizSchema = z.object({
     options: z.array(z.string()).min(2),
     correctAnswer: z.number().min(0),
     explanation: z.string().optional(),
+    points: z.number().min(1).default(1),
   })),
   passingScore: z.number().min(0).max(100).default(60),
   timeLimit: z.number().nullable().optional(),
+  maxAttempts: z.number().min(1).default(1),
+  order: z.number().default(0),
 });
 
 const submitQuizSchema = z.object({
@@ -44,6 +49,7 @@ export class QuizController {
         courseId: new Types.ObjectId(data.courseId),
         lessonId: new Types.ObjectId(data.lessonId),
         timeLimit: data.timeLimit ?? undefined,
+        createdBy: new Types.ObjectId(req.userId),
       });
 
       res.status(201).json({
@@ -86,6 +92,7 @@ export class QuizController {
       const data = isAdmin ? quiz : {
         ...quiz.toObject(),
         questions: quiz.questions.map((q: any) => ({
+          _id: q._id,
           question: q.question,
           options: q.options,
         })),
@@ -118,17 +125,27 @@ export class QuizController {
         });
       }
 
-      // Check if user already completed
-      const attempts = await QuizService.getAttempts(userId, quizId);
-      const completed = attempts.some(a => a.completedAt);
-
-      if (completed) {
+      // Get attempt stats
+      const stats = await QuizService.getUserAttemptStats(userId, quizId);
+      
+      if (stats.passed) {
         return res.status(400).json({
           success: false,
-          message: 'You have already completed this quiz',
-          data: { attempts },
+          message: 'You have already passed this quiz',
+          data: { stats },
         });
       }
+
+      if (stats.remainingAttempts <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No attempts remaining for this quiz',
+          data: { stats },
+        });
+      }
+
+      // Start or get existing attempt
+      const { attempt, remainingAttempts } = await QuizService.startQuiz(quizId, userId);
 
       // Return quiz without correct answers
       const quizData = {
@@ -142,10 +159,11 @@ export class QuizController {
         })),
         timeLimit: quiz.timeLimit,
         totalQuestions: quiz.questions.length,
+        passingScore: quiz.passingScore,
+        maxAttempts: quiz.maxAttempts,
+        attemptNumber: attempt.attemptNumber,
+        remainingAttempts,
       };
-
-      // Start or get existing attempt
-      const attempt = await QuizService.startQuiz(quizId, userId);
 
       res.status(200).json({
         success: true,
@@ -155,12 +173,13 @@ export class QuizController {
             _id: attempt._id,
             startedAt: attempt.startedAt,
           },
+          stats,
         },
       });
     } catch (error: any) {
       console.error('Get quiz for attempt error:', error);
       
-      if (error.message === 'You have already completed this quiz') {
+      if (error.message.includes('Maximum attempts')) {
         return res.status(400).json({
           success: false,
           message: error.message,
@@ -190,6 +209,8 @@ export class QuizController {
           score: result.score,
           passed: result.passed,
           feedback: result.feedback,
+          xpEarned: result.xpEarned,
+          remainingAttempts: result.remainingAttempts,
           attemptId: result.attempt._id,
         },
       });
@@ -203,10 +224,10 @@ export class QuizController {
         });
       }
 
-      if (error.message === 'Quiz already completed') {
+      if (error.message === 'No active quiz attempt found') {
         return res.status(400).json({
           success: false,
-          message: error.message,
+          message: 'No active quiz attempt. Please start the quiz first.',
         });
       }
 
@@ -280,6 +301,7 @@ export class QuizController {
         ...(courseId ? { courseId: new Types.ObjectId(courseId) } : {}),
         ...(lessonId ? { lessonId: new Types.ObjectId(lessonId) } : {}),
       });
+      
       if (!quiz) {
         return res.status(404).json({
           success: false,
@@ -362,22 +384,58 @@ export class QuizController {
     }
   }
 
-  // ---------- Get Quizzes by Lesson ----------
+  // ---------- Get Quizzes by Lesson ---------- ✅ FIXED
   static async getQuizzesByLesson(req: Request, res: Response) {
     try {
       const { lessonId } = req.params;
+      
+      // ✅ Validate that lessonId is a valid ObjectId
+      if (!Types.ObjectId.isValid(lessonId)) {
+        console.warn(`⚠️ Invalid lessonId format: ${lessonId}`);
+        return res.status(200).json({
+          success: true,
+          data: [],
+          message: 'Invalid lesson ID format',
+        });
+      }
+
       const quizzes = await QuizService.getQuizzesByLesson(lessonId);
 
       res.status(200).json({
         success: true,
-        data: quizzes,
+        data: quizzes || [],
       });
     } catch (error: any) {
       console.error('Get quizzes by lesson error:', error);
-      res.status(500).json({
-        success: false,
+      // ✅ Return empty array instead of 500 error
+      res.status(200).json({
+        success: true,
+        data: [],
         message: error.message || 'Failed to fetch quizzes',
       });
     }
   }
+
+  // ---------- Get User Quiz Stats ----------
+  static async getUserQuizStats(req: Request, res: Response) {
+    try {
+      const { quizId } = req.params;
+      const userId = req.userId;
+
+      const stats = await QuizService.getUserAttemptStats(userId, quizId);
+
+      res.status(200).json({
+        success: true,
+        data: stats,
+      });
+    } catch (error: any) {
+      console.error('Get user quiz stats error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch quiz stats',
+      });
+    }
+  }
 }
+
+export default QuizController;

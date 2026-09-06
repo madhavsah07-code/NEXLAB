@@ -5,17 +5,31 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, BookOpen, Hash, X, List, Code2, Zap } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { ImageUpload } from '../../components/ImageUpload';
+import { ProblemSearch } from '../../components/ProblemSearch';
+import { QuizManagement } from '../../components/QuizManagement';
+import toast from 'react-hot-toast';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
-// ✅ Setup Monaco only if used in this file
+// Setup Monaco
 const setupMonaco = () => {
   import('../../lib/monaco-config').then(({ setupMonaco }) => {
     setupMonaco();
   });
 };
+
+interface Problem {
+  _id: string;
+  problemNumber: number;
+  title: string;
+  slug: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  isPublished: boolean;
+}
 
 const courseSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
@@ -26,23 +40,23 @@ const courseSchema = z.object({
   thumbnail: z.string().optional(),
   coverImage: z.string().optional(),
   lessons: z.array(z.object({
+    _id: z.string().optional(),
     title: z.string().min(1, 'Lesson title is required'),
     description: z.string().optional(),
     videoUrl: z.string().url('Must be a valid URL'),
     duration: z.number().optional(),
     order: z.number(),
     isFree: z.boolean().default(false),
+    problemIds: z.array(z.string()).default([]),
+    quizId: z.string().optional(),
   })),
 });
 
 type CourseFormData = z.infer<typeof courseSchema>;
 
 export const CourseForm: React.FC = () => {
-  // ✅ Setup Monaco if needed - CourseForm doesn't use Monaco Editor
   useEffect(() => {
-    // Monaco Editor is not used in this form, so we don't need to set it up
-    // If Monaco is needed in the future, uncomment the line below:
-    // setupMonaco();
+    setupMonaco();
   }, []);
 
   const { id } = useParams();
@@ -51,8 +65,10 @@ export const CourseForm: React.FC = () => {
   const [fetching, setFetching] = useState(!!id);
   const [thumbnail, setThumbnail] = useState<string>('');
   const [coverImage, setCoverImage] = useState<string>('');
+  const [selectedProblems, setSelectedProblems] = useState<Record<number, Problem[]>>({});
+  const [quizCount, setQuizCount] = useState<Record<number, number>>({});
 
-  const { register, control, handleSubmit, formState: { errors }, reset, setValue } = useForm<CourseFormData>({
+  const { register, control, handleSubmit, formState: { errors }, reset, setValue, watch, getValues } = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: '',
@@ -62,7 +78,14 @@ export const CourseForm: React.FC = () => {
       price: 0,
       thumbnail: '',
       coverImage: '',
-      lessons: [{ title: '', videoUrl: '', order: 1, isFree: false }],
+      lessons: [{ 
+        title: '', 
+        videoUrl: '', 
+        order: 1, 
+        isFree: false, 
+        problemIds: [],
+        quizId: '' 
+      }],
     },
   });
 
@@ -78,8 +101,56 @@ export const CourseForm: React.FC = () => {
         try {
           const response = await api.get(`/courses/${id}`);
           const course = response.data.data;
+          console.log('📚 Fetched course:', course);
+          console.log('📚 Lessons:', course.lessons);
+          
           setThumbnail(course.thumbnail || '');
           setCoverImage(course.coverImage || '');
+          
+          const lessonData = course.lessons?.length ? course.lessons : [{ 
+            title: '', 
+            videoUrl: '', 
+            order: 1, 
+            isFree: false, 
+            problemIds: [],
+            quizId: '' 
+          }];
+          
+          // Load selected problems for each lesson
+          if (course.lessons) {
+            const problemsMap: Record<number, Problem[]> = {};
+            for (let i = 0; i < course.lessons.length; i++) {
+              const lesson = course.lessons[i];
+              // Load problems
+              if (lesson.problemIds && lesson.problemIds.length > 0) {
+                try {
+                  const problemDetails = await Promise.all(
+                    lesson.problemIds.map(async (problemId: string) => {
+                      const res = await api.get(`/problems/admin/${problemId}`);
+                      return res.data.data;
+                    })
+                  );
+                  problemsMap[i] = problemDetails;
+                } catch (error) {
+                  console.error('Error fetching problem details:', error);
+                }
+              }
+              
+              // Load quiz count
+              if (lesson.quizId) {
+                try {
+                  const quizRes = await api.get(`/quizzes/${lesson.quizId}`);
+                  if (quizRes.data.data) {
+                    setQuizCount(prev => ({ ...prev, [i]: 1 }));
+                  }
+                } catch (error) {
+                  console.error('Error fetching quiz:', error);
+                }
+              }
+            }
+            setSelectedProblems(problemsMap);
+          }
+          
           reset({
             title: course.title,
             description: course.description,
@@ -88,10 +159,11 @@ export const CourseForm: React.FC = () => {
             price: course.price,
             thumbnail: course.thumbnail || '',
             coverImage: course.coverImage || '',
-            lessons: course.lessons?.length ? course.lessons : [{ title: '', videoUrl: '', order: 1, isFree: false }],
+            lessons: lessonData,
           });
         } catch (error) {
           console.error('Error fetching course:', error);
+          toast.error('Failed to load course');
         } finally {
           setFetching(false);
         }
@@ -100,34 +172,146 @@ export const CourseForm: React.FC = () => {
     }
   }, [id, reset]);
 
-  const onSubmit = async (data: CourseFormData) => {
+  // ✅ DIRECT SAVE FUNCTION - Bypasses react-hook-form issues
+  const handleSave = async () => {
+    console.log('🚀 Save button clicked');
+    
+    // Get form data directly
+    const data = getValues();
+    console.log('📋 Form data:', data);
+    
+    // Validate required fields
+    if (!data.title || data.title.trim().length < 3) {
+      toast.error('Title must be at least 3 characters');
+      return;
+    }
+    
+    if (!data.description || data.description.trim().length < 10) {
+      toast.error('Description must be at least 10 characters');
+      return;
+    }
+    
+    if (!data.category || data.category.trim().length < 1) {
+      toast.error('Category is required');
+      return;
+    }
+    
+    // Validate lessons
+    for (let i = 0; i < data.lessons.length; i++) {
+      const lesson = data.lessons[i];
+      if (!lesson.title || lesson.title.trim().length < 1) {
+        toast.error(`Lesson ${i + 1}: Title is required`);
+        return;
+      }
+      if (!lesson.videoUrl || lesson.videoUrl.trim().length < 1) {
+        toast.error(`Lesson ${i + 1}: Video URL is required`);
+        return;
+      }
+    }
+    
     setLoading(true);
     try {
+      // ✅ Build course data
+      const lessonsWithData = data.lessons.map((lesson, index) => {
+        const lessonData: any = {
+          title: lesson.title,
+          description: lesson.description || '',
+          videoUrl: lesson.videoUrl,
+          duration: lesson.duration || 0,
+          order: lesson.order || index + 1,
+          isFree: lesson.isFree || false,
+          problemIds: selectedProblems[index]?.map(p => p._id) || [],
+          quizId: lesson.quizId || null,
+        };
+        
+        // Only include _id if it exists and is a string
+        if (lesson._id && typeof lesson._id === 'string') {
+          lessonData._id = lesson._id;
+        }
+        
+        return lessonData;
+      });
+
+      const courseData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        level: data.level,
+        price: data.price || 0,
+        thumbnail: data.thumbnail || '',
+        coverImage: data.coverImage || '',
+        lessons: lessonsWithData,
+      };
+
+      console.log('📦 Sending course data:', JSON.stringify(courseData, null, 2));
+
+      let response;
       if (id) {
-        await api.put(`/courses/${id}`, data);
+        console.log(`🔄 Updating course ${id}...`);
+        response = await api.put(`/courses/${id}`, courseData);
+        console.log('✅ Update response:', response.data);
+        toast.success('Course updated successfully!');
       } else {
-        await api.post('/courses', data);
+        console.log('🔄 Creating new course...');
+        response = await api.post('/courses', courseData);
+        console.log('✅ Create response:', response.data);
+        toast.success('Course created successfully!');
       }
-      navigate('/admin/courses');
+      
+      // Navigate after successful save
+      setTimeout(() => {
+        navigate('/admin/courses');
+      }, 1000);
     } catch (error: any) {
-      console.error('Error saving course:', error);
-      alert(error.response?.data?.message || 'Failed to save course. Please try again.');
+      console.error('❌ Error saving course:', error);
+      console.error('❌ Error response:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Failed to save course. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleAddProblem = (lessonIndex: number, problem: Problem) => {
+    setSelectedProblems(prev => {
+      const current = prev[lessonIndex] || [];
+      if (current.some(p => p._id === problem._id)) {
+        toast.error('Problem already added to this lesson');
+        return prev;
+      }
+      return {
+        ...prev,
+        [lessonIndex]: [...current, problem],
+      };
+    });
+    toast.success(`Added problem #${problem.problemNumber} to lesson`);
+  };
+
+  const handleRemoveProblem = (lessonIndex: number, problemId: string) => {
+    setSelectedProblems(prev => {
+      const current = prev[lessonIndex] || [];
+      return {
+        ...prev,
+        [lessonIndex]: current.filter(p => p._id !== problemId),
+      };
+    });
+    toast.success('Problem removed from lesson');
+  };
+
+  const getSelectedProblemIds = (lessonIndex: number) => {
+    return (selectedProblems[lessonIndex] || []).map(p => p._id);
+  };
+
+  const handleQuizCreated = (lessonIndex: number) => {
+    setQuizCount(prev => ({ ...prev, [lessonIndex]: (prev[lessonIndex] || 0) + 1 }));
+    toast.success('Quiz added to lesson!');
+  };
+
   if (fetching) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Loading course..." />;
   }
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1200px] mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/admin/courses')}
@@ -140,7 +324,7 @@ export const CourseForm: React.FC = () => {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6">
         {/* Basic Info */}
         <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
           <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Basic Information</h2>
@@ -225,7 +409,6 @@ export const CourseForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Thumbnail Upload */}
           <div className="mt-4">
             <ImageUpload
               value={thumbnail}
@@ -242,7 +425,6 @@ export const CourseForm: React.FC = () => {
             )}
           </div>
 
-          {/* Cover Image Upload */}
           <div className="mt-4">
             <ImageUpload
               value={coverImage}
@@ -275,7 +457,14 @@ export const CourseForm: React.FC = () => {
               type="button"
               variant="secondary"
               size="sm"
-              onClick={() => append({ title: '', videoUrl: '', order: fields.length + 1, isFree: false })}
+              onClick={() => append({ 
+                title: '', 
+                videoUrl: '', 
+                order: fields.length + 1, 
+                isFree: false, 
+                problemIds: [],
+                quizId: '' 
+              })}
               className="gap-1"
             >
               <Plus className="w-3 h-3" />
@@ -287,7 +476,13 @@ export const CourseForm: React.FC = () => {
             <div key={field.id} className="bg-[#0D0F0F] border border-[#2A302E] rounded-lg p-4 mb-4 relative">
               <button
                 type="button"
-                onClick={() => remove(index)}
+                onClick={() => {
+                  if (fields.length === 1) {
+                    toast.error('You need at least one lesson');
+                    return;
+                  }
+                  remove(index);
+                }}
                 className="absolute top-2 right-2 p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
@@ -303,6 +498,9 @@ export const CourseForm: React.FC = () => {
                     className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
                     placeholder="Lesson title"
                   />
+                  {errors.lessons?.[index]?.title && (
+                    <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.title?.message}</p>
+                  )}
                 </div>
 
                 <div>
@@ -314,6 +512,9 @@ export const CourseForm: React.FC = () => {
                     className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
                     placeholder="https://youtube.com/..."
                   />
+                  {errors.lessons?.[index]?.videoUrl && (
+                    <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.videoUrl?.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -340,6 +541,9 @@ export const CourseForm: React.FC = () => {
                     className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
                     placeholder="1"
                   />
+                  {errors.lessons?.[index]?.order && (
+                    <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.order?.message}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center mt-6">
@@ -353,6 +557,83 @@ export const CourseForm: React.FC = () => {
                   </label>
                 </div>
               </div>
+
+              {/* Coding Problems Section */}
+              <div className="mt-4 pt-4 border-t border-[#2A302E]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Code2 className="w-4 h-4 text-[#10B981]" />
+                  <h4 className="text-sm font-medium text-[#EDEFEE]">Coding Problems</h4>
+                  <span className="text-xs text-[#5C6360]">
+                    ({selectedProblems[index]?.length || 0} added)
+                  </span>
+                </div>
+
+                <ProblemSearch
+                  onAddProblem={(problem) => handleAddProblem(index, problem)}
+                  selectedProblemIds={getSelectedProblemIds(index)}
+                  placeholder="Search coding problems by name or ID..."
+                />
+
+                {(selectedProblems[index] || []).length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {selectedProblems[index]?.map((problem) => (
+                      <div
+                        key={problem._id}
+                        className="flex items-center justify-between p-3 bg-[#161A19] border border-[#2A302E] rounded-lg hover:border-[#10B981]/30 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-xs text-[#5C6360] font-mono flex-shrink-0">
+                            #{problem.problemNumber}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-[#EDEFEE] truncate">
+                              {problem.title}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className={`px-1.5 py-0.5 rounded-full border ${
+                                problem.difficulty === 'easy' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' :
+                                problem.difficulty === 'medium' ? 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30' :
+                                'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
+                              }`}>
+                                {problem.difficulty}
+                              </span>
+                              {problem.tags?.slice(0, 2).map((tag) => (
+                                <span key={tag} className="text-[#5C6360]">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveProblem(index, problem._id)}
+                          className="p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quiz Management Section */}
+              <div className="mt-4 pt-4 border-t border-[#2A302E]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-[#FBBF24]" />
+                  <h4 className="text-sm font-medium text-[#EDEFEE]">Quiz</h4>
+                  <span className="text-xs text-[#5C6360]">
+                    {quizCount[index] ? '✅ Added' : 'Not added'}
+                  </span>
+                </div>
+
+                <QuizManagement
+                  courseId={id || 'new'}
+                  lessonId={field.id || `lesson-${index}`}
+                  onQuizChange={() => handleQuizCreated(index)}
+                />
+              </div>
             </div>
           ))}
 
@@ -363,7 +644,7 @@ export const CourseForm: React.FC = () => {
           )}
         </div>
 
-        {/* Submit */}
+        {/* ✅ Submit - Using type="button" with onClick handler */}
         <div className="flex gap-4">
           <Button
             type="button"
@@ -373,11 +654,20 @@ export const CourseForm: React.FC = () => {
             Cancel
           </Button>
           <Button
-            type="submit"
+            type="button"
             variant="primary"
             disabled={loading}
+            className="gap-2"
+            onClick={handleSave}
           >
-            {loading ? 'Saving...' : id ? 'Update Course' : 'Create Course'}
+            {loading ? (
+              <>
+                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                Saving...
+              </>
+            ) : (
+              id ? 'Update Course' : 'Create Course'
+            )}
           </Button>
         </div>
       </form>
