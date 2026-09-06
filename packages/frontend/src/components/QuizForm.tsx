@@ -187,6 +187,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({
         correctAnswer: q.correctAnswer,
         points: q.points || 1,
       })),
+      // ✅ isPublished defaults to true on the backend
     });
   };
 
@@ -415,6 +416,8 @@ export const QuizForm: React.FC<QuizFormProps> = ({
             </div>
           )}
         </div>
+
+        {/* ✅ Removed isPublished toggle - now defaults to true on backend */}
 
         {/* Actions */}
         <div className="flex gap-4">

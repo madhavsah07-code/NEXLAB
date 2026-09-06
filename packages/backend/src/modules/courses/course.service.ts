@@ -60,7 +60,7 @@ export class CourseService {
       .populate('enrolledStudents', 'name email');
   }
 
-  // ✅ FIXED: Update course with proper handling of nested arrays
+  // ✅ FIXED: Update course with proper handling of nested arrays including quizIds
   static async updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null> {
     try {
       // Find the course first
@@ -71,37 +71,45 @@ export class CourseService {
       }
 
       console.log(`📝 Updating course: ${course.title} (${id})`);
-      console.log('📦 Update data:', JSON.stringify(data, null, 2));
+      console.log('📦 Update data received:', JSON.stringify(data, null, 2));
 
       // Handle lessons update properly
       if (data.lessons) {
         console.log(`📚 Updating ${data.lessons.length} lessons`);
         
-        // Map lessons to ensure all fields are present
-        const updatedLessons = data.lessons.map((lesson, index) => ({
-          _id: lesson._id || new Types.ObjectId(),
-          title: lesson.title || `Lesson ${index + 1}`,
-          description: lesson.description || '',
-          videoUrl: lesson.videoUrl || '',
-          duration: lesson.duration || 0,
-          order: lesson.order || index + 1,
-          isFree: lesson.isFree || false,
-          problemIds: lesson.problemIds || [],
-        }));
+        // Map lessons to ensure all fields are preserved including quizIds
+        const updatedLessons = data.lessons.map((lesson, index) => {
+          // Find existing lesson to preserve any fields not in update
+          const existingLesson = course.lessons?.find(
+            l => l._id?.toString() === lesson._id?.toString()
+          );
+          
+          return {
+            _id: lesson._id || new Types.ObjectId(),
+            title: lesson.title || `Lesson ${index + 1}`,
+            description: lesson.description || existingLesson?.description || '',
+            videoUrl: lesson.videoUrl || existingLesson?.videoUrl || '',
+            duration: lesson.duration || existingLesson?.duration || 0,
+            order: lesson.order || index + 1,
+            isFree: lesson.isFree !== undefined ? lesson.isFree : (existingLesson?.isFree || false),
+            problemIds: lesson.problemIds || existingLesson?.problemIds || [],
+            quizIds: lesson.quizIds || existingLesson?.quizIds || [], // ✅ CRITICAL: Preserve quizIds
+          };
+        });
 
-        // Use findOneAndUpdate with proper options
+        // Use findOneAndUpdate with $set
         const updatedCourse = await Course.findByIdAndUpdate(
           id,
           { 
             $set: {
-              title: data.title,
-              description: data.description,
-              category: data.category,
-              level: data.level,
-              price: data.price,
-              thumbnail: data.thumbnail,
-              coverImage: data.coverImage,
-              isPublished: data.isPublished,
+              title: data.title || course.title,
+              description: data.description || course.description,
+              category: data.category || course.category,
+              level: data.level || course.level,
+              price: data.price !== undefined ? data.price : course.price,
+              thumbnail: data.thumbnail !== undefined ? data.thumbnail : course.thumbnail,
+              coverImage: data.coverImage !== undefined ? data.coverImage : course.coverImage,
+              isPublished: data.isPublished !== undefined ? data.isPublished : course.isPublished,
               lessons: updatedLessons,
             }
           },
@@ -114,6 +122,11 @@ export class CourseService {
         if (updatedCourse) {
           console.log(`✅ Course updated successfully: ${updatedCourse.title}`);
           console.log(`📚 Lessons count: ${updatedCourse.lessons?.length || 0}`);
+          
+          // Log quizIds for each lesson to verify
+          updatedCourse.lessons?.forEach((lesson: any, index: number) => {
+            console.log(`📚 Lesson ${index + 1}: "${lesson.title}" - quizIds:`, lesson.quizIds || []);
+          });
         }
 
         await this.clearCache();

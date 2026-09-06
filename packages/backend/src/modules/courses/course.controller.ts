@@ -29,7 +29,6 @@ const createCourseSchema = z.object({
   price: z.number().min(0).default(0),
   thumbnail: z.string().optional(),
   coverImage: z.string().optional(),
-  isPublished: z.boolean().optional(),
   lessons: z.array(z.object({
     _id: z.string().optional(),
     title: z.string().min(1, 'Lesson title is required'),
@@ -39,7 +38,7 @@ const createCourseSchema = z.object({
     order: z.number(),
     isFree: z.boolean().default(false),
     problemIds: z.array(z.string()).default([]),
-    quizId: z.string().nullable().optional(), // ✅ Allow null
+    quizIds: z.array(z.string()).default([]), // ✅ Added quizIds
   })),
 });
 
@@ -215,11 +214,15 @@ export class CourseController {
         price: data.price !== undefined ? data.price : existingCourse.price,
         thumbnail: thumbnailUrl || data.thumbnail || existingCourse.thumbnail,
         coverImage: coverImageUrl || data.coverImage || existingCourse.coverImage,
-        isPublished: data.isPublished !== undefined ? data.isPublished : existingCourse.isPublished,
+        isPublished:
+          (data as any).isPublished !== undefined
+            ? (data as any).isPublished
+            : existingCourse.isPublished,
       };
 
       // Handle lessons - if provided, use them; otherwise keep existing
       if (data.lessons) {
+        // ✅ Ensure lessons have proper structure with quizIds
         updateData.lessons = data.lessons.map((lesson: any) => ({
           // Preserve existing _id if present
           _id: lesson._id || new Types.ObjectId(),
@@ -230,7 +233,7 @@ export class CourseController {
           order: lesson.order,
           isFree: lesson.isFree || false,
           problemIds: lesson.problemIds || [],
-          quizId: lesson.quizId || null,
+          quizIds: lesson.quizIds || [], // ✅ CRITICAL: Include quizIds
         }));
         console.log(`📚 Updating ${updateData.lessons.length} lessons`);
       } else {
@@ -259,6 +262,11 @@ export class CourseController {
 
       console.log(`✅ Course updated successfully: ${updatedCourse.title}`);
       console.log(`📚 Lessons in updated course: ${updatedCourse.lessons?.length || 0}`);
+      
+      // ✅ Log quizIds to verify
+      updatedCourse.lessons?.forEach((lesson: any, index: number) => {
+        console.log(`📚 Lesson ${index + 1}: "${lesson.title}" - quizIds:`, lesson.quizIds || []);
+      });
 
       // Clear cache
       try {

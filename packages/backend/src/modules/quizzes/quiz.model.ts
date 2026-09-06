@@ -13,7 +13,7 @@ export interface IQuestion {
 
 export interface IQuiz extends Document {
   _id: Types.ObjectId;
-  courseId: Types.ObjectId;
+  courseId: Types.ObjectId | null;
   lessonId: string;
   title: string;
   description?: string;
@@ -55,7 +55,12 @@ const QuestionSchema = new Schema<IQuestion>({
 
 const QuizSchema = new Schema<IQuiz>(
   {
-    courseId: { type: Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
+    courseId: { 
+      type: Schema.Types.ObjectId, 
+      ref: 'Course', 
+      required: false,
+      index: true 
+    },
     lessonId: { type: String, required: true, index: true },
     title: { type: String, required: true },
     description: { type: String },
@@ -63,7 +68,7 @@ const QuizSchema = new Schema<IQuiz>(
     passingScore: { type: Number, required: true, default: 60, min: 0, max: 100 },
     timeLimit: { type: Number, default: null },
     maxAttempts: { type: Number, default: 1, min: 1 },
-    isPublished: { type: Boolean, default: false },
+    isPublished: { type: Boolean, default: true }, // ✅ CHANGED: default to true
     order: { type: Number, default: 0 },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
@@ -85,7 +90,10 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
   { timestamps: true }
 );
 
+// Compound index for unique attempts
 QuizAttemptSchema.index({ quizId: 1, userId: 1, attemptNumber: 1 }, { unique: true });
+
+// Index for tracking attempts
 QuizAttemptSchema.index({ quizId: 1, userId: 1 });
 
 export const Quiz = mongoose.model<IQuiz>('Quiz', QuizSchema);

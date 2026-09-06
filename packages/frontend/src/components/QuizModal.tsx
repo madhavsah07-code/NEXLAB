@@ -14,6 +14,7 @@ interface Question {
   _id: string;
   question: string;
   options: string[];
+  correctAnswer?: number;
 }
 
 interface QuizData {
@@ -82,7 +83,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
   const [expandedExplanations, setExpandedExplanations] = useState<Record<number, boolean>>({});
   const [reviewQuestionIndex, setReviewQuestionIndex] = useState(0);
   
-  // ✅ New: Track if quiz is already completed
+  // Track if quiz is already completed
   const [isCompleted, setIsCompleted] = useState(false);
   const [completedResult, setCompletedResult] = useState<QuizResult | null>(null);
 
@@ -118,7 +119,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
   const fetchQuiz = async () => {
     setLoading(true);
     try {
-      // ✅ First, check if the quiz is already completed
+      // First, check if the quiz is already completed via attempts endpoint
       const attemptsResponse = await api.get('/quizzes/attempts', {
         params: { quizId }
       });
@@ -127,35 +128,37 @@ export const QuizModal: React.FC<QuizModalProps> = ({
       const completedAttempt = attempts.find((a: any) => a.completedAt && a.quizId === quizId);
       
       if (completedAttempt) {
-        // ✅ Quiz is already completed - show results
         console.log('✅ Quiz already completed, showing results');
         setIsCompleted(true);
         
-        // Fetch the quiz details to show in review mode
+        // Fetch quiz details for the UI (title, description, questions without correct answers)
         const quizResponse = await api.get(`/quizzes/public/${quizId}`);
         setQuiz(quizResponse.data.data);
         
-        // Fetch the attempt details to get the result
-        const resultResponse = await api.get(`/quizzes/attempt/${quizId}`);
-        const data = resultResponse.data.data;
+        // ✅ Build feedback from the completed attempt
+        // The attempt has answers array and we need to match with quiz questions
+        const quizQuestions = quizResponse.data.data.questions;
+        const userAnswers = completedAttempt.answers || [];
         
-        // Construct result from attempt data
-        const feedback = quizResponse.data.data.questions.map((q: any, index: number) => {
-          const userAnswerIndex = completedAttempt.answers?.[index] ?? -1;
-          const isCorrect = userAnswerIndex === q.correctAnswer;
+        // Build feedback array from attempt data
+        const feedback: FeedbackItem[] = quizQuestions.map((q: any, index: number) => {
+          const userAnswerIndex = userAnswers[index] ?? -1;
+          const correctAnswerIndex = q.correctAnswer ?? 0;
+          const isCorrect = userAnswerIndex === correctAnswerIndex;
+          
           return {
             question: q.question,
-            userAnswer: userAnswerIndex === -1 ? 'Not answered' : q.options[userAnswerIndex] || 'Invalid',
-            correctAnswer: q.options[q.correctAnswer],
-            isCorrect,
-            explanation: q.explanation,
+            userAnswer: userAnswerIndex === -1 ? 'Not answered' : (q.options[userAnswerIndex] || 'Invalid'),
+            correctAnswer: q.options[correctAnswerIndex] || '',
+            isCorrect: isCorrect,
+            explanation: q.explanation || '',
           };
         });
         
         setCompletedResult({
           score: completedAttempt.score || 0,
           passed: completedAttempt.passed || false,
-          feedback,
+          feedback: feedback,
           xpEarned: 0,
           remainingAttempts: 0,
         });
@@ -164,7 +167,6 @@ export const QuizModal: React.FC<QuizModalProps> = ({
         return;
       }
       
-      // ✅ Quiz not completed - start normally
       console.log('✅ Quiz not completed, starting fresh');
       const response = await api.get(`/quizzes/attempt/${quizId}`);
       const data = response.data.data;
@@ -172,7 +174,6 @@ export const QuizModal: React.FC<QuizModalProps> = ({
       setAttempt(data.attempt);
       setIsCompleted(false);
       
-      // Initialize answers
       const initialAnswers: Record<number, number> = {};
       data.quiz.questions.forEach((_: any, index: number) => {
         initialAnswers[index] = -1;
@@ -181,7 +182,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
     } catch (error: any) {
       console.error('Error fetching quiz:', error);
       
-      // ✅ If the error is "already passed", try to fetch the result
+      // If the error is "already passed/complete", handle it gracefully
       if (error.response?.data?.message?.includes('already passed') || 
           error.response?.data?.message?.includes('already completed')) {
         console.log('✅ Quiz already completed (caught from error), showing results');
@@ -192,7 +193,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
           const quizResponse = await api.get(`/quizzes/public/${quizId}`);
           setQuiz(quizResponse.data.data);
           
-          // Fetch attempts to get the result
+          // ✅ Fetch attempts to get the completed attempt data
           const attemptsResponse = await api.get('/quizzes/attempts', {
             params: { quizId }
           });
@@ -201,34 +202,52 @@ export const QuizModal: React.FC<QuizModalProps> = ({
           const completedAttempt = attempts.find((a: any) => a.completedAt);
           
           if (completedAttempt) {
-            const feedback = quizResponse.data.data.questions.map((q: any, index: number) => {
-              const userAnswerIndex = completedAttempt.answers?.[index] ?? -1;
-              const isCorrect = userAnswerIndex === q.correctAnswer;
+            const quizQuestions = quizResponse.data.data.questions;
+            const userAnswers = completedAttempt.answers || [];
+            
+            // Build feedback from attempt data
+            const feedback: FeedbackItem[] = quizQuestions.map((q: any, index: number) => {
+              const userAnswerIndex = userAnswers[index] ?? -1;
+              const correctAnswerIndex = q.correctAnswer ?? 0;
+              const isCorrect = userAnswerIndex === correctAnswerIndex;
+              
               return {
                 question: q.question,
-                userAnswer: userAnswerIndex === -1 ? 'Not answered' : q.options[userAnswerIndex] || 'Invalid',
-                correctAnswer: q.options[q.correctAnswer],
-                isCorrect,
-                explanation: q.explanation,
+                userAnswer: userAnswerIndex === -1 ? 'Not answered' : (q.options[userAnswerIndex] || 'Invalid'),
+                correctAnswer: q.options[correctAnswerIndex] || '',
+                isCorrect: isCorrect,
+                explanation: q.explanation || '',
               };
             });
             
             setCompletedResult({
               score: completedAttempt.score || 0,
               passed: completedAttempt.passed || false,
-              feedback,
+              feedback: feedback,
+              xpEarned: 0,
+              remainingAttempts: 0,
+            });
+            setShowResults(true);
+          } else {
+            // Fallback - no completed attempt found
+            setCompletedResult({
+              score: 0,
+              passed: false,
+              feedback: [],
               xpEarned: 0,
               remainingAttempts: 0,
             });
             setShowResults(true);
           }
+          setLoading(false);
+          return;
         } catch (error2) {
           console.error('Error fetching completed quiz:', error2);
           toast.error('Failed to load quiz results');
           onClose();
+          setLoading(false);
+          return;
         }
-        setLoading(false);
-        return;
       }
       
       toast.error(error.response?.data?.message || 'Failed to load quiz');
@@ -248,7 +267,6 @@ export const QuizModal: React.FC<QuizModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    // Check if all questions answered
     const allAnswered = Object.values(answers).every((ans) => ans !== -1);
     if (!allAnswered) {
       const unansweredCount = Object.values(answers).filter(a => a === -1).length;
@@ -271,7 +289,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
       if (data.passed) {
         toast.success(`🎉 Congratulations! You passed with ${data.score}%! +${data.xpEarned} XP`);
       } else {
-        toast.error(`📝 You scored ${data.score}%. Keep learning and try again!`);
+        toast(`📝 You scored ${data.score}%. Keep learning and try again!`);
       }
       
       onComplete?.(data.score, data.passed);
@@ -330,6 +348,28 @@ export const QuizModal: React.FC<QuizModalProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Helper to check if an option is the correct answer using feedback data
+  const isCorrectAnswer = (questionIndex: number, optionIndex: number): boolean => {
+    if (!isReviewMode) return false;
+    const displayResult = result || completedResult;
+    if (!displayResult || !displayResult.feedback) return false;
+    const feedback = displayResult.feedback[questionIndex];
+    if (!feedback) return false;
+    const option = quiz?.questions[questionIndex]?.options[optionIndex];
+    return feedback.correctAnswer === option;
+  };
+
+  // Helper to check if user selected this option using feedback data
+  const isSelectedOption = (questionIndex: number, optionIndex: number): boolean => {
+    if (!isReviewMode) return false;
+    const displayResult = result || completedResult;
+    if (!displayResult || !displayResult.feedback) return false;
+    const feedback = displayResult.feedback[questionIndex];
+    if (!feedback) return false;
+    const option = quiz?.questions[questionIndex]?.options[optionIndex];
+    return feedback.userAnswer === option;
+  };
+
   if (!isOpen) return null;
 
   if (loading) {
@@ -343,7 +383,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
     );
   }
 
-  // ✅ Show results with review option (using either result or completedResult)
+  // Show results with review option
   if (showResults && (result || completedResult)) {
     const displayResult = result || completedResult;
     if (!displayResult) return null;
@@ -397,24 +437,12 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                     {displayResult.feedback.filter(f => f.isCorrect).length}
                   </span> / {displayResult.feedback.length} correct
                 </div>
-                {!displayResult.passed && displayResult.remainingAttempts > 0 && (
-                  <div className="text-sm text-[#5C6360]">
-                    Attempts left: <span className="font-medium text-[#FBBF24]">{displayResult.remainingAttempts}</span>
-                  </div>
-                )}
-                {isCompleted && (
-                  <div className="text-sm text-[#5C6360]">
-                    <Lock className="w-3 h-3 inline mr-1" />
-                    Completed
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
           {/* Review Mode vs Summary */}
           {isReviewMode && quiz ? (
-            // Review Mode - Show questions with answers
             <div className="flex-1 overflow-y-auto p-6">
               {quiz.questions.length > 0 && reviewQuestionIndex < quiz.questions.length && (
                 <div className="space-y-4">
@@ -459,55 +487,46 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                       </p>
                     </div>
 
-                    {(() => {
-                      const feedback = displayResult.feedback[reviewQuestionIndex];
-
-                      return (
-                        <>
                     <div className="space-y-2">
                       {quiz.questions[reviewQuestionIndex].options.map((option, optionIndex) => {
-                        const isSelected = feedback?.userAnswer === option;
-                        const isCorrect = feedback?.isCorrect;
-                        const isCorrectAnswer = feedback?.correctAnswer === option;
+                        const isCorrect = isCorrectAnswer(reviewQuestionIndex, optionIndex);
+                        const isSelected = isSelectedOption(reviewQuestionIndex, optionIndex);
+                        
+                        let borderClass = 'border-[#2A302E]';
+                        let bgClass = '';
+                        let icon = null;
+
+                        if (isSelected && isCorrect) {
+                          borderClass = 'border-[#10B981]';
+                          bgClass = 'bg-[#10B981]/10';
+                          icon = <CheckCircle className="w-4 h-4 text-[#10B981] ml-auto" />;
+                        } else if (isSelected && !isCorrect) {
+                          borderClass = 'border-[#F87171]';
+                          bgClass = 'bg-[#F87171]/10';
+                          icon = <XCircle className="w-4 h-4 text-[#F87171] ml-auto" />;
+                        } else if (isCorrect && !isSelected) {
+                          borderClass = 'border-[#10B981]/50';
+                          bgClass = 'bg-[#10B981]/5';
+                          icon = <CheckCircle className="w-4 h-4 text-[#10B981] ml-auto" />;
+                        }
 
                         return (
                           <div
                             key={optionIndex}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all duration-200 ${
-                              isSelected && isCorrect
-                                ? 'border-[#10B981] bg-[#10B981]/10'
-                                : isSelected && !isCorrect
-                                ? 'border-[#F87171] bg-[#F87171]/10'
-                                : isCorrectAnswer && !isSelected
-                                ? 'border-[#10B981]/50 bg-[#10B981]/5'
-                                : 'border-[#2A302E]'
-                            }`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${borderClass} ${bgClass} transition-all duration-200`}
                           >
-                            <span className={`text-sm ${
-                              isSelected && isCorrect ? 'text-[#10B981]' :
-                              isSelected && !isCorrect ? 'text-[#F87171]' :
-                              isCorrectAnswer ? 'text-[#10B981]' :
-                              'text-[#5C6360]'
-                            }`}>
+                            <span className={`text-sm ${isCorrect ? 'text-[#10B981]' : isSelected ? 'text-[#F87171]' : 'text-[#5C6360]'}`}>
                               {String.fromCharCode(65 + optionIndex)}.
                             </span>
                             <span className="text-sm text-[#EDEFEE]">{option}</span>
-                            {isCorrectAnswer && !isSelected && (
-                              <CheckCircle className="w-4 h-4 text-[#10B981] ml-auto" />
-                            )}
-                            {isSelected && isCorrect && (
-                              <CheckCircle className="w-4 h-4 text-[#10B981] ml-auto" />
-                            )}
-                            {isSelected && !isCorrect && (
-                              <XCircle className="w-4 h-4 text-[#F87171] ml-auto" />
-                            )}
+                            {icon}
                           </div>
                         );
                       })}
                     </div>
 
                     {/* Explanation */}
-                    {feedback?.explanation && (
+                    {displayResult.feedback[reviewQuestionIndex]?.explanation && (
                       <div className="mt-4 p-4 bg-[#161A19] rounded-lg border border-[#2A302E]">
                         <button
                           onClick={() => toggleExplanation(reviewQuestionIndex)}
@@ -519,26 +538,27 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                             <ChevronDown className="w-4 h-4" />
                           )}
                           <span>Explanation</span>
-                          <span className="text-xs text-[#5C6360]">
-                            {feedback.isCorrect ? '✅ Correct' : '❌ Incorrect'}
+                          <span className={`text-xs ${
+                            displayResult.feedback[reviewQuestionIndex]?.isCorrect 
+                              ? 'text-[#10B981]' 
+                              : 'text-[#F87171]'
+                          }`}>
+                            {displayResult.feedback[reviewQuestionIndex]?.isCorrect ? '✅ Correct' : '❌ Incorrect'}
                           </span>
                         </button>
                         {expandedExplanations[reviewQuestionIndex] && (
                           <p className="mt-2 text-sm text-[#9CA3A0] leading-relaxed">
-                            {feedback.explanation}
+                            {displayResult.feedback[reviewQuestionIndex]?.explanation}
                           </p>
                         )}
                       </div>
                     )}
-                        </>
-                      );
-                    })()}
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            // Summary View - Show all results
+            // Summary View - Show all results using feedback data
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-3">
                 {displayResult.feedback.map((item, index) => (

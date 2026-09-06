@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Zap, Plus, Edit, Trash2, Eye, EyeOff, 
   ChevronRight, X, Clock, Award, Users,
-  BarChart3, RefreshCw
+  BarChart3, RefreshCw, CheckCircle, XCircle
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Button } from './ui/Button';
@@ -25,6 +25,7 @@ interface Quiz {
   order: number;
   createdAt: string;
   updatedAt: string;
+  courseId?: string | null;
 }
 
 interface QuizManagementProps {
@@ -48,6 +49,9 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
   const [loadingStats, setLoadingStats] = useState(false);
   const { confirm, ConfirmDialogComponent } = useConfirm();
 
+  // Check if this is a new course
+  const isNewCourse = courseId === 'new' || !courseId;
+
   useEffect(() => {
     fetchQuizzes();
   }, [lessonId]);
@@ -65,29 +69,129 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
     }
   };
 
+  // ✅ FIXED: Update the lesson with the quizId in the course's quizIds array
   const updateLessonWithQuizId = async (quizId: string) => {
+    // Skip if this is a new course
+    if (isNewCourse) {
+      console.log('📝 New course detected - skipping lesson update');
+      return;
+    }
+
     try {
+      console.log(`🔄 Attempting to add quiz ${quizId} to lesson ${lessonId}`);
+      
+      // First, get the current course data
       const courseResponse = await api.get(`/courses/${courseId}`);
       const course = courseResponse.data.data;
       
+      console.log('📚 Current course data:', {
+        courseId: course._id,
+        courseTitle: course.title,
+        totalLessons: course.lessons?.length || 0
+      });
+      
+      // Find the lesson and update its quizIds array
+      let lessonFound = false;
+      let updatedLessonRecord = null;
+      
       const updatedLessons = course.lessons.map((lesson: any) => {
-        if (lesson._id === lessonId || lesson.id === lessonId) {
-          return {
-            ...lesson,
-            quizId: quizId,
-          };
+        // Match by _id (string comparison)
+        const lessonIdStr = lesson._id?.toString();
+        const targetLessonId = lessonId.toString();
+        
+        console.log(`📚 Checking lesson: ${lesson.title} (${lessonIdStr}) against target: ${targetLessonId}`);
+        
+        if (lessonIdStr === targetLessonId || lesson._id === lessonId) {
+          lessonFound = true;
+          // Initialize quizIds array if it doesn't exist
+          const currentQuizIds = lesson.quizIds || [];
+          // Add the new quizId if it's not already in the array
+          if (!currentQuizIds.includes(quizId)) {
+            console.log(`✅ Adding quiz ${quizId} to lesson "${lesson.title}"`);
+            updatedLessonRecord = {
+              ...lesson,
+              quizIds: [...currentQuizIds, quizId],
+            };
+            return updatedLessonRecord;
+          } else {
+            console.log(`⚠️ Quiz ${quizId} already exists in lesson`);
+            updatedLessonRecord = lesson;
+            return lesson;
+          }
         }
         return lesson;
       });
       
-      await api.put(`/courses/${courseId}`, {
-        ...course,
-        lessons: updatedLessons,
-      });
+      if (!lessonFound) {
+        console.error(`❌ Lesson with ID ${lessonId} not found in course`);
+        console.log('📚 Available lessons:', course.lessons.map((l: any) => ({ 
+          id: l._id?.toString(), 
+          title: l.title 
+        })));
+        
+        // Try to find by id property instead of _id
+        const lessonByStringId = course.lessons.find((l: any) => l.id === lessonId);
+        if (lessonByStringId) {
+          console.log(`✅ Found lesson by string ID: ${lessonByStringId.title}`);
+          lessonFound = true;
+          const currentQuizIds = lessonByStringId.quizIds || [];
+          if (!currentQuizIds.includes(quizId)) {
+            const updatedLessonData = {
+              ...lessonByStringId,
+              quizIds: [...currentQuizIds, quizId],
+            };
+            // Update the lesson in the array
+            const index = course.lessons.indexOf(lessonByStringId);
+            updatedLessons[index] = updatedLessonData;
+          }
+        }
+      }
       
-      console.log(`✅ Updated lesson ${lessonId} with quizId ${quizId}`);
-    } catch (error) {
+      if (!lessonFound) {
+        console.error(`❌ Lesson with ID ${lessonId} not found in course after all attempts`);
+        addToast('Failed to link quiz to lesson - lesson not found', 'error');
+        return;
+      }
+      
+      // ✅ IMPORTANT: Make sure we include all course data
+      const updateData = {
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        level: course.level,
+        price: course.price,
+        thumbnail: course.thumbnail || '',
+        coverImage: course.coverImage || '',
+        isPublished: course.isPublished,
+        lessons: updatedLessons,
+      };
+      
+      console.log('📤 Updating course with new quizId:', JSON.stringify(updateData, null, 2));
+      
+      // Update the course
+      const response = await api.put(`/courses/${courseId}`, updateData);
+      console.log('✅ Course updated successfully:', response.data);
+      
+      // Verify the quiz was added
+      const updatedCourse = response.data.data;
+      const updatedLesson = updatedCourse.lessons.find((l: any) => 
+        l._id?.toString() === lessonId.toString() || l._id === lessonId || l.id === lessonId
+      );
+      
+      if (updatedLesson) {
+        console.log(`✅ Verified: Lesson "${updatedLesson.title}" now has quizIds:`, updatedLesson.quizIds || []);
+        if (updatedLesson.quizIds?.includes(quizId)) {
+          console.log(`✅ Quiz ${quizId} successfully linked to lesson!`);
+          addToast('Quiz linked to lesson successfully!', 'success');
+        } else {
+          console.warn(`⚠️ Quiz ${quizId} was not found in lesson's quizIds after update`);
+          addToast('Quiz created but may not be linked to lesson. Please check.', 'warning');
+        }
+      }
+    } catch (error: any) {
       console.error('❌ Error updating lesson with quizId:', error);
+      console.error('❌ Error response:', error.response?.data);
+      addToast(error.response?.data?.message || 'Failed to link quiz to lesson', 'error');
       throw error;
     }
   };
@@ -95,23 +199,35 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
   const handleCreateQuiz = async (data: any) => {
     setSubmitting(true);
     try {
+      // Remove isPublished from the data to let backend handle it
+      const { isPublished, ...quizData } = data;
+      
       console.log('📤 Creating quiz with data:', {
-        ...data,
+        ...quizData,
         courseId,
         lessonId,
       });
 
+      // ✅ Create the quiz first
       const response = await api.post('/quizzes', {
-        ...data,
-        courseId,
+        ...quizData,
+        isPublished: true,
+        courseId: isNewCourse ? null : courseId,
         lessonId,
-        isPublished: false,
       });
       
       console.log('✅ Quiz created:', response.data);
       const quizId = response.data.data._id;
       
-      await updateLessonWithQuizId(quizId);
+      // ✅ CRITICAL: Update the lesson with the quizId
+      if (!isNewCourse) {
+        console.log(`📝 Attempting to add quiz ${quizId} to lesson ${lessonId}`);
+        await updateLessonWithQuizId(quizId);
+        console.log(`✅ Successfully added quiz ${quizId} to lesson`);
+      } else {
+        console.log('📝 New course - quiz will be linked when course is saved');
+        addToast('Quiz created! Please save the course to link this quiz.', 'info');
+      }
       
       addToast('Quiz created successfully!', 'success');
       setShowForm(false);
@@ -176,8 +292,23 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
   const handleTogglePublish = async (quizId: string, currentStatus: boolean) => {
     try {
       const response = await api.patch(`/quizzes/${quizId}/publish`);
-      addToast(`Quiz ${response.data.data.isPublished ? 'published' : 'unpublished'} successfully`, 'success');
-      await fetchQuizzes();
+      const updatedQuiz = response.data.data;
+      
+      // Update the quiz in the local state immediately
+      setQuizzes(prevQuizzes => 
+        prevQuizzes.map(quiz => 
+          quiz._id === quizId 
+            ? { ...quiz, isPublished: updatedQuiz.isPublished }
+            : quiz
+        )
+      );
+      
+      const newStatus = updatedQuiz.isPublished;
+      addToast(`Quiz ${newStatus ? 'published' : 'unpublished'} successfully`, 'success');
+      
+      if (onQuizChange) {
+        onQuizChange(quizId);
+      }
     } catch (error: any) {
       console.error('Error toggling publish:', error);
       addToast(error.response?.data?.message || 'Failed to update quiz status', 'error');
@@ -211,9 +342,9 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
     setShowForm(true);
   };
 
-  const handleCloseForm = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleCloseForm = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     setShowForm(false);
     setEditingQuiz(null);
   };
@@ -236,6 +367,11 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
             <Zap className="w-5 h-5 text-[#10B981]" />
             <h4 className="text-sm font-semibold text-[#EDEFEE]">Quizzes</h4>
             <span className="text-xs text-[#5C6360]">({quizzes.length})</span>
+            {isNewCourse && (
+              <span className="text-xs text-[#FBBF24] bg-[#FBBF24]/10 px-2 py-0.5 rounded-full">
+                New Course
+              </span>
+            )}
           </div>
           <Button
             variant="primary"
@@ -258,131 +394,151 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {quizzes.map((quiz) => (
-              <div
-                key={quiz._id}
-                className="bg-[#0D0F0F] border border-[#2A302E] rounded-lg p-3 hover:border-[#10B981]/30 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-[#EDEFEE] truncate">
-                        {quiz.title}
-                      </span>
-                      {quiz.isPublished ? (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 flex-shrink-0">
-                          Published
+            {quizzes.map((quiz) => {
+              const isLinked = !isNewCourse && quiz.courseId !== null;
+              
+              return (
+                <div
+                  key={quiz._id}
+                  className="bg-[#0D0F0F] border border-[#2A302E] rounded-lg p-3 hover:border-[#10B981]/30 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-[#EDEFEE] truncate">
+                          {quiz.title}
                         </span>
-                      ) : (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#FBBF24]/20 text-[#FBBF24] border border-[#FBBF24]/30 flex-shrink-0">
-                          Draft
-                        </span>
-                      )}
+                        {quiz.isPublished ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1 flex-shrink-0">
+                            <Eye className="w-3 h-3" />
+                            Published
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#FBBF24]/20 text-[#FBBF24] border border-[#FBBF24]/30 flex items-center gap-1 flex-shrink-0">
+                            <EyeOff className="w-3 h-3" />
+                            Draft
+                          </span>
+                        )}
+                        {!isLinked && !isNewCourse && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#60A5FA]/20 text-[#60A5FA] border border-[#60A5FA]/30 flex-shrink-0">
+                            Not Linked
+                          </span>
+                        )}
+                        {isNewCourse && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#60A5FA]/20 text-[#60A5FA] border border-[#60A5FA]/30 flex-shrink-0">
+                            Pending Save
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-[#5C6360] mt-0.5">
+                        <span>{quiz.questions.length} questions</span>
+                        <span>•</span>
+                        <span>Pass: {quiz.passingScore}%</span>
+                        {quiz.timeLimit && (
+                          <>
+                            <span>•</span>
+                            <span>{quiz.timeLimit} min</span>
+                          </>
+                        )}
+                        <span>•</span>
+                        <span>{quiz.maxAttempts} attempt{quiz.maxAttempts > 1 ? 's' : ''}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-[#5C6360] mt-0.5">
-                      <span>{quiz.questions.length} questions</span>
-                      <span>•</span>
-                      <span>Pass: {quiz.passingScore}%</span>
-                      {quiz.timeLimit && (
-                        <>
-                          <span>•</span>
-                          <span>{quiz.timeLimit} min</span>
-                        </>
-                      )}
-                      <span>•</span>
-                      <span>{quiz.maxAttempts} attempt{quiz.maxAttempts > 1 ? 's' : ''}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleTogglePublish(quiz._id, quiz.isPublished);
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          quiz.isPublished 
+                            ? 'text-[#10B981] hover:bg-[#10B981]/10' 
+                            : 'text-[#5C6360] hover:text-[#EDEFEE] hover:bg-[#1E2322]'
+                        }`}
+                        title={quiz.isPublished ? 'Unpublish' : 'Publish'}
+                      >
+                        {quiz.isPublished ? (
+                          <Eye className="w-4 h-4" />
+                        ) : (
+                          <EyeOff className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleViewStats(quiz._id);
+                        }}
+                        className="p-1.5 text-[#5C6360] hover:text-[#60A5FA] hover:bg-[#60A5FA]/10 rounded-lg transition-colors"
+                        title="View Statistics"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setEditingQuiz(quiz);
+                          setShowForm(true);
+                        }}
+                        className="p-1.5 text-[#5C6360] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteQuiz(quiz._id, quiz.title);
+                        }}
+                        className="p-1.5 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleViewStats(quiz._id);
-                      }}
-                      className="p-1.5 text-[#5C6360] hover:text-[#60A5FA] hover:bg-[#60A5FA]/10 rounded-lg transition-colors"
-                      title="View Statistics"
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleTogglePublish(quiz._id, quiz.isPublished);
-                      }}
-                      className="p-1.5 text-[#5C6360] hover:text-[#10B981] hover:bg-[#10B981]/10 rounded-lg transition-colors"
-                      title={quiz.isPublished ? 'Unpublish' : 'Publish'}
-                    >
-                      {quiz.isPublished ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setEditingQuiz(quiz);
-                        setShowForm(true);
-                      }}
-                      className="p-1.5 text-[#5C6360] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
-                      title="Edit"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleDeleteQuiz(quiz._id, quiz.title);
-                      }}
-                      className="p-1.5 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
 
-                {/* Stats Panel */}
-                {showStats === quiz._id && (
-                  <div className="mt-3 pt-3 border-t border-[#2A302E]">
-                    {loadingStats ? (
-                      <div className="flex items-center justify-center py-4">
-                        <LoadingSpinner size="sm" />
-                      </div>
-                    ) : stats ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#EDEFEE]">{stats.totalAttempts || 0}</p>
-                          <p className="text-xs text-[#5C6360]">Total Attempts</p>
+                  {/* Stats Panel */}
+                  {showStats === quiz._id && (
+                    <div className="mt-3 pt-3 border-t border-[#2A302E]">
+                      {loadingStats ? (
+                        <div className="flex items-center justify-center py-4">
+                          <LoadingSpinner size="sm" />
                         </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#10B981]">{stats.passRate || 0}%</p>
-                          <p className="text-xs text-[#5C6360]">Pass Rate</p>
+                      ) : stats ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#EDEFEE]">{stats.totalAttempts || 0}</p>
+                            <p className="text-xs text-[#5C6360]">Total Attempts</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#10B981]">{stats.passRate || 0}%</p>
+                            <p className="text-xs text-[#5C6360]">Pass Rate</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#60A5FA]">{stats.averageScore || 0}%</p>
+                            <p className="text-xs text-[#5C6360]">Avg Score</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#FBBF24]">{stats.passedAttempts || 0}</p>
+                            <p className="text-xs text-[#5C6360]">Passed</p>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#60A5FA]">{stats.averageScore || 0}%</p>
-                          <p className="text-xs text-[#5C6360]">Avg Score</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#FBBF24]">{stats.passedAttempts || 0}</p>
-                          <p className="text-xs text-[#5C6360]">Passed</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-[#5C6360] text-center">No attempts yet</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      ) : (
+                        <p className="text-sm text-[#5C6360] text-center">No attempts yet</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -417,7 +573,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
               <QuizForm
                 initialData={editingQuiz || undefined}
                 onSubmit={editingQuiz ? handleUpdateQuiz : handleCreateQuiz}
-                onCancel={() => handleCloseForm({} as React.MouseEvent)}
+                onCancel={handleCloseForm}
                 loading={submitting}
               />
             </div>

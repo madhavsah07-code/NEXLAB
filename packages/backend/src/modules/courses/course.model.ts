@@ -12,7 +12,7 @@ export interface ILesson {
   order: number;
   isFree?: boolean;
   problemIds?: string[];
-  quizIds?: string[]; // ✅ Changed to array for multiple quizzes
+  quizIds?: string[]; // ✅ Array of quiz IDs
 }
 
 // Main Course schema
@@ -44,7 +44,7 @@ const LessonSchema = new Schema<ILesson>({
   order: { type: Number, required: true },
   isFree: { type: Boolean, default: false },
   problemIds: { type: [String], default: [] },
-  quizIds: { type: [String], default: [] }, // ✅ Array of quiz IDs
+  quizIds: { type: [String], default: [] }, // ✅ Added for multiple quizzes
 }, { _id: true });
 
 const CourseSchema = new Schema<ICourse>(
@@ -82,6 +82,7 @@ CourseSchema.pre('save', function(next) {
   next();
 });
 
+// Auto-generate slug for findOneAndUpdate
 CourseSchema.pre('findOneAndUpdate', function(next) {
   const update = this.getUpdate() as any;
   if (update.title && !update.slug) {

@@ -8,7 +8,7 @@ import { Course } from '../courses/course.model.js';
 
 // Validation schemas
 const createQuizSchema = z.object({
-  courseId: z.string(),
+  courseId: z.string().nullable().optional(),
   lessonId: z.string(),
   title: z.string().min(3).max(100),
   description: z.string().optional(),
@@ -23,7 +23,7 @@ const createQuizSchema = z.object({
   timeLimit: z.number().nullable().optional(),
   maxAttempts: z.number().min(1).default(1),
   order: z.number().default(0),
-  isPublished: z.boolean().optional().default(false),
+  isPublished: z.boolean().optional().default(true),
 });
 
 const submitQuizSchema = z.object({
@@ -38,27 +38,41 @@ export class QuizController {
 
       console.log('📝 Creating quiz with data:', JSON.stringify(data, null, 2));
 
-      const course = await Course.findById(data.courseId);
-      if (!course) {
-        console.error(`❌ Course not found: ${data.courseId}`);
-        return res.status(404).json({
-          success: false,
-          message: 'Course not found',
-        });
-      }
+      // Handle new course (temp_course_id) or null courseId
+      const isNewCourse = data.courseId === 'temp_course_id' || data.courseId === null || data.courseId === undefined;
 
-      const lessonExists = course.lessons?.some(
-        (lesson: any) => lesson._id?.toString() === data.lessonId
-      );
+      let courseId = null;
       
-      if (!lessonExists) {
-        console.error(`❌ Lesson not found in course: ${data.lessonId}`);
-        return res.status(404).json({
-          success: false,
-          message: 'Lesson not found in this course',
-        });
+      if (!isNewCourse && data.courseId) {
+        // Validate course exists
+        const course = await Course.findById(data.courseId);
+        if (!course) {
+          console.error(`❌ Course not found: ${data.courseId}`);
+          return res.status(404).json({
+            success: false,
+            message: 'Course not found',
+          });
+        }
+
+        // Check if lesson exists in the course
+        const lessonExists = course.lessons?.some(
+          (lesson: any) => lesson._id?.toString() === data.lessonId
+        );
+        
+        if (!lessonExists) {
+          console.error(`❌ Lesson not found in course: ${data.lessonId}`);
+          return res.status(404).json({
+            success: false,
+            message: 'Lesson not found in this course',
+          });
+        }
+        
+        courseId = new Types.ObjectId(data.courseId);
+      } else {
+        console.log('📝 New course detected - skipping course validation');
       }
 
+      // Ensure userId exists
       if (!req.userId) {
         console.error('❌ User ID not found in request');
         return res.status(401).json({
@@ -67,13 +81,19 @@ export class QuizController {
         });
       }
 
+      // Prepare quiz data
       const quizData = {
-        ...data,
-        courseId: new Types.ObjectId(data.courseId),
+        title: data.title,
+        description: data.description || '',
+        courseId: courseId,
         lessonId: data.lessonId,
+        questions: data.questions,
+        passingScore: data.passingScore,
         timeLimit: data.timeLimit ?? undefined,
+        maxAttempts: data.maxAttempts || 1,
+        order: data.order || 0,
+        isPublished: data.isPublished !== undefined ? data.isPublished : true,
         createdBy: new Types.ObjectId(req.userId),
-        isPublished: data.isPublished || false,
       };
 
       console.log('📦 Quiz data to save:', JSON.stringify(quizData, null, 2));
@@ -82,7 +102,7 @@ export class QuizController {
 
       res.status(201).json({
         success: true,
-        message: 'Quiz created successfully',
+        message: isNewCourse ? 'Quiz created successfully! Please save the course to link this quiz.' : 'Quiz created successfully',
         data: quiz,
       });
     } catch (error: any) {
@@ -139,6 +159,7 @@ export class QuizController {
 
       console.log(`✅ Quiz found: ${quiz.title}, isPublished: ${quiz.isPublished}`);
 
+      // Return quiz without correct answers for students
       const quizData = {
         _id: quiz._id,
         title: quiz.title,
@@ -206,7 +227,7 @@ export class QuizController {
     }
   }
 
-  // ---------- Get Quiz for Attempt ---------- ✅ FIXED - Removed isPublished check
+  // ---------- Get Quiz for Attempt ----------
   static async getQuizForAttempt(req: Request, res: Response) {
     try {
       const { quizId } = req.params;
@@ -224,8 +245,6 @@ export class QuizController {
       }
 
       console.log(`✅ Quiz found: ${quiz.title}, isPublished: ${quiz.isPublished}`);
-
-      // ✅ isPublished check removed - quiz is now published
 
       const stats = await QuizService.getUserAttemptStats(userId, quizId);
       console.log(`📊 User stats:`, stats);
@@ -421,10 +440,17 @@ export class QuizController {
       const data = createQuizSchema.partial().parse(req.body);
 
       const { courseId, lessonId, timeLimit, ...quizData } = data;
+      
+      // Handle courseId update
+      let courseObjectId = undefined;
+      if (courseId && courseId !== 'temp_course_id') {
+        courseObjectId = new Types.ObjectId(courseId);
+      }
+      
       const quiz = await QuizService.updateQuiz(quizId, {
         ...quizData,
         ...(timeLimit !== undefined && timeLimit !== null ? { timeLimit } : {}),
-        ...(courseId ? { courseId: new Types.ObjectId(courseId) } : {}),
+        ...(courseObjectId !== undefined ? { courseId: courseObjectId } : {}),
         ...(lessonId ? { lessonId: lessonId } : {}),
       });
       
