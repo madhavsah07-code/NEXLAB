@@ -49,7 +49,7 @@ const courseSchema = z.object({
     order: z.number(),
     isFree: z.boolean().default(false),
     problemIds: z.array(z.string()).default([]),
-    quizId: z.string().optional(),
+    quizIds: z.array(z.string()).default([]), // ✅ Array of quiz IDs
   })),
 });
 
@@ -80,13 +80,13 @@ export const CourseForm: React.FC = () => {
       price: 0,
       thumbnail: '',
       coverImage: '',
-      lessons: [{ 
-        title: '', 
-        videoUrl: '', 
-        order: 1, 
-        isFree: false, 
+      lessons: [{
+        title: '',
+        videoUrl: '',
+        order: 1,
+        isFree: false,
         problemIds: [],
-        quizId: '' 
+        quizIds: []
       }],
     },
   });
@@ -105,19 +105,19 @@ export const CourseForm: React.FC = () => {
           const course = response.data.data;
           console.log('📚 Fetched course:', course);
           console.log('📚 Lessons:', course.lessons);
-          
+
           setThumbnail(course.thumbnail || '');
           setCoverImage(course.coverImage || '');
-          
-          const lessonData = course.lessons?.length ? course.lessons : [{ 
-            title: '', 
-            videoUrl: '', 
-            order: 1, 
-            isFree: false, 
+
+          const lessonData = course.lessons?.length ? course.lessons : [{
+            title: '',
+            videoUrl: '',
+            order: 1,
+            isFree: false,
             problemIds: [],
-            quizId: '' 
+            quizId: ''
           }];
-          
+
           // Load selected problems for each lesson
           if (course.lessons) {
             const problemsMap: Record<number, Problem[]> = {};
@@ -137,7 +137,7 @@ export const CourseForm: React.FC = () => {
                   console.error('Error fetching problem details:', error);
                 }
               }
-              
+
               // Load quiz count
               if (lesson.quizId) {
                 try {
@@ -152,7 +152,7 @@ export const CourseForm: React.FC = () => {
             }
             setSelectedProblems(problemsMap);
           }
-          
+
           reset({
             title: course.title,
             description: course.description,
@@ -195,11 +195,11 @@ export const CourseForm: React.FC = () => {
       const newSelectedProblems = { ...selectedProblems };
       delete newSelectedProblems[index];
       setSelectedProblems(newSelectedProblems);
-      
+
       const newQuizCount = { ...quizCount };
       delete newQuizCount[index];
       setQuizCount(newQuizCount);
-      
+
       addToast('Lesson removed successfully', 'success');
     }
   };
@@ -207,27 +207,27 @@ export const CourseForm: React.FC = () => {
   // DIRECT SAVE FUNCTION
   const handleSave = async () => {
     console.log('🚀 Save button clicked');
-    
+
     // Get form data directly
     const data = getValues();
     console.log('📋 Form data:', data);
-    
+
     // Validate required fields
     if (!data.title || data.title.trim().length < 3) {
       addToast('Title must be at least 3 characters', 'error');
       return;
     }
-    
+
     if (!data.description || data.description.trim().length < 10) {
       addToast('Description must be at least 10 characters', 'error');
       return;
     }
-    
+
     if (!data.category || data.category.trim().length < 1) {
       addToast('Category is required', 'error');
       return;
     }
-    
+
     // Validate lessons
     for (let i = 0; i < data.lessons.length; i++) {
       const lesson = data.lessons[i];
@@ -240,7 +240,7 @@ export const CourseForm: React.FC = () => {
         return;
       }
     }
-    
+
     setLoading(true);
     try {
       // Build course data
@@ -253,14 +253,14 @@ export const CourseForm: React.FC = () => {
           order: lesson.order || index + 1,
           isFree: lesson.isFree || false,
           problemIds: selectedProblems[index]?.map(p => p._id) || [],
-          quizId: lesson.quizId || null,
+          quizIds: lesson.quizIds || [],
         };
-        
+
         // Only include _id if it exists and is a string
         if (lesson._id && typeof lesson._id === 'string') {
           lessonData._id = lesson._id;
         }
-        
+
         return lessonData;
       });
 
@@ -289,7 +289,7 @@ export const CourseForm: React.FC = () => {
         console.log('✅ Create response:', response.data);
         addToast('Course created successfully!', 'success');
       }
-      
+
       // Navigate after successful save
       setTimeout(() => {
         navigate('/admin/courses');
@@ -345,14 +345,17 @@ export const CourseForm: React.FC = () => {
 
   const handleQuizCreated = (lessonIndex: number, quizId?: string) => {
     setQuizCount(prev => ({ ...prev, [lessonIndex]: (prev[lessonIndex] || 0) + 1 }));
-    
+
     if (quizId) {
       const currentLessons = getValues('lessons');
       if (currentLessons && currentLessons[lessonIndex]) {
-        setValue(`lessons.${lessonIndex}.quizId`, quizId);
+        const quizIds = currentLessons[lessonIndex].quizIds || [];
+        if (!quizIds.includes(quizId)) {
+          setValue(`lessons.${lessonIndex}.quizIds`, [...quizIds, quizId]);
+        }
       }
     }
-    
+
     addToast('Quiz added to lesson!', 'success');
   };
 
@@ -380,7 +383,7 @@ export const CourseForm: React.FC = () => {
           {/* Basic Info - Same as before */}
           <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
             <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Basic Information</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
@@ -495,7 +498,7 @@ export const CourseForm: React.FC = () => {
 
             <div className="mt-4 p-4 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
               <p className="text-xs text-[#5C6360]">
-                💡 <strong>Pro Tip:</strong> Upload a cover image (16:9 ratio) for the course banner and a thumbnail (square) for course cards. 
+                💡 <strong>Pro Tip:</strong> Upload a cover image (16:9 ratio) for the course banner and a thumbnail (square) for course cards.
                 Images will be automatically uploaded to ImageKit CDN.
               </p>
             </div>
@@ -509,13 +512,13 @@ export const CourseForm: React.FC = () => {
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => append({ 
-                  title: '', 
-                  videoUrl: '', 
-                  order: fields.length + 1, 
-                  isFree: false, 
+                onClick={() => append({
+                  title: '',
+                  videoUrl: '',
+                  order: fields.length + 1,
+                  isFree: false,
                   problemIds: [],
-                  quizId: '' 
+                  quizIds: []
                 })}
                 className="gap-1"
               >
@@ -636,11 +639,10 @@ export const CourseForm: React.FC = () => {
                                 {problem.title}
                               </p>
                               <div className="flex items-center gap-2 text-xs">
-                                <span className={`px-1.5 py-0.5 rounded-full border ${
-                                  problem.difficulty === 'easy' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' :
-                                  problem.difficulty === 'medium' ? 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30' :
-                                  'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
-                                }`}>
+                                <span className={`px-1.5 py-0.5 rounded-full border ${problem.difficulty === 'easy' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' :
+                                    problem.difficulty === 'medium' ? 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30' :
+                                      'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
+                                  }`}>
                                   {problem.difficulty}
                                 </span>
                                 {problem.tags?.slice(0, 2).map((tag) => (

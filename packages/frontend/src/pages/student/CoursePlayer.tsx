@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import {
+import { 
   ArrowLeft, Play, CheckCircle, Lock, BookOpen, Award, Star, Zap,
   ChevronLeft, ChevronRight, Code2, ChevronRight as ChevronRightIcon,
   Video, ClipboardCheck, Clock, Users, Calendar, ThumbsUp, MessageCircle,
-  List, FileText, BarChart3, TrendingUp, Check, X, AlertCircle,
-  Hash
+  List, FileText, BarChart3, TrendingUp, Check, X, XCircle, AlertCircle,
+  Hash, Eye, RotateCcw
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
@@ -26,7 +26,7 @@ interface Lesson {
   order: number;
   isFree: boolean;
   problemIds?: string[];
-  quizId?: string;
+  quizIds?: string[]; // ✅ Changed to array for multiple quizzes
 }
 
 interface Problem {
@@ -52,6 +52,10 @@ interface Quiz {
   passingScore: number;
   maxAttempts: number;
   isPublished: boolean;
+  isCompleted?: boolean;
+  completedScore?: number;
+  passed?: boolean;
+  attemptCount?: number;
 }
 
 interface Course {
@@ -70,6 +74,7 @@ interface Course {
 
 interface QuizAttempt {
   _id: string;
+  quizId: string;
   score: number;
   passed: boolean;
   completedAt: string;
@@ -85,20 +90,19 @@ export const CoursePlayer: React.FC = () => {
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
-
+  
   // Tab state
   const [activeTab, setActiveTab] = useState<'session' | 'practice'>('session');
-
-  // Quiz states
+  
+  // Quiz states - ✅ Multiple quizzes support
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([]);
-  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
-  const [quizStats, setQuizStats] = useState<any>(null);
-  const [loadingQuiz, setLoadingQuiz] = useState(false);
-
+  const [completedQuizzes, setCompletedQuizzes] = useState<Set<string>>(new Set());
+  const [quizAttempts, setQuizAttempts] = useState<Record<string, QuizAttempt>>({});
+  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
+  const [quizStatusMap, setQuizStatusMap] = useState<Record<string, { completed: boolean; score?: number; passed?: boolean }>>({});
+  
   // Problem states
   const [lessonProblems, setLessonProblems] = useState<Record<string, Problem[]>>({});
   const [loadingProblems, setLoadingProblems] = useState<Record<string, boolean>>({});
@@ -118,9 +122,8 @@ export const CoursePlayer: React.FC = () => {
   useEffect(() => {
     if (currentLesson?._id) {
       fetchQuizzes();
-      checkQuizCompletion();
       fetchLessonProblems(currentLesson._id);
-      fetchQuizAttempts();
+      fetchAllQuizAttempts();
     }
   }, [currentLesson]);
 
@@ -169,78 +172,86 @@ export const CoursePlayer: React.FC = () => {
     }
   };
 
-  // ✅ Updated: Fetch quizzes for the current lesson
+  // ✅ Fetch all quizzes for the current lesson
   const fetchQuizzes = async () => {
     if (!currentLesson?._id) return;
-
-    // Check if the lesson has a quizId
-    if (!currentLesson.quizId) {
-      console.log('📚 No quizId found for this lesson');
+    
+    // Check if the lesson has quiz IDs
+    if (!currentLesson.quizIds || currentLesson.quizIds.length === 0) {
+      console.log('📚 No quiz IDs found for this lesson');
       setQuizzes([]);
       return;
     }
 
-    setLoadingQuiz(true);
+    setLoadingQuizzes(true);
     try {
-      console.log(`📚 Fetching quiz for lesson ${currentLesson._id} with quizId: ${currentLesson.quizId}`);
-
-      // ✅ Use public endpoint instead of admin endpoint
-      const response = await api.get(`/quizzes/public/${currentLesson.quizId}`);
-      const quiz = response.data.data;
-
-      if (quiz) {
-        setQuizzes([quiz]);
-        console.log('✅ Quiz loaded:', quiz.title);
-      } else {
-        setQuizzes([]);
-        console.log('📚 Quiz not found');
-      }
-    } catch (error: any) {
-      console.error('Error fetching quiz:', error);
-      if (error.response?.status === 404) {
-        console.log('📚 Quiz not found');
-      } else {
-        toast.error('Failed to load quiz');
-      }
-      setQuizzes([]);
+      console.log(`📚 Fetching ${currentLesson.quizIds.length} quizzes for lesson ${currentLesson._id}`);
+      
+      const quizPromises = currentLesson.quizIds.map(async (quizId: string) => {
+        try {
+          const response = await api.get(`/quizzes/public/${quizId}`);
+          return response.data.data;
+        } catch (error) {
+          console.error(`Error fetching quiz ${quizId}:`, error);
+          return null;
+        }
+      });
+      
+      const quizResults = await Promise.all(quizPromises);
+      const validQuizzes = quizResults.filter((q): q is Quiz => q !== null);
+      setQuizzes(validQuizzes);
+      console.log(`✅ Loaded ${validQuizzes.length} quizzes`);
+    } catch (error) {
+      console.error('Error fetching quizzes:', error);
+      toast.error('Failed to load quizzes');
     } finally {
-      setLoadingQuiz(false);
+      setLoadingQuizzes(false);
     }
   };
 
-  const checkQuizCompletion = async () => {
+  // ✅ Fetch all quiz attempts for the current user
+  const fetchAllQuizAttempts = async () => {
     try {
       const response = await api.get('/quizzes/attempts');
       const attempts = response.data.data || [];
-      const completed = attempts
-        .filter((a: any) => a.completedAt && a.quizId)
-        .map((a: any) => a.quizId._id || a.quizId);
-      setCompletedQuizzes(completed);
-
-      if (quizzes.length > 0) {
-        const isCompleted = completed.includes(quizzes[0]._id);
-        setQuizCompleted(isCompleted);
-      }
+      
+      const statusMap: Record<string, { completed: boolean; score?: number; passed?: boolean }> = {};
+      const completedSet = new Set<string>();
+      
+      attempts.forEach((attempt: any) => {
+        if (attempt.completedAt) {
+          const quizId = attempt.quizId?._id || attempt.quizId;
+          if (quizId) {
+            completedSet.add(quizId);
+            statusMap[quizId] = {
+              completed: true,
+              score: attempt.score,
+              passed: attempt.passed,
+            };
+          }
+        }
+      });
+      
+      setCompletedQuizzes(completedSet);
+      setQuizStatusMap(statusMap);
+      
+      // Update quiz completion status
+      setQuizzes(prev => prev.map(quiz => ({
+        ...quiz,
+        isCompleted: completedSet.has(quiz._id),
+        completedScore: statusMap[quiz._id]?.score,
+        passed: statusMap[quiz._id]?.passed,
+      })));
+      
     } catch (error) {
-      console.error('Error checking quiz completion:', error);
+      console.error('Error fetching quiz attempts:', error);
     }
   };
-
-  const fetchQuizAttempts = async () => {
-    if (!currentLesson?.quizId) return;
-    try {
-      // ✅ Use public stats endpoint
-      const response = await api.get(`/quizzes/public/${currentLesson.quizId}/stats`);
-      setQuizStats(response.data.data);
-    } catch (error) {
-      console.error('Error fetching quiz stats:', error);
-    }
-  };;
 
   // Fetch problems for a lesson using public endpoint
   const fetchLessonProblems = async (lessonId: string) => {
     if (!course) return;
-
+    
     const currentLesson = course.lessons.find(l => l._id === lessonId);
     if (!currentLesson || !currentLesson.problemIds || currentLesson.problemIds.length === 0) {
       console.log(`📚 No problem IDs found for lesson ${lessonId}`);
@@ -249,7 +260,6 @@ export const CoursePlayer: React.FC = () => {
     }
 
     console.log(`📚 Fetching ${currentLesson.problemIds.length} problems for lesson ${lessonId}`);
-    console.log('📚 Problem IDs:', currentLesson.problemIds);
 
     setLoadingProblems(prev => ({ ...prev, [lessonId]: true }));
 
@@ -257,7 +267,6 @@ export const CoursePlayer: React.FC = () => {
       const problemDetails = await Promise.all(
         currentLesson.problemIds.map(async (problemId: string) => {
           try {
-            // Use the public endpoint for published problems
             const response = await api.get(`/problems/public/${problemId}`);
             return response.data.data;
           } catch (error: any) {
@@ -270,7 +279,7 @@ export const CoursePlayer: React.FC = () => {
           }
         })
       );
-
+      
       const validProblems = problemDetails.filter((p): p is Problem => p !== null);
       console.log(`✅ Found ${validProblems.length} valid problems`);
       setLessonProblems(prev => ({ ...prev, [lessonId]: validProblems }));
@@ -286,10 +295,9 @@ export const CoursePlayer: React.FC = () => {
     try {
       const response = await api.post(`/courses/${courseId}/${lessonId}/complete`);
       setXpEarned(response.data.data.xpEarned || 10);
-
+      
       await fetchProgress();
-
-      // Auto-advance to next lesson after completion
+      
       if (course && currentLessonIndex < course.lessons.length - 1) {
         setTimeout(() => {
           setCurrentLessonIndex(currentLessonIndex + 1);
@@ -302,17 +310,34 @@ export const CoursePlayer: React.FC = () => {
     }
   };
 
-  const handleQuizComplete = (score: number, passed: boolean) => {
-    setQuizCompleted(true);
-    setCompletedQuizzes([...completedQuizzes, selectedQuizId || '']);
+  const handleQuizComplete = (quizId: string, score: number, passed: boolean) => {
+    setCompletedQuizzes(prev => new Set(prev).add(quizId));
+    setQuizStatusMap(prev => ({
+      ...prev,
+      [quizId]: { completed: true, score, passed },
+    }));
+    
+    // Update quiz in the list
+    setQuizzes(prev => prev.map(q => 
+      q._id === quizId 
+        ? { ...q, isCompleted: true, completedScore: score, passed }
+        : q
+    ));
+    
     fetchCourse();
     fetchProgress();
-    fetchQuizAttempts();
+    fetchAllQuizAttempts();
+    
     if (passed) {
       toast.success(`🎉 Quiz passed! Score: ${score}%`);
     } else {
-      toast(`📝 Quiz score: ${score}%. Keep learning!`);
+      toast.error(`📝 Quiz score: ${score}%. Keep learning!`);
     }
+  };
+
+  const handleOpenQuiz = (quizId: string) => {
+    setSelectedQuizId(quizId);
+    setIsQuizModalOpen(true);
   };
 
   const isLessonCompleted = (lessonId: string) => {
@@ -356,7 +381,7 @@ export const CoursePlayer: React.FC = () => {
   const completedCount = completedLessons.length;
   const allLessonsCompleted = completedCount === totalLessons && totalLessons > 0;
   const hasProblems = currentLesson?.problemIds && currentLesson.problemIds.length > 0;
-  const hasQuiz = currentLesson?.quizId && quizzes.length > 0;
+  const hasQuizzes = currentLesson?.quizIds && currentLesson.quizIds.length > 0;
 
   return (
     <div className="min-h-screen bg-[#0D0F0F]">
@@ -401,7 +426,7 @@ export const CoursePlayer: React.FC = () => {
             <span className="text-[#10B981] font-semibold">{progress}% Complete</span>
           </div>
           <div className="w-full h-1.5 bg-[#0D0F0F] rounded-full overflow-hidden">
-            <div
+            <div 
               className="h-full bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
@@ -417,18 +442,19 @@ export const CoursePlayer: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Content - Split View */}
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Panel - Lesson Content */}
+          {/* Left Panel */}
           <div className="lg:col-span-3">
             {/* Tab Navigation */}
             <div className="flex border-b border-[#2A302E] mb-4">
               <button
                 onClick={() => setActiveTab('session')}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${activeTab === 'session'
-                  ? 'border-[#10B981] text-[#10B981]'
-                  : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-                  }`}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                  activeTab === 'session'
+                    ? 'border-[#10B981] text-[#10B981]'
+                    : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                }`}
               >
                 <Video className="w-4 h-4" />
                 Session
@@ -438,18 +464,19 @@ export const CoursePlayer: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('practice')}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${activeTab === 'practice'
-                  ? 'border-[#10B981] text-[#10B981]'
-                  : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-                  }`}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                  activeTab === 'practice'
+                    ? 'border-[#10B981] text-[#10B981]'
+                    : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                }`}
               >
                 <ClipboardCheck className="w-4 h-4" />
                 Practice
-                {(hasProblems || hasQuiz) && (
+                {(hasProblems || hasQuizzes) && (
                   <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981]">
                     {hasProblems && (lessonProblems[currentLesson?._id || '']?.length || 0)}
-                    {hasProblems && hasQuiz && ' + '}
-                    {hasQuiz && '1 Quiz'}
+                    {hasProblems && hasQuizzes && ' + '}
+                    {hasQuizzes && `${quizzes.length} Quiz${quizzes.length > 1 ? 'zes' : ''}`}
                   </span>
                 )}
               </button>
@@ -473,16 +500,9 @@ export const CoursePlayer: React.FC = () => {
                 loadingProblems={loadingProblems}
                 solvedProblems={solvedProblems}
                 quizzes={quizzes}
-                quizCompleted={quizCompleted}
-                quizStats={quizStats}
-                loadingQuiz={loadingQuiz}
-                handleQuizStart={() => {
-                  const quiz = quizzes[0];
-                  if (quiz) {
-                    setSelectedQuizId(quiz._id);
-                    setIsQuizModalOpen(true);
-                  }
-                }}
+                loadingQuizzes={loadingQuizzes}
+                quizStatusMap={quizStatusMap}
+                onOpenQuiz={handleOpenQuiz}
               />
             )}
           </div>
@@ -499,7 +519,7 @@ export const CoursePlayer: React.FC = () => {
                   const isCompleted = isLessonCompleted(lesson._id);
                   const isCurrent = index === currentLessonIndex;
                   const hasProblems = lesson.problemIds && lesson.problemIds.length > 0;
-                  const hasQuiz = lesson.quizId;
+                  const hasQuizzes = lesson.quizIds && lesson.quizIds.length > 0;
 
                   return (
                     <button
@@ -537,10 +557,10 @@ export const CoursePlayer: React.FC = () => {
                               {lesson.problemIds?.length}
                             </span>
                           )}
-                          {hasQuiz && (
+                          {hasQuizzes && (
                             <span className="text-xs text-[#FBBF24] flex items-center gap-1">
                               <Zap className="w-3 h-3" />
-                              Quiz
+                              {lesson.quizIds?.length}
                             </span>
                           )}
                         </div>
@@ -593,8 +613,8 @@ export const CoursePlayer: React.FC = () => {
         {/* Reviews Section */}
         <div className="mt-8 pt-8 border-t border-[#2A302E]">
           <h2 className="text-xl font-bold text-[#EDEFEE] mb-4">Course Reviews</h2>
-          <CourseReviews
-            courseId={course._id}
+          <CourseReviews 
+            courseId={course._id} 
             onReviewChange={() => {
               fetchCourse();
             }}
@@ -611,7 +631,11 @@ export const CoursePlayer: React.FC = () => {
               setIsQuizModalOpen(false);
               setSelectedQuizId(null);
             }}
-            onComplete={handleQuizComplete}
+            onComplete={(score: number, passed: boolean) => {
+              if (selectedQuizId) {
+                handleQuizComplete(selectedQuizId, score, passed);
+              }
+            }}
           />
         )}
       </div>
@@ -637,8 +661,6 @@ const SessionTab: React.FC<SessionTabProps> = ({
   handleCompleteLesson,
   xpEarned,
 }) => {
-  const [showTranscript, setShowTranscript] = useState(false);
-
   if (!currentLesson) {
     return (
       <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
@@ -650,7 +672,6 @@ const SessionTab: React.FC<SessionTabProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Video Player */}
       <div className="bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
         <div className="aspect-video bg-[#0D0F0F] flex items-center justify-center relative">
           {currentLesson.videoUrl ? (
@@ -666,13 +687,13 @@ const SessionTab: React.FC<SessionTabProps> = ({
               <p className="text-[#5C6360] mt-2">Video coming soon</p>
             </div>
           )}
-
+          
           <div className="absolute top-4 left-4 bg-[#0D0F0F]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#2A302E]">
             <span className="text-xs text-[#5C6360]">
               Lesson {currentLessonIndex + 1} of {course.lessons.length}
             </span>
           </div>
-
+          
           {isLessonCompleted(currentLesson._id) && (
             <div className="absolute top-4 right-4 bg-[#10B981]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#10B981]/30">
               <span className="text-xs font-medium text-white flex items-center gap-1">
@@ -682,7 +703,7 @@ const SessionTab: React.FC<SessionTabProps> = ({
             </div>
           )}
         </div>
-
+        
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
@@ -753,7 +774,7 @@ const SessionTab: React.FC<SessionTabProps> = ({
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-3.5 h-3.5 text-[#10B981] mt-0.5 flex-shrink-0" />
-              <span>Complete the quiz to test your understanding</span>
+              <span>Complete the quizzes to test your understanding</span>
             </li>
           </ul>
         </div>
@@ -794,10 +815,9 @@ interface PracticeTabProps {
   loadingProblems: Record<string, boolean>;
   solvedProblems: Set<string>;
   quizzes: Quiz[];
-  quizCompleted: boolean;
-  quizStats: any;
-  loadingQuiz: boolean;
-  handleQuizStart: () => void;
+  loadingQuizzes: boolean;
+  quizStatusMap: Record<string, { completed: boolean; score?: number; passed?: boolean }>;
+  onOpenQuiz: (quizId: string) => void;
 }
 
 const PracticeTab: React.FC<PracticeTabProps> = ({
@@ -807,12 +827,11 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
   loadingProblems,
   solvedProblems,
   quizzes,
-  quizCompleted,
-  quizStats,
-  loadingQuiz,
-  handleQuizStart,
+  loadingQuizzes,
+  quizStatusMap,
+  onOpenQuiz,
 }) => {
-  const [activePracticeTab, setActivePracticeTab] = useState<'problems' | 'quiz'>('problems');
+  const [activePracticeTab, setActivePracticeTab] = useState<'problems' | 'quizzes'>('problems');
 
   if (!currentLesson) {
     return (
@@ -825,29 +844,20 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
 
   const problems = lessonProblems[currentLesson._id] || [];
   const hasProblems = problems.length > 0;
-  const hasQuiz = quizzes.length > 0;
-
-  // Debug logging
-  console.log(`📚 PracticeTab - Lesson: ${currentLesson.title}`);
-  console.log(`📚 Problem IDs from lesson:`, currentLesson.problemIds);
-  console.log(`📚 Problems loaded:`, problems);
-  console.log(`📚 Has problems:`, hasProblems);
-  console.log(`📚 Quiz ID from lesson:`, currentLesson.quizId);
-  console.log(`📚 Quiz loaded:`, quizzes);
-  console.log(`📚 Has quiz:`, hasQuiz);
+  const hasQuizzes = quizzes.length > 0;
 
   // Determine which tab to show by default
   useEffect(() => {
-    if (hasProblems && !hasQuiz) {
+    if (hasProblems && !hasQuizzes) {
       setActivePracticeTab('problems');
-    } else if (hasQuiz && !hasProblems) {
-      setActivePracticeTab('quiz');
-    } else if (hasProblems && hasQuiz) {
+    } else if (hasQuizzes && !hasProblems) {
+      setActivePracticeTab('quizzes');
+    } else if (hasProblems && hasQuizzes) {
       setActivePracticeTab('problems');
     }
-  }, [hasProblems, hasQuiz]);
+  }, [hasProblems, hasQuizzes]);
 
-  if (!hasProblems && !hasQuiz) {
+  if (!hasProblems && !hasQuizzes) {
     return (
       <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
         <ClipboardCheck className="w-12 h-12 text-[#5C6360] mx-auto mb-4 opacity-40" />
@@ -862,6 +872,9 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
     );
   }
 
+  // Count completed quizzes
+  const completedQuizCount = quizzes.filter(q => quizStatusMap[q._id]?.completed).length;
+
   return (
     <div className="space-y-4">
       {/* Practice Tab Navigation */}
@@ -869,10 +882,11 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
         {hasProblems && (
           <button
             onClick={() => setActivePracticeTab('problems')}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${activePracticeTab === 'problems'
-              ? 'border-[#10B981] text-[#10B981]'
-              : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-              }`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
+              activePracticeTab === 'problems'
+                ? 'border-[#10B981] text-[#10B981]'
+                : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+            }`}
           >
             <Code2 className="w-4 h-4" />
             Coding Problems
@@ -881,19 +895,20 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
             </span>
           </button>
         )}
-        {hasQuiz && (
+        {hasQuizzes && (
           <button
-            onClick={() => setActivePracticeTab('quiz')}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${activePracticeTab === 'quiz'
-              ? 'border-[#10B981] text-[#10B981]'
-              : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-              }`}
+            onClick={() => setActivePracticeTab('quizzes')}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
+              activePracticeTab === 'quizzes'
+                ? 'border-[#10B981] text-[#10B981]'
+                : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+            }`}
           >
             <Zap className="w-4 h-4" />
-            Quiz
-            {quizCompleted && (
-              <CheckCircle className="w-3 h-3 text-[#10B981]" />
-            )}
+            Quizzes
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#2A302E] text-[#5C6360]">
+              {completedQuizCount}/{quizzes.length}
+            </span>
           </button>
         )}
       </div>
@@ -983,99 +998,103 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
         </div>
       )}
 
-      {activePracticeTab === 'quiz' && hasQuiz && (
+      {activePracticeTab === 'quizzes' && hasQuizzes && (
         <div className="space-y-4">
-          {loadingQuiz ? (
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-[#EDEFEE]">Quizzes</h3>
+              <p className="text-xs text-[#5C6360]">
+                Test your knowledge with these quizzes
+              </p>
+            </div>
+            <span className="text-xs text-[#5C6360]">
+              {completedQuizCount} / {quizzes.length} completed
+            </span>
+          </div>
+
+          {loadingQuizzes ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner size="sm" />
             </div>
           ) : (
-            quizzes.map((quiz) => (
-              <div key={quiz._id} className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap className="w-5 h-5 text-[#FBBF24]" />
-                      <h3 className="text-lg font-semibold text-[#EDEFEE]">{quiz.title}</h3>
-                      {quizCompleted && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1">
-                          <Check className="w-3 h-3" />
-                          Completed
-                        </span>
-                      )}
-                    </div>
-                    {quiz.description && (
-                      <p className="text-sm text-[#9CA3A0] mb-3">{quiz.description}</p>
-                    )}
+            <div className="space-y-4">
+              {quizzes.map((quiz) => {
+                const status = quizStatusMap[quiz._id];
+                const isCompleted = status?.completed || false;
+                const score = status?.score;
+                const passed = status?.passed;
 
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-[#5C6360]">
-                      <span className="flex items-center gap-1">
-                        <FileText className="w-4 h-4" />
-                        {quiz.questions.length} questions
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Award className="w-4 h-4" />
-                        Pass: {quiz.passingScore}%
-                      </span>
-                      {quiz.timeLimit && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {quiz.timeLimit} min
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {quiz.maxAttempts} attempt{quiz.maxAttempts > 1 ? 's' : ''}
-                      </span>
-                    </div>
-
-                    {/* Quiz Stats */}
-                    {quizStats && (
-                      <div className="mt-3 p-3 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <div className="text-center">
-                            <p className="text-lg font-bold text-[#EDEFEE]">{quizStats.totalAttempts || 0}</p>
-                            <p className="text-xs text-[#5C6360]">Attempts</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-lg font-bold text-[#10B981]">{quizStats.passRate || 0}%</p>
-                            <p className="text-xs text-[#5C6360]">Pass Rate</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-lg font-bold text-[#60A5FA]">{quizStats.averageScore || 0}%</p>
-                            <p className="text-xs text-[#5C6360]">Avg Score</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-lg font-bold text-[#FBBF24]">{quizStats.passedAttempts || 0}</p>
-                            <p className="text-xs text-[#5C6360]">Passed</p>
-                          </div>
+                return (
+                  <div key={quiz._id} className="bg-[#161A19] border border-[#2A302E] rounded-xl p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Zap className="w-5 h-5 text-[#FBBF24]" />
+                          <h4 className="text-base font-semibold text-[#EDEFEE]">{quiz.title}</h4>
+                          {isCompleted && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                              passed 
+                                ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' 
+                                : 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
+                            }`}>
+                              {passed ? (
+                                <CheckCircle className="w-3 h-3" />
+                              ) : (
+                                <XCircle className="w-3 h-3" />
+                              )}
+                              {passed ? 'Passed' : 'Failed'} ({score}%)
+                            </span>
+                          )}
+                        </div>
+                        {quiz.description && (
+                          <p className="text-sm text-[#9CA3A0] mb-3">{quiz.description}</p>
+                        )}
+                        
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-[#5C6360]">
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3.5 h-3.5" />
+                            {quiz.questions.length} questions
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Award className="w-3.5 h-3.5" />
+                            Pass: {quiz.passingScore}%
+                          </span>
+                          {quiz.timeLimit && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              {quiz.timeLimit} min
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3.5 h-3.5" />
+                            {quiz.maxAttempts} attempt{quiz.maxAttempts > 1 ? 's' : ''}
+                          </span>
                         </div>
                       </div>
-                    )}
+                      <div className="flex-shrink-0">
+                        <Button
+                          variant={isCompleted ? 'secondary' : 'primary'}
+                          onClick={() => onOpenQuiz(quiz._id)}
+                          className="gap-2"
+                        >
+                          {isCompleted ? (
+                            <>
+                              <Eye className="w-4 h-4" />
+                              Review
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="w-4 h-4" />
+                              Start Quiz
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-shrink-0">
-                    <Button
-                      variant={quizCompleted ? 'outline' : 'primary'}
-                      onClick={handleQuizStart}
-                      disabled={quizCompleted}
-                      className="gap-2"
-                    >
-                      {quizCompleted ? (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Completed
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4" />
-                          Start Quiz
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
         </div>
       )}
