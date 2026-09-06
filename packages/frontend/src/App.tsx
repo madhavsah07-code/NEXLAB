@@ -4,6 +4,10 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 
+// ❌ Remove global Monaco setup - only load when needed
+// import { setupMonaco } from './lib/monaco-config';
+// setupMonaco();
+
 // Layouts
 import { RootLayout } from './layouts/RootLayout';
 
@@ -63,12 +67,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes - Landing page has its own animations */}
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected Student Routes - No animations */}
+        {/* Protected Student Routes */}
         <Route element={<ProtectedRoute><RootLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<StudentDashboard />} />
           <Route path="/courses" element={<StudentCourses />} />
@@ -80,7 +84,7 @@ function App() {
           <Route path="/course/:courseId" element={<CoursePlayer />} />
         </Route>
 
-        {/* Protected Admin Routes - No animations */}
+        {/* Protected Admin Routes */}
         <Route element={<ProtectedRoute adminOnly><RootLayout /></ProtectedRoute>}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/courses" element={<AdminCourses />} />

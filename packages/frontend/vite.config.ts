@@ -15,14 +15,21 @@ export default defineConfig({
       },
     },
   },
+  // ✅ Ensure workers are properly handled
+  worker: {
+    format: 'es',
+  },
+  optimizeDeps: {
+    include: ['monaco-editor'],
+    exclude: ['@monaco-editor/react'],
+  },
+  // ✅ Build configuration
   build: {
     rollupOptions: {
       output: {
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'favicon.ico' || assetInfo.name === 'favicon.png') {
-            return '[name][extname]';
-          }
-          return 'assets/[name]-[hash][extname]';
+        manualChunks: {
+          // ✅ Separate Monaco into its own chunk
+          'monaco-editor': ['monaco-editor', '@monaco-editor/react'],
         },
       },
     },

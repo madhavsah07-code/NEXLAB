@@ -1,16 +1,22 @@
 // packages/frontend/src/pages/student/Sandbox.tsx
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Loader2, Terminal, ChevronDown, X, Copy, Check, Maximize2, Minimize2 } from 'lucide-react';
-import { api } from '../../lib/api';
+import { Play, Loader2, Terminal, ChevronDown, X, Copy, Check, Maximize2, Minimize2, AlertCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { setupMonaco } from '../../lib/monaco-config';
 
-// Setup Monaco environment
-setupMonaco();
-
-// Lazy load Monaco Editor
+// ✅ Lazy load Monaco Editor - only loads when Sandbox is visited
 const MonacoEditor = React.lazy(() => import('@monaco-editor/react'));
+
+// ✅ Setup Monaco only when the component mounts (user visits Sandbox)
+const setupMonaco = () => {
+  // Dynamic import to avoid loading Monaco on pages that don't need it
+  import('../../lib/monaco-config').then(({ setupMonaco }) => {
+    setupMonaco();
+  });
+};
+
+// ✅ Correct CDN URL for Pyodide
+const PYODIDE_INDEX_URL = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/';
 
 interface Language {
   id: string;
@@ -24,14 +30,49 @@ interface ExecutionResult {
   output: string;
   error: string;
   executed: boolean;
-  exitCode?: number;
   language?: string;
   executionTime?: string;
-  message?: string;
 }
 
 export const Sandbox: React.FC = () => {
-  const [languages, setLanguages] = useState<Language[]>([]);
+  // ✅ Setup Monaco when Sandbox mounts
+  useEffect(() => {
+    setupMonaco();
+  }, []);
+
+  const [languages] = useState<Language[]>([
+    {
+      id: 'javascript',
+      name: 'JavaScript',
+      extension: 'js',
+      sample: `// Welcome to NexLab JavaScript Sandbox!
+// Write your JavaScript code here
+
+console.log("Hello, World!");
+console.log("This is JavaScript running in NexLab!");
+
+// Try a simple calculation
+const x = 10;
+const y = 20;
+console.log(\`Sum: \${x + y}\`);`
+    },
+    {
+      id: 'python',
+      name: 'Python',
+      extension: 'py',
+      sample: `# Welcome to NexLab Python Sandbox!
+# Write your Python code here
+
+print("Hello, World!")
+print("This is Python running in NexLab!")
+
+# Try a simple calculation
+x = 10
+y = 20
+print(f"Sum: {x + y}")`
+    }
+  ]);
+
   const [selectedLanguage, setSelectedLanguage] = useState<string>('javascript');
   const [code, setCode] = useState<string>('');
   const [stdin, setStdin] = useState<string>('');
@@ -42,31 +83,139 @@ export const Sandbox: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [editorError, setEditorError] = useState(false);
   const [isOutputMaximized, setIsOutputMaximized] = useState(false);
-  // Editor width is controlled as a percentage of the sandbox width.
-  // This keeps the editor and output side by side with a draggable divider.
+  const [pyodide, setPyodide] = useState<any>(null);
+  const [pyodideLoading, setPyodideLoading] = useState(false);
+  const [pyodideError, setPyodideError] = useState<string | null>(null);
+  const [isPyodideLoaded, setIsPyodideLoaded] = useState(false);
   const [editorWidth, setEditorWidth] = useState(60);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   const outputRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // ✅ Parse input utility
+  const parseInput = (input: string): any => {
+    if (!input || !input.trim()) return '';
+    
+    const trimmed = input.trim();
+    
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || 
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      return trimmed.slice(1, -1);
+    }
+    
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      const content = trimmed.slice(1, -1).trim();
+      if (!content) return [];
+      return content.split(',').map((val: string) => {
+        const v = val.trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || 
+            (v.startsWith("'") && v.endsWith("'"))) {
+          return v.slice(1, -1);
+        }
+        const num = Number(v);
+        return isNaN(num) ? v : num;
+      });
+    }
+    
+    if (trimmed.includes(',')) {
+      return trimmed.split(',').map((val: string) => {
+        const v = val.trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || 
+            (v.startsWith("'") && v.endsWith("'"))) {
+          return v.slice(1, -1);
+        }
+        const num = Number(v);
+        return isNaN(num) ? v : num;
+      });
+    }
+    
+    const num = Number(trimmed);
+    return isNaN(num) ? trimmed : num;
+  };
+
+  // ✅ Load Pyodide
   useEffect(() => {
-    fetchLanguages();
+    const initPyodide = async () => {
+      setPyodideLoading(true);
+      setPyodideError(null);
+      
+      try {
+        const loadPyodideFn = (window as any).loadPyodide;
+        
+        if (typeof loadPyodideFn === 'function') {
+          console.log('🔄 Loading Pyodide from jsdelivr...');
+          const instance = await loadPyodideFn({
+            indexURL: PYODIDE_INDEX_URL,
+            fullStdLib: true,
+          });
+          
+          setPyodide(instance);
+          setIsPyodideLoaded(true);
+          console.log('✅ Pyodide loaded successfully');
+        } else {
+          console.log('⏳ Waiting for Pyodide script to load...');
+          
+          const waitForPyodide = new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+              if (typeof (window as any).loadPyodide === 'function') {
+                clearInterval(checkInterval);
+                resolve(true);
+              }
+            }, 100);
+            
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              resolve(false);
+            }, 15000);
+          });
+          
+          const loaded = await waitForPyodide;
+          
+          if (loaded && typeof (window as any).loadPyodide === 'function') {
+            const instance = await (window as any).loadPyodide({
+              indexURL: PYODIDE_INDEX_URL,
+              fullStdLib: true,
+            });
+            
+            setPyodide(instance);
+            setIsPyodideLoaded(true);
+            console.log('✅ Pyodide loaded successfully (delayed)');
+          } else {
+            throw new Error('Pyodide script failed to load. Please refresh and try again.');
+          }
+        }
+      } catch (error: any) {
+        console.error('❌ Failed to load Pyodide:', error);
+        setPyodideError(error.message || 'Failed to load Python runtime. Please refresh and try again.');
+      } finally {
+        setPyodideLoading(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      initPyodide();
+    }, 500);
+
+    const defaultLang = languages.find(l => l.id === 'javascript');
+    if (defaultLang) {
+      setCode(defaultLang.sample);
+    }
+    setIsLoading(false);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // Drag functionality for the vertical divider.
+  // Drag functionality
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
-
       const rect = containerRef.current.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const percentage = (mouseX / rect.width) * 100;
-
-      // Keep both panels usable.
       if (percentage > 20 && percentage < 80) {
         setEditorWidth(percentage);
       }
@@ -99,22 +248,6 @@ export const Sandbox: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchLanguages = async () => {
-    try {
-      const response = await api.get('/sandbox/languages');
-      const data = response.data.data || [];
-      setLanguages(data);
-      if (data.length > 0) {
-        setSelectedLanguage(data[0].id);
-        setCode(data[0].sample);
-      }
-    } catch (error) {
-      console.error('Error fetching languages:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleLanguageChange = (languageId: string) => {
     const lang = languages.find(l => l.id === languageId);
     if (lang) {
@@ -125,6 +258,161 @@ export const Sandbox: React.FC = () => {
     setIsLanguageDropdownOpen(false);
   };
 
+  // ✅ Execute JavaScript
+  const executeJavaScript = (code: string, input: string): Promise<{ output: string; error: string; success: boolean }> => {
+    return new Promise((resolve) => {
+      let capturedOutput = '';
+      let capturedError = '';
+
+      try {
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = (...args) => {
+          capturedOutput += args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ') + '\n';
+        };
+        console.error = (...args) => {
+          capturedError += args.map(arg => String(arg)).join(' ') + '\n';
+        };
+        console.warn = (...args) => {
+          capturedOutput += args.map(arg => String(arg)).join(' ') + '\n';
+        };
+
+        const parsedInput = parseInput(input);
+        let argStr = '';
+        if (Array.isArray(parsedInput)) {
+          argStr = JSON.stringify(parsedInput);
+        } else if (typeof parsedInput === 'string') {
+          argStr = `"${parsedInput}"`;
+        } else {
+          argStr = String(parsedInput);
+        }
+
+        const functionMatch = code.match(/function\s+(\w+)\s*\(/);
+        const varMatch = code.match(/(?:var|let|const)\s+(\w+)\s*=\s*function/);
+        const arrowMatch = code.match(/(?:var|let|const)\s+(\w+)\s*=\s*\(/);
+        const functionName = functionMatch?.[1] || varMatch?.[1] || arrowMatch?.[1] || null;
+
+        if (!functionName) {
+          const func = new Function(code);
+          const result = func();
+          if (result !== undefined && result !== null) {
+            capturedOutput += String(result) + '\n';
+          }
+        } else {
+          const wrapperCode = `
+            ${code}
+            
+            try {
+              const result = ${functionName}(${argStr});
+              if (result !== undefined && result !== null) {
+                console.log(result);
+              }
+            } catch (e) {
+              console.error(e.message);
+            }
+          `;
+          const func = new Function(wrapperCode);
+          func();
+        }
+
+        console.log = originalLog;
+        console.error = originalError;
+        console.warn = originalWarn;
+
+        resolve({
+          output: capturedOutput.trim(),
+          error: capturedError.trim(),
+          success: true,
+        });
+      } catch (error: any) {
+        resolve({
+          output: capturedOutput.trim(),
+          error: error.message || 'Execution error',
+          success: false,
+        });
+      }
+    });
+  };
+
+  // ✅ Execute Python
+  const executePython = async (code: string, input: string): Promise<{ output: string; error: string; success: boolean }> => {
+    if (!isPyodideLoaded || !pyodide) {
+      return {
+        output: '',
+        error: pyodideError || 'Python runtime is not available. Please refresh and try again.',
+        success: false,
+      };
+    }
+
+    try {
+      const parsedInput = parseInput(input);
+      let argStr = '';
+      if (Array.isArray(parsedInput)) {
+        argStr = JSON.stringify(parsedInput);
+      } else if (typeof parsedInput === 'string') {
+        argStr = `"${parsedInput}"`;
+      } else {
+        argStr = String(parsedInput);
+      }
+
+      const functionMatch = code.match(/def\s+(\w+)\s*\(/);
+      const functionName = functionMatch?.[1] || null;
+
+      let wrapperCode = code;
+      if (functionName) {
+        wrapperCode = `
+${code}
+
+if __name__ == "__main__":
+    result = ${functionName}(${argStr})
+    print(result)
+        `;
+      }
+
+      if (input) {
+        pyodide.runPython(`
+import sys
+sys.stdin = open('input.txt', 'w')
+sys.stdin.write('${input.replace(/'/g, "\\'")}')
+sys.stdin.close()
+sys.stdin = open('input.txt', 'r')
+        `);
+      }
+
+      pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+sys.stderr = StringIO()
+      `);
+
+      pyodide.runPython(wrapperCode);
+
+      const stdout = pyodide.runPython('sys.stdout.getvalue()');
+      const stderr = pyodide.runPython('sys.stderr.getvalue()');
+
+      pyodide.runPython('sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__');
+
+      return {
+        output: stdout.trim(),
+        error: stderr.trim(),
+        success: true,
+      };
+    } catch (error: any) {
+      pyodide.runPython('sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__');
+      return {
+        output: '',
+        error: error.message || 'Python execution error',
+        success: false,
+      };
+    }
+  };
+
+  // ✅ Execute code based on language
   const handleExecute = async () => {
     if (!code.trim()) {
       alert('Please write some code first.');
@@ -134,28 +422,42 @@ export const Sandbox: React.FC = () => {
     setIsExecuting(true);
     setResult(null);
 
-    try {
-      const response = await api.post('/sandbox/execute', {
-        language: selectedLanguage,
-        code: code,
-        stdin: stdin,
-      });
+    const startTime = performance.now();
 
-      setResult(response.data);
-      
-      if (outputRef.current) {
-        setTimeout(() => {
-          outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+    try {
+      let output = '';
+      let error = '';
+      let success = false;
+
+      switch (selectedLanguage) {
+        case 'javascript':
+          ({ output, error, success } = await executeJavaScript(code, stdin));
+          break;
+        case 'python':
+          ({ output, error, success } = await executePython(code, stdin));
+          break;
+        default:
+          throw new Error('Unsupported language');
       }
+
+      const executionTime = ((performance.now() - startTime) / 1000).toFixed(2);
+
+      setResult({
+        success,
+        output,
+        error,
+        executed: true,
+        language: selectedLanguage,
+        executionTime: `${executionTime}s`,
+      });
     } catch (error: any) {
-      console.error('Execution error:', error);
       setResult({
         success: false,
         output: '',
-        error: error.response?.data?.message || 'Failed to execute code.',
+        error: error.message || 'Execution failed',
         executed: false,
-        message: error.response?.data?.message || 'Failed to execute code.',
+        language: selectedLanguage,
+        executionTime: '0s',
       });
     } finally {
       setIsExecuting(false);
@@ -186,8 +488,6 @@ export const Sandbox: React.FC = () => {
     const colors: Record<string, string> = {
       python: 'bg-[#10B981]',
       javascript: 'bg-[#FBBF24]',
-      java: 'bg-[#F87171]',
-      cpp: 'bg-[#60A5FA]',
     };
     return colors[languageId] || 'bg-[#10B981]';
   };
@@ -266,7 +566,6 @@ export const Sandbox: React.FC = () => {
 
         {/* Main Content */}
         <div ref={containerRef} className="flex-1 flex flex-col min-h-0 gap-0">
-          {/* Sandbox Container */}
           <div className="flex-1 min-h-[500px] lg:min-h-[700px] min-w-0 flex flex-row bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
 
             {/* Editor Section */}
@@ -275,7 +574,6 @@ export const Sandbox: React.FC = () => {
                 className="flex flex-col min-h-0 min-w-0 overflow-hidden"
                 style={{ width: `${editorWidth}%` }}
               >
-                {/* Editor Toolbar */}
                 <div className="px-4 py-2 border-b border-[#2A302E] flex items-center justify-between bg-[#1A1D1E] flex-shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getLanguageColor(selectedLanguage)}`} />
@@ -291,7 +589,6 @@ export const Sandbox: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Monaco Editor */}
                 <div className="flex-1 min-h-0 min-w-0 bg-[#1E1E1E]">
                   {!editorError ? (
                     <React.Suspense
@@ -357,7 +654,6 @@ export const Sandbox: React.FC = () => {
                 isOutputMaximized ? 'w-full' : 'flex-1'
               }`}
             >
-              {/* Output Header */}
               <div className="px-4 py-2 border-b border-[#2A302E] flex items-center justify-between bg-[#0D0F0F] flex-shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <Terminal className="w-4 h-4 text-[#9CA3A0] flex-shrink-0" />
@@ -369,6 +665,18 @@ export const Sandbox: React.FC = () => {
                         : 'bg-[#F87171]/10 text-[#F87171] border border-[#F87171]/20'
                     }`}>
                       {result.success ? 'Success' : 'Error'}
+                    </span>
+                  )}
+                  {pyodideLoading && (
+                    <span className="text-xs text-[#60A5FA] flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Loading Python...
+                    </span>
+                  )}
+                  {pyodideError && (
+                    <span className="text-xs text-[#F87171] flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Python unavailable
                     </span>
                   )}
                 </div>
@@ -420,7 +728,6 @@ export const Sandbox: React.FC = () => {
                 </div>
               </div>
 
-              {/* Output Content */}
               <div
                 ref={outputRef}
                 className="flex-1 p-4 overflow-y-auto font-mono text-sm bg-[#0D0F0F] min-h-0"
@@ -449,22 +756,17 @@ export const Sandbox: React.FC = () => {
                       </div>
                     )}
 
-                    {!result.success && result.message && (
-                      <div>
+                    {!result.success && result.executed && (
+                      <div className="pt-2">
                         <div className="text-xs text-[#F87171] mb-1">Error:</div>
                         <pre className="text-[#F87171] whitespace-pre-wrap bg-[#161A19] p-3 rounded-lg">
-                          {result.message}
+                          {result.error || 'Execution failed'}
                         </pre>
                       </div>
                     )}
 
-                    {result.executed && result.success && (
+                    {result.executed && (
                       <div className="pt-3 border-t border-[#2A302E] flex flex-wrap items-center gap-4 text-xs text-[#9CA3A0]">
-                        {result.exitCode !== undefined && (
-                          <span>
-                            Exit Code: <span className="text-[#EDEFEE]">{result.exitCode}</span>
-                          </span>
-                        )}
                         {result.executionTime && (
                           <span>
                             Time: <span className="text-[#EDEFEE]">{result.executionTime}</span>
@@ -483,10 +785,9 @@ export const Sandbox: React.FC = () => {
             </div>
           </div>
 
-          {/* Keyboard Shortcut Hint */}
           <div className="text-xs text-[#5C6360] text-center flex-shrink-0 mt-2">
             <kbd className="px-2.5 py-1 bg-[#161A19] border border-[#2A302E] rounded text-xs">⌘ + Enter</kbd>
-            {' '}to run code • Multiple languages supported • 5 executions per minute
+            {' '}to run code • Supports JavaScript and Python
           </div>
         </div>
       </div>

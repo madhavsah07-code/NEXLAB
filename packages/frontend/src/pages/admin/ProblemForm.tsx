@@ -1,12 +1,25 @@
+// packages/frontend/src/pages/admin/ProblemForm.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, X, Code2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 
+// ✅ Lazy load Monaco Editor only when needed
+const MonacoEditor = React.lazy(() => import('@monaco-editor/react'));
+
+// ✅ Setup Monaco only when ProblemForm mounts
+const setupMonaco = () => {
+  import('../../lib/monaco-config').then(({ setupMonaco }) => {
+    setupMonaco();
+  });
+};
+
+// ✅ Updated schema with JavaScript and Python only
 const problemSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
   difficulty: z.enum(['easy', 'medium', 'hard']),
@@ -18,11 +31,14 @@ const problemSchema = z.object({
   })),
   constraints: z.array(z.string()).default([]),
   testCases: z.array(z.object({
-    input: z.string().min(1, 'Input is required (e.g., 5, 10)'),
+    input: z.string().min(1, 'Input is required'),
     expectedOutput: z.string().min(1, 'Expected output is required'),
     isHidden: z.boolean().default(false),
   })),
-  starterCode: z.string().default(''),
+  starterCode: z.object({
+    javascript: z.string().default(''),
+    python: z.string().default(''),
+  }),
   solutionCode: z.string().default(''),
   hints: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
@@ -32,11 +48,33 @@ const problemSchema = z.object({
 
 type ProblemFormData = z.infer<typeof problemSchema>;
 
+// ✅ Default starter code for JavaScript and Python
+const DEFAULT_STARTER_CODE = {
+  javascript: `/**
+ * @param {number} a
+ * @param {number} b
+ * @return {number}
+ */
+var sumOfTwoNumbers = function(a, b) {
+    // Write your solution here
+    return 0;
+};`,
+  python: `def sum_of_two_numbers(a: int, b: int) -> int:
+    # Write your solution here
+    return 0`
+};
+
 export const ProblemForm: React.FC = () => {
+  // ✅ Setup Monaco when ProblemForm mounts
+  useEffect(() => {
+    setupMonaco();
+  }, []);
+
   const { problemId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!problemId);
+  const [activeLanguageTab, setActiveLanguageTab] = useState<'javascript' | 'python'>('javascript');
 
   const { register, control, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<ProblemFormData>({
     resolver: zodResolver(problemSchema),
@@ -47,7 +85,7 @@ export const ProblemForm: React.FC = () => {
       examples: [{ input: '', output: '', explanation: '' }],
       constraints: [],
       testCases: [{ input: '', expectedOutput: '', isHidden: false }],
-      starterCode: '',
+      starterCode: DEFAULT_STARTER_CODE,
       solutionCode: '',
       hints: [],
       tags: [],
@@ -69,6 +107,7 @@ export const ProblemForm: React.FC = () => {
   const tags = watch('tags') || [];
   const hints = watch('hints') || [];
   const constraints = watch('constraints') || [];
+  const starterCode = watch('starterCode');
 
   useEffect(() => {
     if (problemId) {
@@ -81,6 +120,12 @@ export const ProblemForm: React.FC = () => {
     try {
       const response = await api.get(`/problems/admin/${problemId}`);
       const problem = response.data.data;
+      
+      const starterCode = {
+        javascript: problem.starterCode?.javascript || DEFAULT_STARTER_CODE.javascript,
+        python: problem.starterCode?.python || DEFAULT_STARTER_CODE.python,
+      };
+      
       reset({
         title: problem.title,
         difficulty: problem.difficulty,
@@ -88,7 +133,7 @@ export const ProblemForm: React.FC = () => {
         examples: problem.examples || [{ input: '', output: '', explanation: '' }],
         constraints: problem.constraints || [],
         testCases: problem.testCases || [{ input: '', expectedOutput: '', isHidden: false }],
-        starterCode: problem.starterCode || '',
+        starterCode: starterCode,
         solutionCode: problem.solutionCode || '',
         hints: problem.hints || [],
         tags: problem.tags || [],
@@ -165,7 +210,7 @@ export const ProblemForm: React.FC = () => {
   }
 
   return (
-    <div className="py-8 max-w-4xl mx-auto">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1200px] mx-auto">
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/admin/problems')}
@@ -324,7 +369,7 @@ export const ProblemForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Test Cases - UPDATED WITH NEW FORMAT */}
+        {/* Test Cases */}
         <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-[#EDEFEE]">Test Cases</h2>
@@ -353,16 +398,13 @@ export const ProblemForm: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                    Input * <span className="text-xs text-[#5C6360]">(e.g., 5, 10)</span>
+                    Input *
                   </label>
                   <input
                     {...register(`testCases.${index}.input`)}
                     className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] font-mono text-sm"
                     placeholder="e.g., 5, 10"
                   />
-                  {errors.testCases?.[index]?.input && (
-                    <p className="text-[#F87171] text-xs mt-1">{errors.testCases[index]?.input?.message}</p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
@@ -373,9 +415,6 @@ export const ProblemForm: React.FC = () => {
                     className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] font-mono text-sm"
                     placeholder="e.g., 15"
                   />
-                  {errors.testCases?.[index]?.expectedOutput && (
-                    <p className="text-[#F87171] text-xs mt-1">{errors.testCases[index]?.expectedOutput?.message}</p>
-                  )}
                 </div>
               </div>
               <div className="mt-3 flex items-center">
@@ -392,26 +431,46 @@ export const ProblemForm: React.FC = () => {
           ))}
         </div>
 
-        {/* Starter Code */}
+        {/* Language-Specific Starter Code */}
         <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Starter Code (JavaScript)</h2>
+          <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4 flex items-center gap-2">
+            <Code2 className="w-5 h-5 text-[#10B981]" />
+            Starter Code
+          </h2>
+          <p className="text-sm text-[#9CA3A0] mb-4">Provide starter code for each language</p>
+
+          {/* Language Tabs - Only JavaScript and Python */}
+          <div className="flex gap-2 mb-4 border-b border-[#2A302E]">
+            {['javascript', 'python'].map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                onClick={() => setActiveLanguageTab(lang as any)}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                  activeLanguageTab === lang
+                    ? 'border-[#10B981] text-[#10B981]'
+                    : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                }`}
+              >
+                {lang.charAt(0).toUpperCase() + lang.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Starter Code Editor for Active Language */}
           <div>
             <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-              Starter Code
+              {activeLanguageTab.charAt(0).toUpperCase() + activeLanguageTab.slice(1)} Starter Code
             </label>
             <textarea
-              {...register('starterCode')}
-              className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] font-mono text-sm min-h-[120px]"
-              placeholder={`/**
- * @param {number} a
- * @param {number} b
- * @return {number}
- */
-var sumOfTwoNumbers = function(a, b) {
-    // Write your solution here
-    return 0;
-};`}
+              {...register(`starterCode.${activeLanguageTab}`)}
+              rows={8}
+              className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] font-mono text-sm"
+              placeholder={`Enter ${activeLanguageTab} starter code...`}
             />
+            <p className="text-xs text-[#5C6360] mt-1">
+              This code will be shown to students when they select {activeLanguageTab}
+            </p>
           </div>
         </div>
 
@@ -504,6 +563,7 @@ var sumOfTwoNumbers = function(a, b) {
           </div>
         </div>
 
+        {/* Submit */}
         <div className="flex gap-4">
           <Button
             type="button"
@@ -524,3 +584,5 @@ var sumOfTwoNumbers = function(a, b) {
     </div>
   );
 };
+
+export default ProblemForm;

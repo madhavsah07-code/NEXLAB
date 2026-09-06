@@ -6,8 +6,9 @@ import {
   ArrowLeft, Play, Loader2, Zap, Copy, Check, 
   Lightbulb, ChevronDown, ChevronUp, CheckCircle, 
   XCircle, Clock, AlertCircle, Terminal,
-  ChevronRight, ChevronLeft, Settings, Maximize2, Minimize2,
-  GripVertical, GripHorizontal, FileText, History, Layers, X
+  ChevronRight, ChevronLeft, Settings, Maximize2, Minimize2, X,
+  GripVertical, GripHorizontal, FileText, History, Layers,
+  ChevronDown as ChevronDownIcon
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
@@ -19,6 +20,49 @@ import { TestCaseConsole } from '../../components/TestCaseConsole';
 import { SubmissionHistory } from '../../components/SubmissionHistory';
 import { CodeHistory } from '../../components/CodeHistory';
 
+// ❌ Remove global setupMonaco import
+// import { setupMonaco } from '../../lib/monaco-config';
+
+// ✅ Setup Monaco only when ProblemDetail mounts
+const setupMonaco = () => {
+  import('../../lib/monaco-config').then(({ setupMonaco }) => {
+    setupMonaco();
+  });
+};
+
+// ✅ Correct CDN URL for Pyodide
+const PYODIDE_INDEX_URL = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/';
+
+// ✅ Language configurations - Only JavaScript and Python
+const SUPPORTED_LANGUAGES = [
+  { 
+    id: 'javascript', 
+    name: 'JavaScript', 
+    monacoLanguage: 'javascript',
+    extension: 'js',
+    icon: '🟡',
+    sampleStarter: `/**
+ * @param {number} a
+ * @param {number} b
+ * @return {number}
+ */
+var sumOfTwoNumbers = function(a, b) {
+    // Write your solution here
+    return 0;
+};`
+  },
+  { 
+    id: 'python', 
+    name: 'Python', 
+    monacoLanguage: 'python',
+    extension: 'py',
+    icon: '🟢',
+    sampleStarter: `def sum_of_two_numbers(a: int, b: int) -> int:
+    # Write your solution here
+    return 0`
+  }
+];
+
 interface Problem {
   _id: string;
   title: string;
@@ -28,7 +72,10 @@ interface Problem {
   examples: any[];
   constraints: string[];
   testCases: any[];
-  starterCode: string;
+  starterCode: {
+    javascript: string;
+    python: string;
+  } | string;
   hints: string[];
   tags: string[];
   timeLimit: number;
@@ -59,7 +106,7 @@ interface SubmissionResult {
   isSubmission?: boolean;
   submission?: {
     id: string;
-    status: string;
+    status: SubmissionResult['status'];
     passedTests: number;
     totalTests: number;
     runtime: number;
@@ -90,11 +137,17 @@ interface Submission {
 }
 
 export const ProblemDetail: React.FC = () => {
+  // ✅ Setup Monaco when ProblemDetail mounts
+  useEffect(() => {
+    setupMonaco();
+  }, []);
+
   const { slug } = useParams();
   const navigate = useNavigate();
   const [problem, setProblem] = useState<Problem | null>(null);
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('javascript');
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<SubmissionResult | null>(null);
@@ -108,6 +161,11 @@ export const ProblemDetail: React.FC = () => {
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [codeHistory, setCodeHistory] = useState<string[]>([]);
   const [isEditorMaximized, setIsEditorMaximized] = useState(false);
+  const [pyodide, setPyodide] = useState<any>(null);
+  const [pyodideLoading, setPyodideLoading] = useState(false);
+  const [pyodideError, setPyodideError] = useState<string | null>(null);
+  const [isPyodideLoaded, setIsPyodideLoaded] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   
   // Split view states
   const [splitPosition, setSplitPosition] = useState(60);
@@ -120,8 +178,9 @@ export const ProblemDetail: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const verticalDragRef = useRef<HTMLDivElement>(null);
   const horizontalDragRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Get problem-specific submissions
+  // Get problem-specific submissions
   const problemSubmissions = useMemo(() => {
     if (!problem) return [];
     return allSubmissions.filter((sub: Submission) => {
@@ -132,17 +191,70 @@ export const ProblemDetail: React.FC = () => {
     });
   }, [allSubmissions, problem]);
 
-  // Configure Monaco
+  // ✅ Load Pyodide using the correct CDN URL
   useEffect(() => {
-    // @ts-ignore
-    window.MonacoEnvironment = {
-      getWorkerUrl: function (moduleId: string, label: string) {
-        if (label === 'javascript' || label === 'typescript') {
-          return 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/language/typescript/ts.worker.js';
+    const initPyodide = async () => {
+      setPyodideLoading(true);
+      setPyodideError(null);
+      
+      try {
+        const loadPyodideFn = (window as any).loadPyodide;
+        
+        if (typeof loadPyodideFn === 'function') {
+          console.log('🔄 Loading Pyodide from jsdelivr...');
+          const instance = await loadPyodideFn({
+            indexURL: PYODIDE_INDEX_URL,
+            fullStdLib: true,
+          });
+          
+          setPyodide(instance);
+          setIsPyodideLoaded(true);
+          console.log('✅ Pyodide loaded successfully');
+        } else {
+          console.log('⏳ Waiting for Pyodide script to load...');
+          
+          const waitForPyodide = new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+              if (typeof (window as any).loadPyodide === 'function') {
+                clearInterval(checkInterval);
+                resolve(true);
+              }
+            }, 100);
+            
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              resolve(false);
+            }, 15000);
+          });
+          
+          const loaded = await waitForPyodide;
+          
+          if (loaded && typeof (window as any).loadPyodide === 'function') {
+            const instance = await (window as any).loadPyodide({
+              indexURL: PYODIDE_INDEX_URL,
+              fullStdLib: true,
+            });
+            
+            setPyodide(instance);
+            setIsPyodideLoaded(true);
+            console.log('✅ Pyodide loaded successfully (delayed)');
+          } else {
+            throw new Error('Pyodide script failed to load. Please refresh and try again.');
+          }
         }
-        return 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/editor/editor.worker.js';
+      } catch (error: any) {
+        console.error('❌ Failed to load Pyodide:', error);
+        setPyodideError(error.message || 'Failed to load Python runtime. Please refresh and try again.');
+      } finally {
+        setPyodideLoading(false);
       }
     };
+
+    const timer = setTimeout(() => {
+      initPyodide();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -157,107 +269,55 @@ export const ProblemDetail: React.FC = () => {
   useEffect(() => {
     if (code && slug) {
       const timer = setTimeout(() => {
-        localStorage.setItem(`code_${slug}`, code);
+        localStorage.setItem(`code_${slug}_${selectedLanguage}`, code);
         saveCodeHistory(code);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [code, slug]);
+  }, [code, slug, selectedLanguage]);
 
-  // Switch to results tab when submission result is received
-  useEffect(() => {
-    if (result && result.testResults && result.testResults.length > 0 && result.isSubmission) {
-      setActiveTab('results');
+  // ✅ Get starter code for a specific language
+  const getStarterCodeForLanguage = (problem: Problem | null, language: string): string => {
+    if (!problem) return '';
+    
+    if (problem.starterCode && typeof problem.starterCode === 'object' && !Array.isArray(problem.starterCode)) {
+      const code = problem.starterCode[language as keyof typeof problem.starterCode];
+      if (code && typeof code === 'string' && code.trim()) {
+        return code;
+      }
     }
-  }, [result]);
-
-  // Vertical Drag Handler
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !containerRef.current) return;
-      
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const containerHeight = containerRect.height;
-      const mouseY = e.clientY - containerRect.top;
-      
-      let percentage = (mouseY / containerHeight) * 100;
-      percentage = Math.max(20, Math.min(80, percentage));
-      
-      setSplitPosition(percentage);
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'none';
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging || !containerRef.current) return;
-      
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const containerHeight = containerRect.height;
-      const touchY = e.touches[0].clientY - containerRect.top;
-      
-      let percentage = (touchY / containerHeight) * 100;
-      percentage = Math.max(20, Math.min(80, percentage));
-      
-      setSplitPosition(percentage);
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleTouchMove);
-      document.addEventListener('touchend', handleMouseUp);
-      document.body.style.cursor = 'row-resize';
-      document.body.style.userSelect = 'none';
+    
+    if (language === 'javascript' && typeof problem.starterCode === 'string') {
+      return problem.starterCode;
     }
+    
+    const langConfig = SUPPORTED_LANGUAGES.find(l => l.id === language);
+    return langConfig?.sampleStarter || '';
+  };
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleMouseUp);
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'auto';
-    };
-  }, [isDragging]);
-
-  // Horizontal Drag Handler
+  // ✅ Load language-specific code from localStorage or problem data
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingHorizontal || !containerRef.current) return;
-      
-      const containerWidth = containerRef.current.clientWidth;
-      const mouseX = e.clientX - containerRef.current.getBoundingClientRect().left;
-      
-      let percentage = (mouseX / containerWidth) * 100;
-      percentage = Math.max(15, Math.min(60, percentage));
-      
-      setLeftWidth(percentage);
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingHorizontal(false);
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'none';
-    };
-
-    if (isDraggingHorizontal) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
+    if (slug && selectedLanguage) {
+      const savedCode = localStorage.getItem(`code_${slug}_${selectedLanguage}`);
+      if (savedCode) {
+        setCode(savedCode);
+      } else if (problem) {
+        const starterCode = getStarterCodeForLanguage(problem, selectedLanguage);
+        setCode(starterCode);
+      }
     }
+  }, [selectedLanguage, slug, problem]);
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'auto';
+  // ✅ Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsLanguageDropdownOpen(false);
+      }
     };
-  }, [isDraggingHorizontal]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchProblem = async () => {
     setLoading(true);
@@ -266,23 +326,11 @@ export const ProblemDetail: React.FC = () => {
       const data = response.data.data;
       setProblem(data.problem);
       
-      const savedCode = localStorage.getItem(`code_${slug}`);
+      const savedCode = localStorage.getItem(`code_${slug}_${selectedLanguage}`);
       if (savedCode) {
         setCode(savedCode);
       } else {
-        let starterCode = `/**
- * @param {number} a
- * @param {number} b
- * @return {number}
- */
-var sumOfTwoNumbers = function(a, b) {
-    // Write your solution here
-    return 0;
-};`;
-        
-        if (data.problem.starterCode) {
-          starterCode = data.problem.starterCode;
-        }
+        const starterCode = getStarterCodeForLanguage(data.problem, selectedLanguage);
         setCode(starterCode);
       }
     } catch (error) {
@@ -305,7 +353,7 @@ var sumOfTwoNumbers = function(a, b) {
   };
 
   const loadCodeHistory = () => {
-    const history = localStorage.getItem(`code_history_${slug}`);
+    const history = localStorage.getItem(`code_history_${slug}_${selectedLanguage}`);
     if (history) {
       try {
         setCodeHistory(JSON.parse(history));
@@ -324,10 +372,375 @@ var sumOfTwoNumbers = function(a, b) {
       updatedHistory.shift();
     }
     setCodeHistory(updatedHistory);
-    localStorage.setItem(`code_history_${slug}`, JSON.stringify(updatedHistory));
+    localStorage.setItem(`code_history_${slug}_${selectedLanguage}`, JSON.stringify(updatedHistory));
   };
 
-  // ✅ UPDATED: Run code (does NOT count as submission)
+  const handleLanguageChange = (languageId: string) => {
+    if (languageId === selectedLanguage) {
+      setIsLanguageDropdownOpen(false);
+      return;
+    }
+    setSelectedLanguage(languageId);
+    setIsLanguageDropdownOpen(false);
+    setResult(null);
+  };
+
+  const currentLanguage = SUPPORTED_LANGUAGES.find(l => l.id === selectedLanguage) || SUPPORTED_LANGUAGES[0];
+
+  // ✅ FIXED: Universal Input Parser - Handles all input types including single element arrays
+  const parseInput = (input: string): any => {
+    if (!input || !input.trim()) return '';
+    
+    const trimmed = input.trim();
+    
+    // Check if it's a quoted string (starts and ends with quotes)
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || 
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      return trimmed.slice(1, -1);
+    }
+    
+    // If it starts with '[' and ends with ']', it's an array format
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      const content = trimmed.slice(1, -1).trim();
+      if (!content) return [];
+      return content.split(',').map((val: string) => {
+        const v = val.trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || 
+            (v.startsWith("'") && v.endsWith("'"))) {
+          return v.slice(1, -1);
+        }
+        const num = Number(v);
+        return isNaN(num) ? v : num;
+      });
+    }
+    
+    // ✅ SPECIAL CASE: Check if this is a list of numbers for array problems
+    // If it contains multiple numbers separated by commas, and looks like array input
+    if (trimmed.includes(',')) {
+      const parts = trimmed.split(',').map((val: string) => {
+        const v = val.trim();
+        const num = Number(v);
+        return isNaN(num) ? v : num;
+      });
+      
+      // ✅ If all parts are numbers, return as array
+      if (parts.every((p: any) => typeof p === 'number')) {
+        return parts;
+      }
+      
+      // Otherwise return as individual arguments
+      return parts;
+    }
+    
+    // ✅ SPECIAL CASE: Single number - Check if it should be an array
+    // This happens for test cases like [1] which gets parsed as "1"
+    // We need to check the problem context to determine if this should be an array
+    const num = Number(trimmed);
+    if (!isNaN(num)) {
+      // For array problems, a single number should be treated as an array with one element
+      // We'll detect this based on the function signature
+      return num;
+    }
+    
+    return trimmed;
+  };
+
+  // ✅ Helper to determine if code expects an array parameter
+  const isArrayFunction = (code: string): boolean => {
+    const arrayKeywords = ['[]', 'arr', 'array', 'nums', 'list'];
+    return arrayKeywords.some(keyword => code.includes(keyword));
+  };
+
+  // ✅ Build argument string based on input type and function signature
+  const buildArgString = (parsedInput: any, code: string): string => {
+    // Check if parsed input is a number (single value)
+    const isSingleNumber = typeof parsedInput === 'number';
+    const isArrayInput = Array.isArray(parsedInput);
+    
+    // Check if function expects an array
+    const expectsArray = isArrayFunction(code);
+    
+    // ✅ For array problems with a single number, wrap it in an array
+    if (isSingleNumber && expectsArray) {
+      return JSON.stringify([parsedInput]);
+    }
+    
+    if (isArrayInput && expectsArray) {
+      // ✅ For array problems, pass as a single array argument
+      return JSON.stringify(parsedInput);
+    } else if (isArrayInput && parsedInput.length > 1) {
+      // Multiple arguments: join with commas
+      return parsedInput.map((v: any) => {
+        if (typeof v === 'string') return `"${v}"`;
+        return String(v);
+      }).join(', ');
+    } else if (isArrayInput && parsedInput.length === 1) {
+      // Single element array
+      return JSON.stringify(parsedInput);
+    } else {
+      return typeof parsedInput === 'string' ? `"${parsedInput}"` : String(parsedInput);
+    }
+  };
+
+  // ✅ FIXED: Execute JavaScript with proper output capture and argument handling
+  const executeJavaScript = (code: string, input: string): Promise<{ output: string; error: string }> => {
+    return new Promise((resolve) => {
+      let output = '';
+      let error = '';
+
+      try {
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = (...args) => {
+          output += args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ') + '\n';
+        };
+        console.warn = (...args) => {
+          output += args.map(arg => String(arg)).join(' ') + '\n';
+        };
+        console.error = (...args) => {
+          error += args.map(arg => String(arg)).join(' ') + '\n';
+        };
+
+        // ✅ Parse input
+        const parsedInput = parseInput(input);
+        
+        // ✅ Build argument string
+        const argStr = buildArgString(parsedInput, code);
+
+        // ✅ Detect function name
+        const functionMatch = code.match(/function\s+(\w+)\s*\(/);
+        const varMatch = code.match(/(?:var|let|const)\s+(\w+)\s*=\s*function/);
+        const arrowMatch = code.match(/(?:var|let|const)\s+(\w+)\s*=\s*\(/);
+        const functionName = functionMatch?.[1] || varMatch?.[1] || arrowMatch?.[1] || null;
+
+        if (!functionName) {
+          try {
+            const func = new Function(code);
+            const result = func();
+            if (result !== undefined && result !== null) {
+              output += String(result) + '\n';
+            }
+          } catch (execError: any) {
+            error += execError.message || 'Execution error';
+          }
+        } else {
+          const wrapperCode = `
+            ${code}
+            
+            try {
+              const result = ${functionName}(${argStr});
+              if (result !== undefined && result !== null) {
+                console.log(result);
+              }
+            } catch (e) {
+              console.error(e.message);
+            }
+          `;
+
+          try {
+            const func = new Function(wrapperCode);
+            func();
+          } catch (execError: any) {
+            error += execError.message || 'Execution error';
+          }
+        }
+
+        console.log = originalLog;
+        console.error = originalError;
+        console.warn = originalWarn;
+
+        resolve({ output: output.trim(), error: error.trim() });
+      } catch (err: any) {
+        resolve({ output: output.trim(), error: err.message || 'Execution error' });
+      }
+    });
+  };
+
+  // ✅ FIXED: Execute Python with proper output capture and argument handling
+  const executePython = async (code: string, input: string): Promise<{ output: string; error: string }> => {
+    if (!isPyodideLoaded || !pyodide) {
+      return {
+        output: '',
+        error: pyodideError || 'Python runtime is not available. Please refresh and try again.',
+      };
+    }
+
+    try {
+      // ✅ Parse input
+      const parsedInput = parseInput(input);
+      
+      // ✅ Build argument string
+      const argStr = buildArgString(parsedInput, code);
+
+      // ✅ Detect function name
+      const functionMatch = code.match(/def\s+(\w+)\s*\(/);
+      const functionName = functionMatch?.[1] || null;
+
+      let wrapperCode = code;
+      
+      if (functionName) {
+        wrapperCode = `
+${code}
+
+# Call the function and print result
+if __name__ == "__main__":
+    result = ${functionName}(${argStr})
+    print(result)
+        `;
+      }
+
+      if (input) {
+        pyodide.runPython(`
+import sys
+sys.stdin = open('input.txt', 'w')
+sys.stdin.write('${input.replace(/'/g, "\\'")}')
+sys.stdin.close()
+sys.stdin = open('input.txt', 'r')
+        `);
+      }
+
+      pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+sys.stderr = StringIO()
+      `);
+
+      pyodide.runPython(wrapperCode);
+
+      const stdout = pyodide.runPython('sys.stdout.getvalue()');
+      const stderr = pyodide.runPython('sys.stderr.getvalue()');
+
+      pyodide.runPython('sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__');
+
+      return {
+        output: stdout.trim(),
+        error: stderr.trim(),
+      };
+    } catch (error: any) {
+      pyodide.runPython('sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__');
+      return {
+        output: '',
+        error: error.message || 'Python execution error',
+      };
+    }
+  };
+
+  // ✅ Execute code based on language
+  const executeCode = async (code: string, input: string, language: string): Promise<{ output: string; error: string }> => {
+    switch (language) {
+      case 'javascript':
+        return await executeJavaScript(code, input);
+      case 'python':
+        return await executePython(code, input);
+      default:
+        return { output: '', error: 'Unsupported language' };
+    }
+  };
+
+  // ✅ Execute code against test cases
+  const executeCodeClientSide = async (
+    code: string,
+    testCases: any[],
+    language: string
+  ): Promise<{
+    passedTests: number;
+    totalTests: number;
+    status: string;
+    runtime: number;
+    memory: number;
+    errorMessage?: string;
+    testResults: any[];
+  }> => {
+    const results = [];
+    let passedTests = 0;
+    let totalTests = testCases.length;
+    let status: SubmissionResult['status'] = 'accepted';
+    let errorMessage = '';
+    let totalRuntime = 0;
+
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const isHidden = testCase.isHidden || false;
+      
+      const result: any = {
+        input: testCase.input,
+        expected: testCase.expectedOutput,
+        got: '',
+        passed: false,
+        isHidden: isHidden,
+        runtime: 0,
+        memory: 0,
+        error: null,
+      };
+
+      try {
+        const startTime = performance.now();
+        
+        const execResult = await executeCode(code, testCase.input, language);
+
+        const runtime = Math.round(performance.now() - startTime);
+        result.runtime = runtime;
+        totalRuntime += runtime;
+
+        const actualOutput = execResult.output.trim();
+        let expectedOutput = testCase.expectedOutput.trim();
+
+        // ✅ Remove quotes from expected if present
+        if ((expectedOutput.startsWith('"') && expectedOutput.endsWith('"')) || 
+            (expectedOutput.startsWith("'") && expectedOutput.endsWith("'"))) {
+          expectedOutput = expectedOutput.slice(1, -1);
+        }
+
+        result.got = actualOutput;
+
+        // ✅ Compare normalized values
+        if (actualOutput === expectedOutput) {
+          result.passed = true;
+          passedTests++;
+        } else {
+          result.passed = false;
+          status = 'wrong_answer';
+          errorMessage = `Test case ${i + 1} failed. Expected: "${expectedOutput}", Got: "${actualOutput}"`;
+        }
+
+        results.push(result);
+      } catch (error: any) {
+        result.got = 'Error';
+        result.passed = false;
+        result.error = error.message || 'Runtime error';
+        results.push(result);
+        
+        if (!isHidden) {
+          status = 'runtime_error';
+          errorMessage = error.message || 'Runtime error occurred';
+        }
+      }
+    }
+
+    const avgRuntime = results.length > 0 ? Math.round(totalRuntime / results.length) : 0;
+
+    if (passedTests === totalTests) {
+      status = 'accepted';
+      errorMessage = '';
+    }
+
+    return {
+      passedTests,
+      totalTests,
+      status,
+      runtime: avgRuntime,
+      memory: 0,
+      errorMessage,
+      testResults: results,
+    };
+  };
+
+  // ✅ Run code (does NOT count as submission)
   const handleRunCode = async () => {
     if (!code.trim()) {
       setResult({
@@ -347,20 +760,19 @@ var sumOfTwoNumbers = function(a, b) {
     setResult(null);
 
     try {
-      // ✅ Pass isSubmission: false for Run
-      const response = await api.post(`/problems/${slug}/submit`, {
-        code: code,
-        isSubmission: false,
-      });
-      
-      const data = response.data.data;
+      if (!problem) return;
+
+      const execResult = await executeCodeClientSide(
+        code,
+        problem.testCases || [],
+        selectedLanguage
+      );
+
       setResult({
-        ...data,
-        testResults: data.testResults || [],
+        ...execResult,
+        status: execResult.status as SubmissionResult['status'],
         isSubmission: false,
       });
-      
-      // ✅ Don't fetch submissions on run (no new submission created)
       
       if (outputRef.current) {
         outputRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -382,7 +794,7 @@ var sumOfTwoNumbers = function(a, b) {
     }
   };
 
-  // ✅ UPDATED: Submit code (DOES count as submission)
+  // ✅ Submit code (DOES count as submission)
   const handleSubmit = async () => {
     if (!code.trim()) {
       setResult({
@@ -402,23 +814,37 @@ var sumOfTwoNumbers = function(a, b) {
     setResult(null);
 
     try {
-      // ✅ Pass isSubmission: true for Submit
+      if (!problem) return;
+
+      const execResult = await executeCodeClientSide(
+        code,
+        problem.testCases || [],
+        selectedLanguage
+      );
+
       const response = await api.post(`/problems/${slug}/submit`, {
         code: code,
+        language: selectedLanguage,
         isSubmission: true,
+        result: {
+          status: execResult.status,
+          passedTests: execResult.passedTests,
+          totalTests: execResult.totalTests,
+          runtime: execResult.runtime,
+          memory: execResult.memory,
+          errorMessage: execResult.errorMessage,
+          testResults: execResult.testResults,
+        },
       });
 
-      const data = response.data.data;
-      
       setResult({
-        ...data,
-        testResults: data.testResults || [],
+        ...execResult,
+        status: execResult.status as SubmissionResult['status'],
         isSubmission: true,
+        submission: response.data.data.submission,
       });
       
-      // ✅ Only fetch submissions on actual submission
       await fetchSubmissions();
-      
       setActiveTab('results');
       
       if (outputRef.current) {
@@ -528,13 +954,11 @@ var sumOfTwoNumbers = function(a, b) {
 
   const difficultyInfo = getDifficultyBadge(problem?.difficulty || 'easy');
 
-  // Calculate panel heights
   const editorHeight = isEditorMaximized ? 100 : isBottomPanelMaximized ? 0 : splitPosition;
   const bottomHeight = isBottomPanelMaximized ? 100 : isEditorMaximized ? 0 : 100 - splitPosition;
 
-  // Check if results are available
   const hasResults = result && result.testResults && result.testResults.length > 0;
-  const allVisiblePassed = Boolean(hasResults && getPassedVisibleCount() === getTotalVisibleCount());
+  const allVisiblePassed = hasResults && getPassedVisibleCount() === getTotalVisibleCount();
 
   if (loading) {
     return (
@@ -575,6 +999,38 @@ var sumOfTwoNumbers = function(a, b) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Language Selector */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#161A19] border border-[#2A302E] rounded-lg hover:border-[#10B981]/30 transition-colors text-sm"
+            >
+              <span>{currentLanguage.icon}</span>
+              <span className="font-medium text-[#EDEFEE]">{currentLanguage.name}</span>
+              <ChevronDownIcon className={`w-4 h-4 text-[#9CA3A0] transition-transform ${isLanguageDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isLanguageDropdownOpen && (
+              <div className="absolute top-full right-0 mt-1 w-48 bg-[#161A19] border border-[#2A302E] rounded-lg shadow-lg py-1 z-10 max-h-60 overflow-y-auto">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => handleLanguageChange(lang.id)}
+                    className={`w-full text-left px-4 py-2 hover:bg-[#1E2322] transition-colors flex items-center gap-2 text-sm ${
+                      selectedLanguage === lang.id ? 'bg-[#10B981]/10 text-[#10B981]' : 'text-[#9CA3A0]'
+                    }`}
+                  >
+                    <span>{lang.icon}</span>
+                    <span>{lang.name}</span>
+                    {selectedLanguage === lang.id && (
+                      <span className="ml-auto text-[#10B981]">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Layout Controls */}
           <div className="flex items-center gap-1 mr-2">
             <button
@@ -764,8 +1220,20 @@ var sumOfTwoNumbers = function(a, b) {
                 <button onClick={() => setShowDescription(true)} className={`text-[#5C6360] hover:text-[#EDEFEE] transition-colors ${showDescription ? 'hidden' : ''}`}>
                   <ChevronRight className="w-4 h-4" />
                 </button>
-                <span className="text-sm text-[#9CA3A0]">JavaScript</span>
+                <span className="text-sm text-[#9CA3A0]">{currentLanguage.name}</span>
                 <span className="text-xs text-[#5C6360]">• {problem.timeLimit || 2000}ms • {problem.memoryLimit || 256}MB</span>
+                {pyodideLoading && selectedLanguage === 'python' && (
+                  <span className="text-xs text-[#60A5FA] flex items-center gap-1 ml-2">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Loading Python...
+                  </span>
+                )}
+                {pyodideError && selectedLanguage === 'python' && (
+                  <span className="text-xs text-[#F87171] flex items-center gap-1 ml-2">
+                    <AlertCircle className="w-3 h-3" />
+                    Python unavailable
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={handleCopyCode} className="text-[#5C6360] hover:text-[#EDEFEE] p-1 rounded hover:bg-[#1E2322] transition-colors" title="Copy code">
@@ -797,8 +1265,7 @@ var sumOfTwoNumbers = function(a, b) {
             <div className="flex-1 min-h-0 bg-[#1E1E1E]">
               <Editor
                 height="100%"
-                defaultLanguage="javascript"
-                language="javascript"
+                language={currentLanguage.monacoLanguage}
                 value={code}
                 onChange={(value) => setCode(value || '')}
                 theme="vs-dark"
@@ -927,7 +1394,7 @@ var sumOfTwoNumbers = function(a, b) {
                   getTestCaseResult={getTestCaseResult}
                   getPassedVisibleCount={getPassedVisibleCount}
                   getTotalVisibleCount={getTotalVisibleCount}
-                  allVisiblePassed={allVisiblePassed}
+                  allVisiblePassed={allVisiblePassed ?? false}
                 />
               )}
 
@@ -984,12 +1451,10 @@ const ResultsTab: React.FC<{
   const totalCount = getTotalVisibleCount();
   const hiddenCount = result.totalTests - totalCount;
 
-  // Check if this was a submission or just a run
   const isSubmission = result.isSubmission !== false;
 
   return (
     <div className="space-y-4">
-      {/* Submission/Run Badge */}
       <div className="flex items-center gap-2">
         <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
           isSubmission 
@@ -1005,7 +1470,6 @@ const ResultsTab: React.FC<{
         )}
       </div>
 
-      {/* Summary Card */}
       <div className={`p-4 rounded-lg border ${
         allVisiblePassed && result.status === 'accepted'
           ? 'bg-[#10B981]/10 border-[#10B981]/30'
@@ -1055,7 +1519,6 @@ const ResultsTab: React.FC<{
         )}
       </div>
 
-      {/* Test Case Results */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-[#5C6360] uppercase tracking-wider">Test Case Details</span>
@@ -1150,7 +1613,6 @@ const ResultsTab: React.FC<{
   );
 };
 
-// ✅ Status helpers for ResultsTab
 const getStatusColor = (status: string) => {
   if (status === 'accepted') return 'text-[#10B981]';
   if (status === 'wrong_answer' || status === 'runtime_error' || status === 'compile_error') return 'text-[#F87171]';

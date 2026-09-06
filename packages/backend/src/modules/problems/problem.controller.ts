@@ -5,6 +5,9 @@ import { z } from 'zod';
 import { Types } from 'mongoose';
 import { ProblemService } from './problem.service.js';
 import { Problem } from './problem.model.js';
+import { User } from '../auth/auth.model.js';
+import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
+import { ProblemSubmission } from './problem.model.js';
 
 const createProblemSchema = z.object({
   title: z.string().min(3).max(100),
@@ -21,7 +24,15 @@ const createProblemSchema = z.object({
     expectedOutput: z.string(),
     isHidden: z.boolean().default(false),
   })),
-  starterCode: z.string().default(''),
+  starterCode: z.object({
+    javascript: z.string().default(''),
+    python: z.string().default(''),
+    java: z.string().default(''),
+  }).default({
+    javascript: '',
+    python: '',
+    java: '',
+  }),
   solutionCode: z.string().default(''),
   hints: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
@@ -33,20 +44,29 @@ const updateProblemSchema = createProblemSchema.partial();
 
 const submitProblemSchema = z.object({
   code: z.string().min(1, 'Code is required'),
-  isSubmission: z.boolean().optional().default(true), // ✅ New field
+  isSubmission: z.boolean().optional().default(true),
+  result: z.object({
+    status: z.enum(['accepted', 'wrong_answer', 'time_limit', 'memory_limit', 'runtime_error', 'compile_error']),
+    passedTests: z.number(),
+    totalTests: z.number(),
+    runtime: z.number(),
+    memory: z.number(),
+    errorMessage: z.string().optional(),
+    testResults: z.array(z.any()).optional(),
+  }).optional(),
 });
 
 export class ProblemController {
   static async create(req: Request, res: Response) {
     try {
       const data = createProblemSchema.parse(req.body);
-      
+
       const problemData = {
         ...data,
         createdBy: new Types.ObjectId(req.userId),
         isPublished: false,
       };
-      
+
       const problem = await ProblemService.createProblem(problemData);
 
       res.status(201).json({
@@ -56,14 +76,14 @@ export class ProblemController {
       });
     } catch (error: any) {
       console.error('Create problem error:', error);
-      
+
       if (error.name === 'ZodError') {
         return res.status(400).json({
           success: false,
           message: error.errors?.[0]?.message || 'Validation error',
         });
       }
-      
+
       res.status(500).json({
         success: false,
         message: error.message || 'Failed to create problem',
@@ -75,7 +95,7 @@ export class ProblemController {
     try {
       const { difficulty, tag, search, limit, page } = req.query;
       const query: any = { isPublished: true };
-      
+
       if (difficulty) query.difficulty = difficulty;
       if (tag) query.tags = tag;
       if (search) {
@@ -175,7 +195,7 @@ export class ProblemController {
     try {
       const { slug } = req.params;
       const problem = await ProblemService.getProblemBySlug(slug);
-      
+
       if (!problem) {
         return res.status(404).json({
           success: false,
@@ -226,7 +246,7 @@ export class ProblemController {
     try {
       const { problemId } = req.params;
       const problem = await ProblemService.getProblemById(problemId);
-      
+
       if (!problem) {
         return res.status(404).json({
           success: false,
@@ -247,13 +267,13 @@ export class ProblemController {
     }
   }
 
-  // ✅ UPDATED: Submit Solution with isSubmission flag
+  // ✅ UPDATED: Submit Solution with client-side result support
   static async submitSolution(req: Request, res: Response) {
     try {
       const { slug } = req.params;
       const userId = req.userId;
-      const { code, isSubmission = true } = req.body; // ✅ Default to true for submit
-      
+      const { code, isSubmission = true, result: clientResult } = req.body;
+
       console.log(`📝 ${isSubmission ? 'SUBMITTING' : 'RUNNING'} solution for ${slug}`);
       console.log(`👤 User ID: ${userId}`);
 
@@ -279,27 +299,80 @@ export class ProblemController {
         });
       }
 
-      const result = await ProblemService.submitSolution(
-        problem._id.toString(),
-        userId,
-        code
-      );
+      let result;
+
+      // ✅ If client provided result and this is a submission, use it
+      if (clientResult && isSubmission) {
+        console.log('📊 Using client-side execution result');
+
+        // ✅ Save submission to database with client-side result
+        const submission = await ProblemSubmission.create({
+          problemId: new Types.ObjectId(problem._id),
+          userId: new Types.ObjectId(userId),
+          language: 'javascript',
+          code,
+          status: clientResult.status,
+          passedTests: clientResult.passedTests,
+          totalTests: clientResult.totalTests,
+          runtime: clientResult.runtime,
+          memory: clientResult.memory || 0,
+          errorMessage: clientResult.errorMessage || undefined,
+          submittedAt: new Date(),
+        });
+
+        // ✅ Award XP if accepted
+        if (clientResult.status === 'accepted') {
+          const xpGain = ProblemService.getXpForDifficulty(problem.difficulty);
+          const user = await User.findById(userId);
+          if (user) {
+            user.xp = (user.xp || 0) + xpGain;
+            const newLevel = Math.floor(user.xp / 100) + 1;
+            if (newLevel > user.level) {
+              user.level = newLevel;
+            }
+            await user.save();
+            await LeaderboardService.updateUserScore(userId, user.xp);
+            console.log(`🏆 Awarded ${xpGain} XP to user ${userId}`);
+          }
+        }
+
+        result = {
+          ...clientResult,
+          isSubmission: true,
+          submission: {
+            id: submission._id,
+            status: submission.status,
+            passedTests: submission.passedTests,
+            totalTests: submission.totalTests,
+            runtime: submission.runtime,
+            memory: submission.memory,
+            errorMessage: submission.errorMessage,
+            createdAt: submission._id.getTimestamp(),
+          },
+        };
+      } else if (clientResult && !isSubmission) {
+        // Run mode with client-side execution - just return results without saving
+        result = {
+          ...clientResult,
+          isSubmission: false,
+          submission: null,
+        };
+      } else {
+        // Fallback to server-side execution
+        console.log('💻 Using server-side execution (fallback)');
+        result = await ProblemService.submitSolution(
+          problem._id.toString(),
+          userId,
+          code,
+          isSubmission
+        );
+      }
 
       console.log(`✅ ${isSubmission ? 'Submission' : 'Run'} result: ${result.status} (${result.passedTests}/${result.totalTests} tests passed)`);
 
       res.status(200).json({
         success: true,
-        data: {
-          status: result.status,
-          passedTests: result.passedTests,
-          totalTests: result.totalTests,
-          runtime: result.runtime,
-          memory: result.memory,
-          errorMessage: result.errorMessage,
-          testResults: result.testResults || [],
-          submission: result.submission,
-          isSubmission: isSubmission, // ✅ Return the flag
-        },
+        data: result,
       });
     } catch (error: any) {
       console.error('Submit solution error:', error);
@@ -337,7 +410,7 @@ export class ProblemController {
     try {
       const { problemId } = req.params;
       const data = updateProblemSchema.parse(req.body);
-      
+
       const problem = await ProblemService.updateProblem(problemId, data);
       if (!problem) {
         return res.status(404).json({
@@ -353,14 +426,14 @@ export class ProblemController {
       });
     } catch (error: any) {
       console.error('Update problem error:', error);
-      
+
       if (error.name === 'ZodError') {
         return res.status(400).json({
           success: false,
           message: error.errors?.[0]?.message || 'Validation error',
         });
       }
-      
+
       res.status(500).json({
         success: false,
         message: error.message || 'Failed to update problem',
@@ -372,7 +445,7 @@ export class ProblemController {
     try {
       const { problemId } = req.params;
       const deleted = await ProblemService.deleteProblem(problemId);
-      
+
       if (!deleted) {
         return res.status(404).json({
           success: false,
@@ -422,3 +495,5 @@ export class ProblemController {
     }
   }
 }
+
+export default ProblemController;

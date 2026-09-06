@@ -35,7 +35,6 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
     }));
   };
 
-  // Check if there's a submission result
   const hasResult = result !== null && result !== undefined;
 
   return (
@@ -46,11 +45,14 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
         {hasResult && (
           <div className="flex items-center gap-3">
             <span className={`text-xs font-medium ${
-              getPassedVisibleCount() === getTotalVisibleCount() 
+              getPassedVisibleCount() === getTotalVisibleCount() && result.status === 'accepted'
                 ? 'text-[#10B981]' 
                 : 'text-[#F87171]'
             }`}>
-              {getPassedVisibleCount()} / {getTotalVisibleCount()} passed
+              {getPassedVisibleCount()} / {getTotalVisibleCount()} visible passed
+              {result.totalTests > getTotalVisibleCount() && 
+                ` (${result.totalTests} total)`
+              }
             </span>
             {result.status && (
               <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
@@ -176,7 +178,7 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
                     <div className="bg-[#0D0F0F] rounded-lg p-2">
                       <span className="text-xs text-[#5C6360]">Your Output:</span>
                       <pre className={`text-sm font-mono mt-1 whitespace-pre-wrap break-all ${
-                        passed ? 'text-[#10B981]' : 'text-[#F87171]'
+                        passed ? 'text-[#10B981]' : testResult.got ? 'text-[#F87171]' : 'text-[#5C6360] italic'
                       }`}>
                         {testResult.got || 'No output'}
                       </pre>
@@ -212,21 +214,23 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
       {/* Summary Message */}
       {hasResult && (
         <div className={`mt-4 p-3 rounded-lg text-sm ${
-          getPassedVisibleCount() === getTotalVisibleCount()
+          getPassedVisibleCount() === getTotalVisibleCount() && result.status === 'accepted'
             ? 'bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981]'
             : 'bg-[#F87171]/10 border border-[#F87171]/20 text-[#F87171]'
         }`}>
-          {getPassedVisibleCount() === getTotalVisibleCount() ? (
+          {getPassedVisibleCount() === getTotalVisibleCount() && result.status === 'accepted' ? (
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
-              <span>🎉 All {getTotalVisibleCount()} visible test cases passed!</span>
+              <span>🎉 All {result.totalTests} test cases passed!</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />
               <span>
-                {getPassedVisibleCount()} of {getTotalVisibleCount()} visible test cases passed. 
-                {getTotalVisibleCount() - getPassedVisibleCount()} failed.
+                {getPassedVisibleCount()} of {getTotalVisibleCount()} visible test cases passed.
+                {result.totalTests > getTotalVisibleCount() && 
+                  ` ${result.totalTests - getTotalVisibleCount()} hidden test(s) not shown.`
+                }
               </span>
             </div>
           )}
@@ -240,7 +244,7 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
           {result.status === 'accepted' && (
             <span className="ml-2 text-[#10B981]">(All passed!)</span>
           )}
-          {result.status === 'wrong_answer' && result.passedTests >= visibleTestCases.length && (
+          {result.status === 'wrong_answer' && getPassedVisibleCount() === getTotalVisibleCount() && (
             <span className="ml-2 text-[#F87171]">(Some hidden tests failed)</span>
           )}
         </div>
@@ -248,3 +252,5 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
     </div>
   );
 };
+
+export default TestCaseConsole;

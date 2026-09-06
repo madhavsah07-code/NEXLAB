@@ -1,3 +1,5 @@
+// packages/backend/src/modules/problems/problem.model.ts
+
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface ITestCase {
@@ -19,7 +21,11 @@ export interface IProblem extends Document {
   }[];
   constraints: string[];
   testCases: ITestCase[];
-  starterCode: string;
+  starterCode: {
+    javascript: string;
+    python: string;
+    java: string;
+  }; // ✅ Changed to object with language-specific code
   solutionCode: string;
   hints: string[];
   tags: string[];
@@ -58,6 +64,7 @@ const ExampleSchema = new Schema({
   explanation: { type: String },
 });
 
+// ✅ Updated ProblemSchema with language-specific starter code
 const ProblemSchema = new Schema<IProblem>(
   {
     title: { type: String, required: true, trim: true },
@@ -71,7 +78,11 @@ const ProblemSchema = new Schema<IProblem>(
     examples: [ExampleSchema],
     constraints: { type: [String], default: [] },
     testCases: [TestCaseSchema],
-    starterCode: { type: String, default: '' },
+    starterCode: {
+      javascript: { type: String, default: '' },
+      python: { type: String, default: '' },
+      java: { type: String, default: '' },
+    },
     solutionCode: { type: String, default: '' },
     hints: { type: [String], default: [] },
     tags: { type: [String], default: [] },
@@ -83,6 +94,7 @@ const ProblemSchema = new Schema<IProblem>(
   { timestamps: true }
 );
 
+// Auto-generate slug from title
 ProblemSchema.pre('save', function(next) {
   if (this.isModified('title') || !this.slug) {
     this.slug = this.title

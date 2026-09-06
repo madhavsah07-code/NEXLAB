@@ -5,10 +5,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Plus, Trash2, Image, Upload, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { ImageUpload } from '../../components/ImageUpload';
+
+// ✅ Setup Monaco only if used in this file
+const setupMonaco = () => {
+  import('../../lib/monaco-config').then(({ setupMonaco }) => {
+    setupMonaco();
+  });
+};
 
 const courseSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
@@ -17,7 +24,7 @@ const courseSchema = z.object({
   level: z.enum(['beginner', 'intermediate', 'advanced']),
   price: z.number().min(0, 'Price must be at least 0'),
   thumbnail: z.string().optional(),
-  coverImage: z.string().optional(), // ✅ Added cover image field
+  coverImage: z.string().optional(),
   lessons: z.array(z.object({
     title: z.string().min(1, 'Lesson title is required'),
     description: z.string().optional(),
@@ -31,14 +38,21 @@ const courseSchema = z.object({
 type CourseFormData = z.infer<typeof courseSchema>;
 
 export const CourseForm: React.FC = () => {
+  // ✅ Setup Monaco if needed - CourseForm doesn't use Monaco Editor
+  useEffect(() => {
+    // Monaco Editor is not used in this form, so we don't need to set it up
+    // If Monaco is needed in the future, uncomment the line below:
+    // setupMonaco();
+  }, []);
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!id);
   const [thumbnail, setThumbnail] = useState<string>('');
-  const [coverImage, setCoverImage] = useState<string>(''); // ✅ Cover image state
+  const [coverImage, setCoverImage] = useState<string>('');
 
-  const { register, control, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<CourseFormData>({
+  const { register, control, handleSubmit, formState: { errors }, reset, setValue } = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: '',
@@ -101,15 +115,6 @@ export const CourseForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ✅ Format price in INR for display
-  const formatPrice = (amount: number): string => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   if (fetching) {
@@ -220,7 +225,7 @@ export const CourseForm: React.FC = () => {
             </div>
           </div>
 
-          {/* ✅ Thumbnail Upload */}
+          {/* Thumbnail Upload */}
           <div className="mt-4">
             <ImageUpload
               value={thumbnail}
@@ -237,7 +242,7 @@ export const CourseForm: React.FC = () => {
             )}
           </div>
 
-          {/* ✅ Cover Image Upload */}
+          {/* Cover Image Upload */}
           <div className="mt-4">
             <ImageUpload
               value={coverImage}

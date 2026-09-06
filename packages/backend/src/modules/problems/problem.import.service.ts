@@ -35,7 +35,11 @@ export interface ProblemImportData {
     expectedOutput: string;
     isHidden?: boolean;
   }[];
-  starterCode?: string;
+  starterCode?: {
+    javascript?: string;
+    python?: string;
+    java?: string;
+  };
   solutionCode?: string;
   hints?: string[];
   tags?: string[];
@@ -88,6 +92,23 @@ export class ProblemImportService {
       });
     }
 
+    // Validate starterCode
+    if (data.starterCode) {
+      if (typeof data.starterCode !== 'object' || Array.isArray(data.starterCode)) {
+        errors.push('starterCode must be an object with language keys');
+      } else {
+        const validLanguages = ['javascript', 'python', 'java'];
+        for (const key of Object.keys(data.starterCode)) {
+          if (!validLanguages.includes(key)) {
+            errors.push(`Invalid language key "${key}" in starterCode. Allowed: javascript, python, java`);
+          }
+          if (typeof data.starterCode[key] !== 'string') {
+            errors.push(`starterCode.${key} must be a string`);
+          }
+        }
+      }
+    }
+
     return { valid: errors.length === 0, errors };
   }
 
@@ -111,24 +132,33 @@ export class ProblemImportService {
         return { success: false, error: `Problem with title "${data.title}" already exists` };
       }
 
+      // ✅ Build starterCode object with defaults
+      const starterCode = {
+        javascript: data.starterCode?.javascript || '',
+        python: data.starterCode?.python || '',
+        java: data.starterCode?.java || '',
+      };
+
       // Create problem
       const problemData = {
-        ...data,
-        createdBy: new Types.ObjectId(createdBy),
-        isPublished: data.isPublished ?? false,
+        title: data.title,
+        difficulty: data.difficulty,
+        description: data.description,
+        examples: data.examples || [],
+        constraints: data.constraints || [],
         testCases: data.testCases.map((tc: any) => ({
           input: tc.input,
           expectedOutput: tc.expectedOutput,
           isHidden: tc.isHidden || false,
         })),
-        examples: data.examples || [],
-        constraints: data.constraints || [],
+        starterCode: starterCode,
+        solutionCode: data.solutionCode || '',
         hints: data.hints || [],
         tags: data.tags || [],
         timeLimit: data.timeLimit || 2000,
         memoryLimit: data.memoryLimit || 256,
-        starterCode: data.starterCode || '',
-        solutionCode: data.solutionCode || '',
+        isPublished: data.isPublished ?? false,
+        createdBy: new Types.ObjectId(createdBy),
       };
 
       const problem = await Problem.create(problemData);
@@ -207,7 +237,8 @@ export class ProblemImportService {
           isHidden: true
         }
       ],
-      starterCode: `/**
+      starterCode: {
+        javascript: `/**
  * @param {number} a
  * @param {number} b
  * @return {number}
@@ -216,6 +247,20 @@ var addTwoNumbers = function(a, b) {
     // Write your solution here
     return 0;
 };`,
+        python: `def add_two_numbers(a: int, b: int) -> int:
+    # Write your solution here
+    return 0`,
+        java: `public class Main {
+    public static int addTwoNumbers(int a, int b) {
+        // Write your solution here
+        return 0;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(addTwoNumbers(5, 10));
+    }
+}`
+      },
       solutionCode: `/**
  * @param {number} a
  * @param {number} b
@@ -326,7 +371,11 @@ var addTwoNumbers = function(a, b) {
       examples: p.examples || [],
       constraints: p.constraints || [],
       testCases: p.testCases || [],
-      starterCode: p.starterCode || '',
+      starterCode: {
+        javascript: p.starterCode?.javascript || '',
+        python: p.starterCode?.python || '',
+        java: p.starterCode?.java || '',
+      },
       solutionCode: p.solutionCode || '',
       hints: p.hints || [],
       tags: p.tags || [],
