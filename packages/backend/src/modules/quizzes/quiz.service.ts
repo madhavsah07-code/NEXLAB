@@ -1,3 +1,5 @@
+// packages/backend/src/modules/quizzes/quiz.service.ts
+
 import { Types } from 'mongoose';
 import { Quiz, QuizAttempt, IQuiz, IQuizAttempt } from './quiz.model.js';
 import { Course } from '../courses/course.model.js';
@@ -8,7 +10,9 @@ export class QuizService {
   // ---------- Quiz CRUD ----------
   
   static async createQuiz(data: Partial<IQuiz>): Promise<IQuiz> {
+    console.log('📝 Creating quiz with data:', JSON.stringify(data, null, 2));
     const quiz = await Quiz.create(data);
+    console.log(`✅ Quiz created with ID: ${quiz._id}`);
     return quiz;
   }
 
@@ -55,16 +59,13 @@ export class QuizService {
       throw new Error('Quiz not found');
     }
 
-    // Check existing attempts
     const existingAttempts = await QuizAttempt.find({ quizId, userId });
     const completedAttempts = existingAttempts.filter(a => a.completedAt);
     
-    // Check if max attempts reached
     if (quiz.maxAttempts && completedAttempts.length >= quiz.maxAttempts) {
       throw new Error(`Maximum attempts (${quiz.maxAttempts}) reached for this quiz`);
     }
 
-    // Check if there's an incomplete attempt
     const incompleteAttempt = existingAttempts.find(a => !a.completedAt);
     if (incompleteAttempt) {
       return { 
@@ -73,7 +74,6 @@ export class QuizService {
       };
     }
 
-    // Create new attempt
     const attemptNumber = completedAttempts.length + 1;
     const attempt = await QuizAttempt.create({
       quizId: new Types.ObjectId(quizId),
@@ -110,7 +110,6 @@ export class QuizService {
       throw new Error('No active quiz attempt found');
     }
 
-    // Calculate score
     let correctCount = 0;
     let totalPoints = 0;
     let earnedPoints = 0;
@@ -140,7 +139,6 @@ export class QuizService {
     const score = Math.round((correctCount / quiz.questions.length) * 100);
     const passed = score >= quiz.passingScore;
 
-    // Update attempt
     attempt.answers = answers;
     attempt.score = score;
     attempt.passed = passed;
@@ -151,13 +149,10 @@ export class QuizService {
 
     await attempt.save();
 
-    // Calculate XP earned
     let xpEarned = 0;
     if (passed) {
-      // Base XP: 10-30 based on score
       const baseXp = Math.round((score / 100) * 20) + 10;
       
-      // Bonus XP for first attempt
       const previousAttempts = await QuizAttempt.countDocuments({ 
         quizId, 
         userId, 
@@ -167,7 +162,6 @@ export class QuizService {
       
       xpEarned = baseXp + bonusXp;
       
-      // Award XP to user
       const user = await User.findById(userId);
       if (user) {
         user.xp = (user.xp || 0) + xpEarned;
@@ -180,7 +174,6 @@ export class QuizService {
       }
     }
 
-    // Get remaining attempts
     const allAttempts = await QuizAttempt.find({ quizId, userId, completedAt: { $exists: true } });
     const remainingAttempts = Math.max(0, (quiz.maxAttempts || 1) - allAttempts.length);
 
@@ -240,7 +233,6 @@ export class QuizService {
       ? completedAttempts.reduce((acc, a) => acc + a.score, 0) / completedAttempts.length
       : 0;
 
-    // Get score distribution
     const distribution = {
       '0-20': 0,
       '21-40': 0,

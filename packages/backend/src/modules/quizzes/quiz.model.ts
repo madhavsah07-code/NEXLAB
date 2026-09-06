@@ -1,26 +1,28 @@
+// packages/backend/src/modules/quizzes/quiz.model.ts
+
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IQuestion {
   _id?: Types.ObjectId;
   question: string;
   options: string[];
-  correctAnswer: number; // index of correct option
+  correctAnswer: number;
   explanation?: string;
-  points?: number; // ✅ Add points per question
+  points?: number;
 }
 
 export interface IQuiz extends Document {
   _id: Types.ObjectId;
   courseId: Types.ObjectId;
-  lessonId: Types.ObjectId;
+  lessonId: string;
   title: string;
   description?: string;
   questions: IQuestion[];
-  passingScore: number; // percentage
-  timeLimit?: number; // in minutes
-  maxAttempts?: number; // ✅ New: max attempts allowed
+  passingScore: number;
+  timeLimit?: number;
+  maxAttempts?: number;
   isPublished: boolean;
-  order?: number; // ✅ New: order within lesson
+  order?: number;
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -30,13 +32,13 @@ export interface IQuizAttempt extends Document {
   _id: Types.ObjectId;
   quizId: Types.ObjectId;
   userId: Types.ObjectId;
-  answers: number[]; // selected option indices
+  answers: number[];
   score: number;
   passed: boolean;
   startedAt: Date;
   completedAt: Date;
-  timeSpent: number; // in seconds
-  attemptNumber: number; // ✅ New: track attempt number
+  timeSpent: number;
+  attemptNumber: number;
 }
 
 const QuestionSchema = new Schema<IQuestion>({
@@ -54,13 +56,13 @@ const QuestionSchema = new Schema<IQuestion>({
 const QuizSchema = new Schema<IQuiz>(
   {
     courseId: { type: Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
-    lessonId: { type: Schema.Types.ObjectId, required: true, index: true },
+    lessonId: { type: String, required: true, index: true },
     title: { type: String, required: true },
     description: { type: String },
     questions: { type: [QuestionSchema], required: true },
     passingScore: { type: Number, required: true, default: 60, min: 0, max: 100 },
     timeLimit: { type: Number, default: null },
-    maxAttempts: { type: Number, default: 1 },
+    maxAttempts: { type: Number, default: 1, min: 1 },
     isPublished: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -83,10 +85,7 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
   { timestamps: true }
 );
 
-// Compound index for unique attempts
 QuizAttemptSchema.index({ quizId: 1, userId: 1, attemptNumber: 1 }, { unique: true });
-
-// Index for tracking attempts
 QuizAttemptSchema.index({ quizId: 1, userId: 1 });
 
 export const Quiz = mongoose.model<IQuiz>('Quiz', QuizSchema);

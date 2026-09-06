@@ -11,7 +11,8 @@ import { Button } from '../../components/ui/Button';
 import { ImageUpload } from '../../components/ImageUpload';
 import { ProblemSearch } from '../../components/ProblemSearch';
 import { QuizManagement } from '../../components/QuizManagement';
-import toast from 'react-hot-toast';
+import { useConfirm } from '../../hooks/useConfirm';
+import { addToast } from '../../components/ui/Toast';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 // Setup Monaco
@@ -67,6 +68,7 @@ export const CourseForm: React.FC = () => {
   const [coverImage, setCoverImage] = useState<string>('');
   const [selectedProblems, setSelectedProblems] = useState<Record<number, Problem[]>>({});
   const [quizCount, setQuizCount] = useState<Record<number, number>>({});
+  const { confirm, ConfirmDialogComponent } = useConfirm();
 
   const { register, control, handleSubmit, formState: { errors }, reset, setValue, watch, getValues } = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -163,7 +165,7 @@ export const CourseForm: React.FC = () => {
           });
         } catch (error) {
           console.error('Error fetching course:', error);
-          toast.error('Failed to load course');
+          addToast('Failed to load course', 'error');
         } finally {
           setFetching(false);
         }
@@ -172,7 +174,37 @@ export const CourseForm: React.FC = () => {
     }
   }, [id, reset]);
 
-  // ✅ DIRECT SAVE FUNCTION - Bypasses react-hook-form issues
+  // Handle removing a lesson with confirmation
+  const handleRemoveLesson = async (index: number) => {
+    if (fields.length === 1) {
+      addToast('You need at least one lesson', 'warning');
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Remove Lesson',
+      message: 'Are you sure you want to remove this lesson? This action cannot be undone.',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'warning',
+    });
+
+    if (confirmed) {
+      remove(index);
+      // Clean up selected problems and quiz count for this lesson
+      const newSelectedProblems = { ...selectedProblems };
+      delete newSelectedProblems[index];
+      setSelectedProblems(newSelectedProblems);
+      
+      const newQuizCount = { ...quizCount };
+      delete newQuizCount[index];
+      setQuizCount(newQuizCount);
+      
+      addToast('Lesson removed successfully', 'success');
+    }
+  };
+
+  // DIRECT SAVE FUNCTION
   const handleSave = async () => {
     console.log('🚀 Save button clicked');
     
@@ -182,17 +214,17 @@ export const CourseForm: React.FC = () => {
     
     // Validate required fields
     if (!data.title || data.title.trim().length < 3) {
-      toast.error('Title must be at least 3 characters');
+      addToast('Title must be at least 3 characters', 'error');
       return;
     }
     
     if (!data.description || data.description.trim().length < 10) {
-      toast.error('Description must be at least 10 characters');
+      addToast('Description must be at least 10 characters', 'error');
       return;
     }
     
     if (!data.category || data.category.trim().length < 1) {
-      toast.error('Category is required');
+      addToast('Category is required', 'error');
       return;
     }
     
@@ -200,18 +232,18 @@ export const CourseForm: React.FC = () => {
     for (let i = 0; i < data.lessons.length; i++) {
       const lesson = data.lessons[i];
       if (!lesson.title || lesson.title.trim().length < 1) {
-        toast.error(`Lesson ${i + 1}: Title is required`);
+        addToast(`Lesson ${i + 1}: Title is required`, 'error');
         return;
       }
       if (!lesson.videoUrl || lesson.videoUrl.trim().length < 1) {
-        toast.error(`Lesson ${i + 1}: Video URL is required`);
+        addToast(`Lesson ${i + 1}: Video URL is required`, 'error');
         return;
       }
     }
     
     setLoading(true);
     try {
-      // ✅ Build course data
+      // Build course data
       const lessonsWithData = data.lessons.map((lesson, index) => {
         const lessonData: any = {
           title: lesson.title,
@@ -250,12 +282,12 @@ export const CourseForm: React.FC = () => {
         console.log(`🔄 Updating course ${id}...`);
         response = await api.put(`/courses/${id}`, courseData);
         console.log('✅ Update response:', response.data);
-        toast.success('Course updated successfully!');
+        addToast('Course updated successfully!', 'success');
       } else {
         console.log('🔄 Creating new course...');
         response = await api.post('/courses', courseData);
         console.log('✅ Create response:', response.data);
-        toast.success('Course created successfully!');
+        addToast('Course created successfully!', 'success');
       }
       
       // Navigate after successful save
@@ -265,7 +297,7 @@ export const CourseForm: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Error saving course:', error);
       console.error('❌ Error response:', error.response?.data);
-      toast.error(error.response?.data?.message || 'Failed to save course. Please try again.');
+      addToast(error.response?.data?.message || 'Failed to save course. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -275,7 +307,7 @@ export const CourseForm: React.FC = () => {
     setSelectedProblems(prev => {
       const current = prev[lessonIndex] || [];
       if (current.some(p => p._id === problem._id)) {
-        toast.error('Problem already added to this lesson');
+        addToast('Problem already added to this lesson', 'warning');
         return prev;
       }
       return {
@@ -283,10 +315,20 @@ export const CourseForm: React.FC = () => {
         [lessonIndex]: [...current, problem],
       };
     });
-    toast.success(`Added problem #${problem.problemNumber} to lesson`);
+    addToast(`Added problem #${problem.problemNumber} to lesson`, 'success');
   };
 
-  const handleRemoveProblem = (lessonIndex: number, problemId: string) => {
+  const handleRemoveProblem = async (lessonIndex: number, problemId: string, problemTitle: string) => {
+    const confirmed = await confirm({
+      title: 'Remove Problem',
+      message: `Are you sure you want to remove "${problemTitle}" from this lesson?`,
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'warning',
+    });
+
+    if (!confirmed) return;
+
     setSelectedProblems(prev => {
       const current = prev[lessonIndex] || [];
       return {
@@ -294,16 +336,24 @@ export const CourseForm: React.FC = () => {
         [lessonIndex]: current.filter(p => p._id !== problemId),
       };
     });
-    toast.success('Problem removed from lesson');
+    addToast('Problem removed from lesson', 'success');
   };
 
   const getSelectedProblemIds = (lessonIndex: number) => {
     return (selectedProblems[lessonIndex] || []).map(p => p._id);
   };
 
-  const handleQuizCreated = (lessonIndex: number) => {
+  const handleQuizCreated = (lessonIndex: number, quizId?: string) => {
     setQuizCount(prev => ({ ...prev, [lessonIndex]: (prev[lessonIndex] || 0) + 1 }));
-    toast.success('Quiz added to lesson!');
+    
+    if (quizId) {
+      const currentLessons = getValues('lessons');
+      if (currentLessons && currentLessons[lessonIndex]) {
+        setValue(`lessons.${lessonIndex}.quizId`, quizId);
+      }
+    }
+    
+    addToast('Quiz added to lesson!', 'success');
   };
 
   if (fetching) {
@@ -311,367 +361,364 @@ export const CourseForm: React.FC = () => {
   }
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1200px] mx-auto">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/admin/courses')}
-          className="p-2 hover:bg-[#1E2322] rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-[#9CA3A0]" />
-        </button>
-        <h1 className="text-2xl font-bold text-[#EDEFEE]">
-          {id ? 'Edit Course' : 'Create New Course'}
-        </h1>
-      </div>
-
-      <form className="space-y-6">
-        {/* Basic Info */}
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Basic Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                Title *
-              </label>
-              <input
-                {...register('title')}
-                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-                placeholder="e.g., React Mastery 2025"
-              />
-              {errors.title && (
-                <p className="text-[#F87171] text-xs mt-1">{errors.title.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                Category *
-              </label>
-              <input
-                {...register('category')}
-                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-                placeholder="e.g., Programming, Design"
-              />
-              {errors.category && (
-                <p className="text-[#F87171] text-xs mt-1">{errors.category.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-              Description *
-            </label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-              placeholder="Describe what students will learn..."
-            />
-            {errors.description && (
-              <p className="text-[#F87171] text-xs mt-1">{errors.description.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                Level *
-              </label>
-              <select
-                {...register('level')}
-                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] transition-all duration-200"
-              >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-              {errors.level && (
-                <p className="text-[#F87171] text-xs mt-1">{errors.level.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                Price (₹) *
-              </label>
-              <input
-                {...register('price', { valueAsNumber: true })}
-                type="number"
-                step="0.01"
-                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-                placeholder="499"
-              />
-              {errors.price && (
-                <p className="text-[#F87171] text-xs mt-1">{errors.price.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <ImageUpload
-              value={thumbnail}
-              onChange={(value) => {
-                setThumbnail(value);
-                setValue('thumbnail', value);
-              }}
-              label="Course Thumbnail (Square, 512x512)"
-              placeholder="Upload a course thumbnail..."
-              aspectRatio="square"
-            />
-            {errors.thumbnail && (
-              <p className="text-[#F87171] text-xs mt-1">{errors.thumbnail.message}</p>
-            )}
-          </div>
-
-          <div className="mt-4">
-            <ImageUpload
-              value={coverImage}
-              onChange={(value) => {
-                setCoverImage(value);
-                setValue('coverImage', value);
-              }}
-              label="Cover Image (16:9, 1920x1080)"
-              placeholder="Upload a cover image for the course..."
-              aspectRatio="16:9"
-            />
-            {errors.coverImage && (
-              <p className="text-[#F87171] text-xs mt-1">{errors.coverImage.message}</p>
-            )}
-          </div>
-
-          <div className="mt-4 p-4 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
-            <p className="text-xs text-[#5C6360]">
-              💡 <strong>Pro Tip:</strong> Upload a cover image (16:9 ratio) for the course banner and a thumbnail (square) for course cards. 
-              Images will be automatically uploaded to ImageKit CDN.
-            </p>
-          </div>
+    <>
+      <ConfirmDialogComponent />
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1200px] mx-auto">
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => navigate('/admin/courses')}
+            className="p-2 hover:bg-[#1E2322] rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-[#9CA3A0]" />
+          </button>
+          <h1 className="text-2xl font-bold text-[#EDEFEE]">
+            {id ? 'Edit Course' : 'Create New Course'}
+          </h1>
         </div>
 
-        {/* Lessons */}
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#EDEFEE]">Lessons</h2>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => append({ 
-                title: '', 
-                videoUrl: '', 
-                order: fields.length + 1, 
-                isFree: false, 
-                problemIds: [],
-                quizId: '' 
-              })}
-              className="gap-1"
-            >
-              <Plus className="w-3 h-3" />
-              Add Lesson
-            </Button>
-          </div>
-
-          {fields.map((field, index) => (
-            <div key={field.id} className="bg-[#0D0F0F] border border-[#2A302E] rounded-lg p-4 mb-4 relative">
-              <button
-                type="button"
-                onClick={() => {
-                  if (fields.length === 1) {
-                    toast.error('You need at least one lesson');
-                    return;
-                  }
-                  remove(index);
-                }}
-                className="absolute top-2 right-2 p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                    Lesson Title *
-                  </label>
-                  <input
-                    {...register(`lessons.${index}.title`)}
-                    className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-                    placeholder="Lesson title"
-                  />
-                  {errors.lessons?.[index]?.title && (
-                    <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.title?.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                    Video URL *
-                  </label>
-                  <input
-                    {...register(`lessons.${index}.videoUrl`)}
-                    className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-                    placeholder="https://youtube.com/..."
-                  />
-                  {errors.lessons?.[index]?.videoUrl && (
-                    <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.videoUrl?.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                    Duration (minutes)
-                  </label>
-                  <input
-                    {...register(`lessons.${index}.duration`, { valueAsNumber: true })}
-                    type="number"
-                    className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-                    placeholder="10"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
-                    Order *
-                  </label>
-                  <input
-                    {...register(`lessons.${index}.order`, { valueAsNumber: true })}
-                    type="number"
-                    className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
-                    placeholder="1"
-                  />
-                  {errors.lessons?.[index]?.order && (
-                    <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.order?.message}</p>
-                  )}
-                </div>
-
-                <div className="flex items-center mt-6">
-                  <label className="flex items-center gap-2 text-sm text-[#9CA3A0]">
-                    <input
-                      {...register(`lessons.${index}.isFree`)}
-                      type="checkbox"
-                      className="w-4 h-4 text-[#10B981] border-[#2A302E] rounded focus:ring-[#10B981] bg-[#0D0F0F]"
-                    />
-                    Free Lesson
-                  </label>
-                </div>
-              </div>
-
-              {/* Coding Problems Section */}
-              <div className="mt-4 pt-4 border-t border-[#2A302E]">
-                <div className="flex items-center gap-2 mb-3">
-                  <Code2 className="w-4 h-4 text-[#10B981]" />
-                  <h4 className="text-sm font-medium text-[#EDEFEE]">Coding Problems</h4>
-                  <span className="text-xs text-[#5C6360]">
-                    ({selectedProblems[index]?.length || 0} added)
-                  </span>
-                </div>
-
-                <ProblemSearch
-                  onAddProblem={(problem) => handleAddProblem(index, problem)}
-                  selectedProblemIds={getSelectedProblemIds(index)}
-                  placeholder="Search coding problems by name or ID..."
+        <form className="space-y-6">
+          {/* Basic Info - Same as before */}
+          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Basic Information</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                  Title *
+                </label>
+                <input
+                  {...register('title')}
+                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                  placeholder="e.g., React Mastery 2025"
                 />
-
-                {(selectedProblems[index] || []).length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {selectedProblems[index]?.map((problem) => (
-                      <div
-                        key={problem._id}
-                        className="flex items-center justify-between p-3 bg-[#161A19] border border-[#2A302E] rounded-lg hover:border-[#10B981]/30 transition-colors group"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span className="text-xs text-[#5C6360] font-mono flex-shrink-0">
-                            #{problem.problemNumber}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-[#EDEFEE] truncate">
-                              {problem.title}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className={`px-1.5 py-0.5 rounded-full border ${
-                                problem.difficulty === 'easy' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' :
-                                problem.difficulty === 'medium' ? 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30' :
-                                'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
-                              }`}>
-                                {problem.difficulty}
-                              </span>
-                              {problem.tags?.slice(0, 2).map((tag) => (
-                                <span key={tag} className="text-[#5C6360]">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveProblem(index, problem._id)}
-                          className="p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                {errors.title && (
+                  <p className="text-[#F87171] text-xs mt-1">{errors.title.message}</p>
                 )}
               </div>
 
-              {/* Quiz Management Section */}
-              <div className="mt-4 pt-4 border-t border-[#2A302E]">
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-4 h-4 text-[#FBBF24]" />
-                  <h4 className="text-sm font-medium text-[#EDEFEE]">Quiz</h4>
-                  <span className="text-xs text-[#5C6360]">
-                    {quizCount[index] ? '✅ Added' : 'Not added'}
-                  </span>
-                </div>
-
-                <QuizManagement
-                  courseId={id || 'new'}
-                  lessonId={field.id || `lesson-${index}`}
-                  onQuizChange={() => handleQuizCreated(index)}
+              <div>
+                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                  Category *
+                </label>
+                <input
+                  {...register('category')}
+                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                  placeholder="e.g., Programming, Design"
                 />
+                {errors.category && (
+                  <p className="text-[#F87171] text-xs mt-1">{errors.category.message}</p>
+                )}
               </div>
             </div>
-          ))}
 
-          {fields.length === 0 && (
-            <p className="text-[#5C6360] text-sm text-center py-4">
-              No lessons yet. Click "Add Lesson" to get started.
-            </p>
-          )}
-        </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                Description *
+              </label>
+              <textarea
+                {...register('description')}
+                rows={4}
+                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                placeholder="Describe what students will learn..."
+              />
+              {errors.description && (
+                <p className="text-[#F87171] text-xs mt-1">{errors.description.message}</p>
+              )}
+            </div>
 
-        {/* ✅ Submit - Using type="button" with onClick handler */}
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => navigate('/admin/courses')}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            disabled={loading}
-            className="gap-2"
-            onClick={handleSave}
-          >
-            {loading ? (
-              <>
-                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                Saving...
-              </>
-            ) : (
-              id ? 'Update Course' : 'Create Course'
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                  Level *
+                </label>
+                <select
+                  {...register('level')}
+                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] transition-all duration-200"
+                >
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+                {errors.level && (
+                  <p className="text-[#F87171] text-xs mt-1">{errors.level.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                  Price (₹) *
+                </label>
+                <input
+                  {...register('price', { valueAsNumber: true })}
+                  type="number"
+                  step="0.01"
+                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                  placeholder="499"
+                />
+                {errors.price && (
+                  <p className="text-[#F87171] text-xs mt-1">{errors.price.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <ImageUpload
+                value={thumbnail}
+                onChange={(value) => {
+                  setThumbnail(value);
+                  setValue('thumbnail', value);
+                }}
+                label="Course Thumbnail (Square, 512x512)"
+                placeholder="Upload a course thumbnail..."
+                aspectRatio="square"
+              />
+              {errors.thumbnail && (
+                <p className="text-[#F87171] text-xs mt-1">{errors.thumbnail.message}</p>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <ImageUpload
+                value={coverImage}
+                onChange={(value) => {
+                  setCoverImage(value);
+                  setValue('coverImage', value);
+                }}
+                label="Cover Image (16:9, 1920x1080)"
+                placeholder="Upload a cover image for the course..."
+                aspectRatio="16:9"
+              />
+              {errors.coverImage && (
+                <p className="text-[#F87171] text-xs mt-1">{errors.coverImage.message}</p>
+              )}
+            </div>
+
+            <div className="mt-4 p-4 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
+              <p className="text-xs text-[#5C6360]">
+                💡 <strong>Pro Tip:</strong> Upload a cover image (16:9 ratio) for the course banner and a thumbnail (square) for course cards. 
+                Images will be automatically uploaded to ImageKit CDN.
+              </p>
+            </div>
+          </div>
+
+          {/* Lessons */}
+          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[#EDEFEE]">Lessons</h2>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => append({ 
+                  title: '', 
+                  videoUrl: '', 
+                  order: fields.length + 1, 
+                  isFree: false, 
+                  problemIds: [],
+                  quizId: '' 
+                })}
+                className="gap-1"
+              >
+                <Plus className="w-3 h-3" />
+                Add Lesson
+              </Button>
+            </div>
+
+            {fields.map((field, index) => (
+              <div key={field.id} className="bg-[#0D0F0F] border border-[#2A302E] rounded-lg p-4 mb-4 relative">
+                <button
+                  type="button"
+                  onClick={() => handleRemoveLesson(index)}
+                  className="absolute top-2 right-2 p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                      Lesson Title *
+                    </label>
+                    <input
+                      {...register(`lessons.${index}.title`)}
+                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      placeholder="Lesson title"
+                    />
+                    {errors.lessons?.[index]?.title && (
+                      <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.title?.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                      Video URL *
+                    </label>
+                    <input
+                      {...register(`lessons.${index}.videoUrl`)}
+                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      placeholder="https://youtube.com/..."
+                    />
+                    {errors.lessons?.[index]?.videoUrl && (
+                      <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.videoUrl?.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                      Duration (minutes)
+                    </label>
+                    <input
+                      {...register(`lessons.${index}.duration`, { valueAsNumber: true })}
+                      type="number"
+                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      placeholder="10"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                      Order *
+                    </label>
+                    <input
+                      {...register(`lessons.${index}.order`, { valueAsNumber: true })}
+                      type="number"
+                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      placeholder="1"
+                    />
+                    {errors.lessons?.[index]?.order && (
+                      <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.order?.message}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center mt-6">
+                    <label className="flex items-center gap-2 text-sm text-[#9CA3A0]">
+                      <input
+                        {...register(`lessons.${index}.isFree`)}
+                        type="checkbox"
+                        className="w-4 h-4 text-[#10B981] border-[#2A302E] rounded focus:ring-[#10B981] bg-[#0D0F0F]"
+                      />
+                      Free Lesson
+                    </label>
+                  </div>
+                </div>
+
+                {/* Coding Problems Section */}
+                <div className="mt-4 pt-4 border-t border-[#2A302E]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Code2 className="w-4 h-4 text-[#10B981]" />
+                    <h4 className="text-sm font-medium text-[#EDEFEE]">Coding Problems</h4>
+                    <span className="text-xs text-[#5C6360]">
+                      ({selectedProblems[index]?.length || 0} added)
+                    </span>
+                  </div>
+
+                  <ProblemSearch
+                    onAddProblem={(problem) => handleAddProblem(index, problem)}
+                    selectedProblemIds={getSelectedProblemIds(index)}
+                    placeholder="Search coding problems by name or ID..."
+                  />
+
+                  {(selectedProblems[index] || []).length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {selectedProblems[index]?.map((problem) => (
+                        <div
+                          key={problem._id}
+                          className="flex items-center justify-between p-3 bg-[#161A19] border border-[#2A302E] rounded-lg hover:border-[#10B981]/30 transition-colors group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-xs text-[#5C6360] font-mono flex-shrink-0">
+                              #{problem.problemNumber}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-[#EDEFEE] truncate">
+                                {problem.title}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className={`px-1.5 py-0.5 rounded-full border ${
+                                  problem.difficulty === 'easy' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' :
+                                  problem.difficulty === 'medium' ? 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30' :
+                                  'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
+                                }`}>
+                                  {problem.difficulty}
+                                </span>
+                                {problem.tags?.slice(0, 2).map((tag) => (
+                                  <span key={tag} className="text-[#5C6360]">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProblem(index, problem._id, problem.title)}
+                            className="p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Quiz Management Section */}
+                <div className="mt-4 pt-4 border-t border-[#2A302E]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Zap className="w-4 h-4 text-[#FBBF24]" />
+                    <h4 className="text-sm font-medium text-[#EDEFEE]">Quiz</h4>
+                    <span className="text-xs text-[#5C6360]">
+                      {quizCount[index] ? '✅ Added' : 'Not added'}
+                    </span>
+                  </div>
+
+                  <QuizManagement
+                    courseId={id || 'new'}
+                    lessonId={field._id || field.id || `lesson-${index}`}
+                    onQuizChange={(quizId) => handleQuizCreated(index, quizId)}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {fields.length === 0 && (
+              <p className="text-[#5C6360] text-sm text-center py-4">
+                No lessons yet. Click "Add Lesson" to get started.
+              </p>
             )}
-          </Button>
-        </div>
-      </form>
-    </div>
+          </div>
+
+          {/* Submit */}
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => navigate('/admin/courses')}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              disabled={loading}
+              className="gap-2"
+              onClick={handleSave}
+            >
+              {loading ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Saving...
+                </>
+              ) : (
+                id ? 'Update Course' : 'Create Course'
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 };
 

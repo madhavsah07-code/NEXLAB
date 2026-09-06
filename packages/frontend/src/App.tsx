@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { ToastProvider } from './components/ToastProvider';
+import { ToastContainer } from './components/ui/Toast';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
 // Layouts
@@ -15,34 +15,36 @@ import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 
-// Student Pages - Lazy loaded for performance
+// Student Pages - Lazy loaded
 const StudentDashboard = React.lazy(() => import('./pages/student/Dashboard'));
 const StudentCourses = React.lazy(() => import('./pages/student/Courses'));
 const Sandbox = React.lazy(() => import('./pages/student/Sandbox'));
 const Leaderboard = React.lazy(() => import('./pages/student/Leaderboard'));
 const Profile = React.lazy(() => import('./pages/student/Profile'));
 const CoursePlayer = React.lazy(() => import('./pages/student/CoursePlayer'));
-const ProblemsList = React.lazy(() =>
-  import('./pages/student/ProblemsList').then(({ ProblemsList }) => ({ default: ProblemsList }))
-);
+const ProblemsList = React.lazy(() => import('./pages/student/ProblemsList'));
 const ProblemDetail = React.lazy(() => import('./pages/student/ProblemDetail'));
 
 // Admin Pages - Lazy loaded
 const AdminDashboard = React.lazy(() =>
-  import('./pages/admin/AdminDashboard').then(({ AdminDashboard }) => ({ default: AdminDashboard }))
+  import('./pages/admin/AdminDashboard').then(({ AdminDashboard }) => ({
+    default: AdminDashboard,
+  }))
 );
-const AdminCourses = React.lazy(() =>
-  import('./pages/admin/AdminCourses').then(({ AdminCourses }) => ({ default: AdminCourses }))
-);
+const AdminCourses = React.lazy(() => import('./pages/admin/AdminCourses'));
 const CourseForm = React.lazy(() => import('./pages/admin/CourseForm'));
 const AdminUsers = React.lazy(() =>
-  import('./pages/admin/AdminUsers').then(({ AdminUsers }) => ({ default: AdminUsers }))
+  import('./pages/admin/AdminUsers').then(({ AdminUsers }) => ({
+    default: AdminUsers,
+  }))
 );
 const AdminAnalytics = React.lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminProblems = React.lazy(() => import('./pages/admin/AdminProblems'));
 const ProblemForm = React.lazy(() => import('./pages/admin/ProblemForm'));
 const AdminBulkImport = React.lazy(() =>
-  import('./pages/admin/AdminBulkImport').then(({ AdminBulkImport }) => ({ default: AdminBulkImport }))
+  import('./pages/admin/AdminBulkImport').then(({ AdminBulkImport }) => ({
+    default: AdminBulkImport,
+  }))
 );
 
 // Protected Route Component
@@ -79,7 +81,7 @@ function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <ToastProvider />
+        <ToastContainer />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />

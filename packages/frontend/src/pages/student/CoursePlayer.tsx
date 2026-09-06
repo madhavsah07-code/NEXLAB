@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
+import {
   ArrowLeft, Play, CheckCircle, Lock, BookOpen, Award, Star, Zap,
   ChevronLeft, ChevronRight, Code2, ChevronRight as ChevronRightIcon,
   Video, ClipboardCheck, Clock, Users, Calendar, ThumbsUp, MessageCircle,
@@ -85,10 +85,10 @@ export const CoursePlayer: React.FC = () => {
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
-  
+
   // Tab state
   const [activeTab, setActiveTab] = useState<'session' | 'practice'>('session');
-  
+
   // Quiz states
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
@@ -97,7 +97,8 @@ export const CoursePlayer: React.FC = () => {
   const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([]);
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
   const [quizStats, setQuizStats] = useState<any>(null);
-  
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
+
   // Problem states
   const [lessonProblems, setLessonProblems] = useState<Record<string, Problem[]>>({});
   const [loadingProblems, setLoadingProblems] = useState<Record<string, boolean>>({});
@@ -168,14 +169,42 @@ export const CoursePlayer: React.FC = () => {
     }
   };
 
+  // ✅ Updated: Fetch quizzes for the current lesson
   const fetchQuizzes = async () => {
     if (!currentLesson?._id) return;
+
+    // Check if the lesson has a quizId
+    if (!currentLesson.quizId) {
+      console.log('📚 No quizId found for this lesson');
+      setQuizzes([]);
+      return;
+    }
+
+    setLoadingQuiz(true);
     try {
-      const response = await api.get(`/quizzes/lesson/${currentLesson._id}`);
-      const data = response.data.data || [];
-      setQuizzes(data.filter((q: Quiz) => q.isPublished));
-    } catch (error) {
-      console.error('Error fetching quizzes:', error);
+      console.log(`📚 Fetching quiz for lesson ${currentLesson._id} with quizId: ${currentLesson.quizId}`);
+
+      // ✅ Use public endpoint instead of admin endpoint
+      const response = await api.get(`/quizzes/public/${currentLesson.quizId}`);
+      const quiz = response.data.data;
+
+      if (quiz) {
+        setQuizzes([quiz]);
+        console.log('✅ Quiz loaded:', quiz.title);
+      } else {
+        setQuizzes([]);
+        console.log('📚 Quiz not found');
+      }
+    } catch (error: any) {
+      console.error('Error fetching quiz:', error);
+      if (error.response?.status === 404) {
+        console.log('📚 Quiz not found');
+      } else {
+        toast.error('Failed to load quiz');
+      }
+      setQuizzes([]);
+    } finally {
+      setLoadingQuiz(false);
     }
   };
 
@@ -187,7 +216,7 @@ export const CoursePlayer: React.FC = () => {
         .filter((a: any) => a.completedAt && a.quizId)
         .map((a: any) => a.quizId._id || a.quizId);
       setCompletedQuizzes(completed);
-      
+
       if (quizzes.length > 0) {
         const isCompleted = completed.includes(quizzes[0]._id);
         setQuizCompleted(isCompleted);
@@ -200,17 +229,18 @@ export const CoursePlayer: React.FC = () => {
   const fetchQuizAttempts = async () => {
     if (!currentLesson?.quizId) return;
     try {
-      const response = await api.get(`/quizzes/${currentLesson.quizId}/stats`);
+      // ✅ Use public stats endpoint
+      const response = await api.get(`/quizzes/public/${currentLesson.quizId}/stats`);
       setQuizStats(response.data.data);
     } catch (error) {
       console.error('Error fetching quiz stats:', error);
     }
-  };
+  };;
 
-  // ✅ FIXED: Fetch problems for a lesson using public endpoint
+  // Fetch problems for a lesson using public endpoint
   const fetchLessonProblems = async (lessonId: string) => {
     if (!course) return;
-    
+
     const currentLesson = course.lessons.find(l => l._id === lessonId);
     if (!currentLesson || !currentLesson.problemIds || currentLesson.problemIds.length === 0) {
       console.log(`📚 No problem IDs found for lesson ${lessonId}`);
@@ -227,7 +257,7 @@ export const CoursePlayer: React.FC = () => {
       const problemDetails = await Promise.all(
         currentLesson.problemIds.map(async (problemId: string) => {
           try {
-            // ✅ Use the public endpoint for published problems
+            // Use the public endpoint for published problems
             const response = await api.get(`/problems/public/${problemId}`);
             return response.data.data;
           } catch (error: any) {
@@ -240,7 +270,7 @@ export const CoursePlayer: React.FC = () => {
           }
         })
       );
-      
+
       const validProblems = problemDetails.filter((p): p is Problem => p !== null);
       console.log(`✅ Found ${validProblems.length} valid problems`);
       setLessonProblems(prev => ({ ...prev, [lessonId]: validProblems }));
@@ -256,9 +286,9 @@ export const CoursePlayer: React.FC = () => {
     try {
       const response = await api.post(`/courses/${courseId}/${lessonId}/complete`);
       setXpEarned(response.data.data.xpEarned || 10);
-      
+
       await fetchProgress();
-      
+
       // Auto-advance to next lesson after completion
       if (course && currentLessonIndex < course.lessons.length - 1) {
         setTimeout(() => {
@@ -371,7 +401,7 @@ export const CoursePlayer: React.FC = () => {
             <span className="text-[#10B981] font-semibold">{progress}% Complete</span>
           </div>
           <div className="w-full h-1.5 bg-[#0D0F0F] rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
@@ -395,11 +425,10 @@ export const CoursePlayer: React.FC = () => {
             <div className="flex border-b border-[#2A302E] mb-4">
               <button
                 onClick={() => setActiveTab('session')}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
-                  activeTab === 'session'
-                    ? 'border-[#10B981] text-[#10B981]'
-                    : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-                }`}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${activeTab === 'session'
+                  ? 'border-[#10B981] text-[#10B981]'
+                  : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                  }`}
               >
                 <Video className="w-4 h-4" />
                 Session
@@ -409,11 +438,10 @@ export const CoursePlayer: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('practice')}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
-                  activeTab === 'practice'
-                    ? 'border-[#10B981] text-[#10B981]'
-                    : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-                }`}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${activeTab === 'practice'
+                  ? 'border-[#10B981] text-[#10B981]'
+                  : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                  }`}
               >
                 <ClipboardCheck className="w-4 h-4" />
                 Practice
@@ -447,6 +475,7 @@ export const CoursePlayer: React.FC = () => {
                 quizzes={quizzes}
                 quizCompleted={quizCompleted}
                 quizStats={quizStats}
+                loadingQuiz={loadingQuiz}
                 handleQuizStart={() => {
                   const quiz = quizzes[0];
                   if (quiz) {
@@ -564,8 +593,8 @@ export const CoursePlayer: React.FC = () => {
         {/* Reviews Section */}
         <div className="mt-8 pt-8 border-t border-[#2A302E]">
           <h2 className="text-xl font-bold text-[#EDEFEE] mb-4">Course Reviews</h2>
-          <CourseReviews 
-            courseId={course._id} 
+          <CourseReviews
+            courseId={course._id}
             onReviewChange={() => {
               fetchCourse();
             }}
@@ -637,15 +666,13 @@ const SessionTab: React.FC<SessionTabProps> = ({
               <p className="text-[#5C6360] mt-2">Video coming soon</p>
             </div>
           )}
-          
-          {/* Lesson number badge */}
+
           <div className="absolute top-4 left-4 bg-[#0D0F0F]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#2A302E]">
             <span className="text-xs text-[#5C6360]">
               Lesson {currentLessonIndex + 1} of {course.lessons.length}
             </span>
           </div>
-          
-          {/* Completion badge */}
+
           {isLessonCompleted(currentLesson._id) && (
             <div className="absolute top-4 right-4 bg-[#10B981]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#10B981]/30">
               <span className="text-xs font-medium text-white flex items-center gap-1">
@@ -655,8 +682,7 @@ const SessionTab: React.FC<SessionTabProps> = ({
             </div>
           )}
         </div>
-        
-        {/* Lesson Info */}
+
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
@@ -710,7 +736,6 @@ const SessionTab: React.FC<SessionTabProps> = ({
         </div>
       </div>
 
-      {/* Lesson Resources / Additional Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
           <h4 className="text-sm font-medium text-[#EDEFEE] mb-2 flex items-center gap-2">
@@ -771,6 +796,7 @@ interface PracticeTabProps {
   quizzes: Quiz[];
   quizCompleted: boolean;
   quizStats: any;
+  loadingQuiz: boolean;
   handleQuizStart: () => void;
 }
 
@@ -783,6 +809,7 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
   quizzes,
   quizCompleted,
   quizStats,
+  loadingQuiz,
   handleQuizStart,
 }) => {
   const [activePracticeTab, setActivePracticeTab] = useState<'problems' | 'quiz'>('problems');
@@ -805,6 +832,20 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
   console.log(`📚 Problem IDs from lesson:`, currentLesson.problemIds);
   console.log(`📚 Problems loaded:`, problems);
   console.log(`📚 Has problems:`, hasProblems);
+  console.log(`📚 Quiz ID from lesson:`, currentLesson.quizId);
+  console.log(`📚 Quiz loaded:`, quizzes);
+  console.log(`📚 Has quiz:`, hasQuiz);
+
+  // Determine which tab to show by default
+  useEffect(() => {
+    if (hasProblems && !hasQuiz) {
+      setActivePracticeTab('problems');
+    } else if (hasQuiz && !hasProblems) {
+      setActivePracticeTab('quiz');
+    } else if (hasProblems && hasQuiz) {
+      setActivePracticeTab('problems');
+    }
+  }, [hasProblems, hasQuiz]);
 
   if (!hasProblems && !hasQuiz) {
     return (
@@ -828,11 +869,10 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
         {hasProblems && (
           <button
             onClick={() => setActivePracticeTab('problems')}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activePracticeTab === 'problems'
-                ? 'border-[#10B981] text-[#10B981]'
-                : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-            }`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${activePracticeTab === 'problems'
+              ? 'border-[#10B981] text-[#10B981]'
+              : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+              }`}
           >
             <Code2 className="w-4 h-4" />
             Coding Problems
@@ -844,11 +884,10 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
         {hasQuiz && (
           <button
             onClick={() => setActivePracticeTab('quiz')}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activePracticeTab === 'quiz'
-                ? 'border-[#10B981] text-[#10B981]'
-                : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
-            }`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${activePracticeTab === 'quiz'
+              ? 'border-[#10B981] text-[#10B981]'
+              : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+              }`}
           >
             <Zap className="w-4 h-4" />
             Quiz
@@ -860,7 +899,7 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
       </div>
 
       {/* Practice Content */}
-      {activePracticeTab === 'problems' && (
+      {activePracticeTab === 'problems' && hasProblems && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
@@ -946,92 +985,98 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
 
       {activePracticeTab === 'quiz' && hasQuiz && (
         <div className="space-y-4">
-          {quizzes.map((quiz) => (
-            <div key={quiz._id} className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-5 h-5 text-[#FBBF24]" />
-                    <h3 className="text-lg font-semibold text-[#EDEFEE]">{quiz.title}</h3>
-                    {quizCompleted && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1">
-                        <Check className="w-3 h-3" />
-                        Completed
-                      </span>
+          {loadingQuiz ? (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner size="sm" />
+            </div>
+          ) : (
+            quizzes.map((quiz) => (
+              <div key={quiz._id} className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap className="w-5 h-5 text-[#FBBF24]" />
+                      <h3 className="text-lg font-semibold text-[#EDEFEE]">{quiz.title}</h3>
+                      {quizCompleted && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1">
+                          <Check className="w-3 h-3" />
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                    {quiz.description && (
+                      <p className="text-sm text-[#9CA3A0] mb-3">{quiz.description}</p>
                     )}
-                  </div>
-                  {quiz.description && (
-                    <p className="text-sm text-[#9CA3A0] mb-3">{quiz.description}</p>
-                  )}
-                  
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-[#5C6360]">
-                    <span className="flex items-center gap-1">
-                      <FileText className="w-4 h-4" />
-                      {quiz.questions.length} questions
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Award className="w-4 h-4" />
-                      Pass: {quiz.passingScore}%
-                    </span>
-                    {quiz.timeLimit && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {quiz.timeLimit} min
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {quiz.maxAttempts} attempt{quiz.maxAttempts > 1 ? 's' : ''}
-                    </span>
-                  </div>
 
-                  {/* Quiz Stats */}
-                  {quizStats && (
-                    <div className="mt-3 p-3 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#EDEFEE]">{quizStats.totalAttempts || 0}</p>
-                          <p className="text-xs text-[#5C6360]">Attempts</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#10B981]">{quizStats.passRate || 0}%</p>
-                          <p className="text-xs text-[#5C6360]">Pass Rate</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#60A5FA]">{quizStats.averageScore || 0}%</p>
-                          <p className="text-xs text-[#5C6360]">Avg Score</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-[#FBBF24]">{quizStats.passedAttempts || 0}</p>
-                          <p className="text-xs text-[#5C6360]">Passed</p>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-[#5C6360]">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        {quiz.questions.length} questions
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Award className="w-4 h-4" />
+                        Pass: {quiz.passingScore}%
+                      </span>
+                      {quiz.timeLimit && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {quiz.timeLimit} min
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {quiz.maxAttempts} attempt{quiz.maxAttempts > 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    {/* Quiz Stats */}
+                    {quizStats && (
+                      <div className="mt-3 p-3 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#EDEFEE]">{quizStats.totalAttempts || 0}</p>
+                            <p className="text-xs text-[#5C6360]">Attempts</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#10B981]">{quizStats.passRate || 0}%</p>
+                            <p className="text-xs text-[#5C6360]">Pass Rate</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#60A5FA]">{quizStats.averageScore || 0}%</p>
+                            <p className="text-xs text-[#5C6360]">Avg Score</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-[#FBBF24]">{quizStats.passedAttempts || 0}</p>
+                            <p className="text-xs text-[#5C6360]">Passed</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-shrink-0">
-                  <Button
-                    variant={quizCompleted ? 'outline' : 'primary'}
-                    onClick={handleQuizStart}
-                    disabled={quizCompleted}
-                    className="gap-2"
-                  >
-                    {quizCompleted ? (
-                      <>
-                        <CheckCircle className="w-4 h-4" />
-                        Completed
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4" />
-                        Start Quiz
-                      </>
                     )}
-                  </Button>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Button
+                      variant={quizCompleted ? 'outline' : 'primary'}
+                      onClick={handleQuizStart}
+                      disabled={quizCompleted}
+                      className="gap-2"
+                    >
+                      {quizCompleted ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Completed
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4" />
+                          Start Quiz
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>
