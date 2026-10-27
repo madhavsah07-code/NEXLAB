@@ -30,6 +30,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
   'https://nexlab-v2.vercel.app',
+  'https://nexlab-psi.vercel.app',
   process.env.CLIENT_URL,
 ].filter((origin): origin is string => Boolean(origin));
 
