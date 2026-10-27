@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { AxiosError } from 'axios';
 import { api } from '../lib/api';
 import { IUser } from '@nexlab/shared';
 import toast from 'react-hot-toast';
@@ -88,7 +89,9 @@ export const useAuthStore = create<AuthState>()(
           });
           return { success: true };
         } catch (error) {
-          console.error('Auth check error:', error);
+          if (!(error instanceof AxiosError) || error.response?.status !== 401) {
+            console.error('Auth check error:', error);
+          }
           set({ user: null, isLoading: false });
           return { success: false };
         }

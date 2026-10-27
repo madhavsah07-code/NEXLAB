@@ -38,11 +38,16 @@ api.interceptors.response.use(
     return res;
   },
   (error: AxiosError) => {
-    console.error('❌ Response error:', {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+    const isUnauthenticatedAuthCheck =
+      error.response?.status === 401 && error.config?.url === '/auth/me';
+
+    if (!isUnauthenticatedAuthCheck) {
+      console.error('❌ Response error:', {
+        url: error.config?.url,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
 
     const isAuthEndpoint = error.config?.url?.includes('/auth/');
     const isLoginPage = window.location.pathname === '/login';
