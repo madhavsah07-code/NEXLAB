@@ -1,8 +1,8 @@
 // packages/frontend/src/components/QuizManagement.tsx
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Zap, Plus, Edit, Trash2, Eye, EyeOff, 
+import {
+  Zap, Plus, Edit, Trash2, Eye, EyeOff,
   ChevronRight, X, Clock, Award, Users,
   BarChart3, RefreshCw, CheckCircle, XCircle
 } from 'lucide-react';
@@ -79,28 +79,28 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
 
     try {
       console.log(`🔄 Attempting to add quiz ${quizId} to lesson ${lessonId}`);
-      
+
       // First, get the current course data
       const courseResponse = await api.get(`/courses/${courseId}`);
       const course = courseResponse.data.data;
-      
+
       console.log('📚 Current course data:', {
         courseId: course._id,
         courseTitle: course.title,
         totalLessons: course.lessons?.length || 0
       });
-      
+
       // Find the lesson and update its quizIds array
       let lessonFound = false;
       let updatedLessonRecord = null;
-      
+
       const updatedLessons = course.lessons.map((lesson: any) => {
         // Match by _id (string comparison)
         const lessonIdStr = lesson._id?.toString();
         const targetLessonId = lessonId.toString();
-        
+
         console.log(`📚 Checking lesson: ${lesson.title} (${lessonIdStr}) against target: ${targetLessonId}`);
-        
+
         if (lessonIdStr === targetLessonId || lesson._id === lessonId) {
           lessonFound = true;
           // Initialize quizIds array if it doesn't exist
@@ -121,14 +121,14 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
         }
         return lesson;
       });
-      
+
       if (!lessonFound) {
         console.error(`❌ Lesson with ID ${lessonId} not found in course`);
-        console.log('📚 Available lessons:', course.lessons.map((l: any) => ({ 
-          id: l._id?.toString(), 
-          title: l.title 
+        console.log('📚 Available lessons:', course.lessons.map((l: any) => ({
+          id: l._id?.toString(),
+          title: l.title
         })));
-        
+
         // Try to find by id property instead of _id
         const lessonByStringId = course.lessons.find((l: any) => l.id === lessonId);
         if (lessonByStringId) {
@@ -146,13 +146,13 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
           }
         }
       }
-      
+
       if (!lessonFound) {
         console.error(`❌ Lesson with ID ${lessonId} not found in course after all attempts`);
         addToast('Failed to link quiz to lesson - lesson not found', 'error');
         return;
       }
-      
+
       // ✅ IMPORTANT: Make sure we include all course data
       const updateData = {
         title: course.title,
@@ -165,19 +165,19 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
         isPublished: course.isPublished,
         lessons: updatedLessons,
       };
-      
+
       console.log('📤 Updating course with new quizId:', JSON.stringify(updateData, null, 2));
-      
+
       // Update the course
       const response = await api.put(`/courses/${courseId}`, updateData);
       console.log('✅ Course updated successfully:', response.data);
-      
+
       // Verify the quiz was added
       const updatedCourse = response.data.data;
-      const updatedLesson = updatedCourse.lessons.find((l: any) => 
+      const updatedLesson = updatedCourse.lessons.find((l: any) =>
         l._id?.toString() === lessonId.toString() || l._id === lessonId || l.id === lessonId
       );
-      
+
       if (updatedLesson) {
         console.log(`✅ Verified: Lesson "${updatedLesson.title}" now has quizIds:`, updatedLesson.quizIds || []);
         if (updatedLesson.quizIds?.includes(quizId)) {
@@ -201,7 +201,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
     try {
       // Remove isPublished from the data to let backend handle it
       const { isPublished, ...quizData } = data;
-      
+
       console.log('📤 Creating quiz with data:', {
         ...quizData,
         courseId,
@@ -215,10 +215,10 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
         courseId: isNewCourse ? null : courseId,
         lessonId,
       });
-      
+
       console.log('✅ Quiz created:', response.data);
       const quizId = response.data.data._id;
-      
+
       // ✅ CRITICAL: Update the lesson with the quizId
       if (!isNewCourse) {
         console.log(`📝 Attempting to add quiz ${quizId} to lesson ${lessonId}`);
@@ -228,11 +228,11 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
         console.log('📝 New course - quiz will be linked when course is saved');
         addToast('Quiz created! Please save the course to link this quiz.', 'info');
       }
-      
+
       addToast('Quiz created successfully!', 'success');
       setShowForm(false);
       await fetchQuizzes();
-      
+
       if (onQuizChange) {
         onQuizChange(quizId);
       }
@@ -293,19 +293,19 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
     try {
       const response = await api.patch(`/quizzes/${quizId}/publish`);
       const updatedQuiz = response.data.data;
-      
+
       // Update the quiz in the local state immediately
-      setQuizzes(prevQuizzes => 
-        prevQuizzes.map(quiz => 
-          quiz._id === quizId 
+      setQuizzes(prevQuizzes =>
+        prevQuizzes.map(quiz =>
+          quiz._id === quizId
             ? { ...quiz, isPublished: updatedQuiz.isPublished }
             : quiz
         )
       );
-      
+
       const newStatus = updatedQuiz.isPublished;
       addToast(`Quiz ${newStatus ? 'published' : 'unpublished'} successfully`, 'success');
-      
+
       if (onQuizChange) {
         onQuizChange(quizId);
       }
@@ -321,7 +321,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
       setStats(null);
       return;
     }
-    
+
     setLoadingStats(true);
     setShowStats(quizId);
     try {
@@ -364,11 +364,11 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-[#10B981]" />
-            <h4 className="text-sm font-semibold text-[#EDEFEE]">Quizzes</h4>
-            <span className="text-xs text-[#5C6360]">({quizzes.length})</span>
+            <Zap className="w-5 h-5 text-[#1951FC]" />
+            <h4 className="text-sm font-semibold text-[#FFFFFF]">Quizzes</h4>
+            <span className="text-xs text-[#5BB8FB]">({quizzes.length})</span>
             {isNewCourse && (
-              <span className="text-xs text-[#FBBF24] bg-[#FBBF24]/10 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-[#3781FC] bg-[#3781FC]/10 px-2 py-0.5 rounded-full">
                 New Course
               </span>
             )}
@@ -387,7 +387,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
 
         {/* Quiz List */}
         {quizzes.length === 0 ? (
-          <div className="text-center py-6 text-[#5C6360] bg-[#0D0F0F] rounded-lg border border-[#2A302E] border-dashed">
+          <div className="text-center py-6 text-[#5BB8FB] bg-[#000000] rounded-lg border border-[#0B2CB1] border-dashed">
             <Zap className="w-8 h-8 mx-auto mb-2 opacity-40" />
             <p className="text-sm">No quizzes for this lesson yet</p>
             <p className="text-xs">Create a quiz to test your students' knowledge</p>
@@ -396,41 +396,41 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
           <div className="space-y-2">
             {quizzes.map((quiz) => {
               const isLinked = !isNewCourse && quiz.courseId !== null;
-              
+
               return (
                 <div
                   key={quiz._id}
-                  className="bg-[#0D0F0F] border border-[#2A302E] rounded-lg p-3 hover:border-[#10B981]/30 transition-colors"
+                  className="bg-[#000000] border border-[#0B2CB1] rounded-lg p-3 hover:border-[#1951FC]/30 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-[#EDEFEE] truncate">
+                        <span className="text-sm font-medium text-[#FFFFFF] truncate">
                           {quiz.title}
                         </span>
                         {quiz.isPublished ? (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1 flex-shrink-0">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#1951FC]/20 text-[#1951FC] border border-[#1951FC]/30 flex items-center gap-1 flex-shrink-0">
                             <Eye className="w-3 h-3" />
                             Published
                           </span>
                         ) : (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#FBBF24]/20 text-[#FBBF24] border border-[#FBBF24]/30 flex items-center gap-1 flex-shrink-0">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#3781FC]/20 text-[#3781FC] border border-[#3781FC]/30 flex items-center gap-1 flex-shrink-0">
                             <EyeOff className="w-3 h-3" />
                             Draft
                           </span>
                         )}
                         {!isLinked && !isNewCourse && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#60A5FA]/20 text-[#60A5FA] border border-[#60A5FA]/30 flex-shrink-0">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#5BB8FB]/20 text-[#5BB8FB] border border-[#5BB8FB]/30 flex-shrink-0">
                             Not Linked
                           </span>
                         )}
                         {isNewCourse && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#60A5FA]/20 text-[#60A5FA] border border-[#60A5FA]/30 flex-shrink-0">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#5BB8FB]/20 text-[#5BB8FB] border border-[#5BB8FB]/30 flex-shrink-0">
                             Pending Save
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-[#5C6360] mt-0.5">
+                      <div className="flex items-center gap-3 text-xs text-[#5BB8FB] mt-0.5">
                         <span>{quiz.questions.length} questions</span>
                         <span>•</span>
                         <span>Pass: {quiz.passingScore}%</span>
@@ -453,9 +453,9 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
                           handleTogglePublish(quiz._id, quiz.isPublished);
                         }}
                         className={`p-1.5 rounded-lg transition-colors ${
-                          quiz.isPublished 
-                            ? 'text-[#10B981] hover:bg-[#10B981]/10' 
-                            : 'text-[#5C6360] hover:text-[#EDEFEE] hover:bg-[#1E2322]'
+                          quiz.isPublished
+                            ? 'text-[#1951FC] hover:bg-[#1951FC]/10'
+                            : 'text-[#5BB8FB] hover:text-[#FFFFFF] hover:bg-[#0B2CB1]'
                         }`}
                         title={quiz.isPublished ? 'Unpublish' : 'Publish'}
                       >
@@ -472,7 +472,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
                           e.stopPropagation();
                           handleViewStats(quiz._id);
                         }}
-                        className="p-1.5 text-[#5C6360] hover:text-[#60A5FA] hover:bg-[#60A5FA]/10 rounded-lg transition-colors"
+                        className="p-1.5 text-[#5BB8FB] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors"
                         title="View Statistics"
                       >
                         <BarChart3 className="w-4 h-4" />
@@ -485,7 +485,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
                           setEditingQuiz(quiz);
                           setShowForm(true);
                         }}
-                        className="p-1.5 text-[#5C6360] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
+                        className="p-1.5 text-[#5BB8FB] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] rounded-lg transition-colors"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
@@ -497,7 +497,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
                           e.stopPropagation();
                           handleDeleteQuiz(quiz._id, quiz.title);
                         }}
-                        className="p-1.5 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
+                        className="p-1.5 text-[#5BB8FB] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -507,7 +507,7 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
 
                   {/* Stats Panel */}
                   {showStats === quiz._id && (
-                    <div className="mt-3 pt-3 border-t border-[#2A302E]">
+                    <div className="mt-3 pt-3 border-t border-[#0B2CB1]">
                       {loadingStats ? (
                         <div className="flex items-center justify-center py-4">
                           <LoadingSpinner size="sm" />
@@ -515,24 +515,24 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
                       ) : stats ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div className="text-center">
-                            <p className="text-lg font-bold text-[#EDEFEE]">{stats.totalAttempts || 0}</p>
-                            <p className="text-xs text-[#5C6360]">Total Attempts</p>
+                            <p className="text-lg font-bold text-[#FFFFFF]">{stats.totalAttempts || 0}</p>
+                            <p className="text-xs text-[#5BB8FB]">Total Attempts</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-bold text-[#10B981]">{stats.passRate || 0}%</p>
-                            <p className="text-xs text-[#5C6360]">Pass Rate</p>
+                            <p className="text-lg font-bold text-[#1951FC]">{stats.passRate || 0}%</p>
+                            <p className="text-xs text-[#5BB8FB]">Pass Rate</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-bold text-[#60A5FA]">{stats.averageScore || 0}%</p>
-                            <p className="text-xs text-[#5C6360]">Avg Score</p>
+                            <p className="text-lg font-bold text-[#5BB8FB]">{stats.averageScore || 0}%</p>
+                            <p className="text-xs text-[#5BB8FB]">Avg Score</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-bold text-[#FBBF24]">{stats.passedAttempts || 0}</p>
-                            <p className="text-xs text-[#5C6360]">Passed</p>
+                            <p className="text-lg font-bold text-[#3781FC]">{stats.passedAttempts || 0}</p>
+                            <p className="text-xs text-[#5BB8FB]">Passed</p>
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm text-[#5C6360] text-center">No attempts yet</p>
+                        <p className="text-sm text-[#5BB8FB] text-center">No attempts yet</p>
                       )}
                     </div>
                   )}
@@ -544,8 +544,8 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
 
         {/* Quiz Form Modal */}
         {showForm && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0F0F]/80 backdrop-blur-sm"
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000000]/80 backdrop-blur-sm"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setShowForm(false);
@@ -553,20 +553,20 @@ export const QuizManagement: React.FC<QuizManagementProps> = ({
               }
             }}
           >
-            <div 
-              className="bg-[#161A19] border border-[#2A302E] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl"
+            <div
+              className="bg-[#03195B] border border-[#0B2CB1] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-[#EDEFEE]">
+                <h2 className="text-xl font-bold text-[#FFFFFF]">
                   {editingQuiz ? 'Edit Quiz' : 'Create New Quiz'}
                 </h2>
                 <button
                   type="button"
                   onClick={handleCloseForm}
-                  className="p-2 hover:bg-[#1E2322] rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#0B2CB1] rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-[#9CA3A0]" />
+                  <X className="w-5 h-5 text-[#CBE9FD]" />
                 </button>
               </div>
 

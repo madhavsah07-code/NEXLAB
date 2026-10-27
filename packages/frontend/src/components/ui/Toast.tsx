@@ -34,28 +34,28 @@ export const Toast: React.FC<ToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-[#10B981]" />;
+        return <CheckCircle className="w-5 h-5 text-[#1951FC]" />;
       case 'error':
-        return <AlertCircle className="w-5 h-5 text-[#F87171]" />;
+        return <AlertCircle className="w-5 h-5 text-[#5BB8FB]" />;
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-[#FBBF24]" />;
+        return <AlertTriangle className="w-5 h-5 text-[#3781FC]" />;
       case 'info':
       default:
-        return <Info className="w-5 h-5 text-[#60A5FA]" />;
+        return <Info className="w-5 h-5 text-[#5BB8FB]" />;
     }
   };
 
   const getBgColor = () => {
     switch (type) {
       case 'success':
-        return 'border-[#10B981]/30 bg-[#10B981]/10';
+        return 'border-[#1951FC]/30 bg-[#1951FC]/10';
       case 'error':
-        return 'border-[#F87171]/30 bg-[#F87171]/10';
+        return 'border-[#5BB8FB]/30 bg-[#5BB8FB]/10';
       case 'warning':
-        return 'border-[#FBBF24]/30 bg-[#FBBF24]/10';
+        return 'border-[#3781FC]/30 bg-[#3781FC]/10';
       case 'info':
       default:
-        return 'border-[#60A5FA]/30 bg-[#60A5FA]/10';
+        return 'border-[#5BB8FB]/30 bg-[#5BB8FB]/10';
     }
   };
 
@@ -64,14 +64,14 @@ export const Toast: React.FC<ToastProps> = ({
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-[#EDEFEE]">{message}</p>
+          <p className="text-sm text-[#FFFFFF]">{message}</p>
         </div>
         <button
           onClick={() => {
             setIsVisible(false);
             setTimeout(onClose, 300);
           }}
-          className="flex-shrink-0 text-[#5C6360] hover:text-[#EDEFEE] transition-colors"
+          className="flex-shrink-0 text-[#5BB8FB] hover:text-[#FFFFFF] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

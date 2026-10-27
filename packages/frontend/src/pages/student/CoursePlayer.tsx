@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
+import {
   ArrowLeft, Play, CheckCircle, Lock, BookOpen, Award, Star, Zap,
   ChevronLeft, ChevronRight, Code2, ChevronRight as ChevronRightIcon,
   Video, ClipboardCheck, Clock, Users, Calendar, ThumbsUp, MessageCircle,
@@ -90,10 +90,10 @@ export const CoursePlayer: React.FC = () => {
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
-  
+
   // Tab state
   const [activeTab, setActiveTab] = useState<'session' | 'practice'>('session');
-  
+
   // Quiz states - ✅ Multiple quizzes support
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export const CoursePlayer: React.FC = () => {
   const [quizAttempts, setQuizAttempts] = useState<Record<string, QuizAttempt>>({});
   const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const [quizStatusMap, setQuizStatusMap] = useState<Record<string, { completed: boolean; score?: number; passed?: boolean }>>({});
-  
+
   // Problem states
   const [lessonProblems, setLessonProblems] = useState<Record<string, Problem[]>>({});
   const [loadingProblems, setLoadingProblems] = useState<Record<string, boolean>>({});
@@ -175,7 +175,7 @@ export const CoursePlayer: React.FC = () => {
   // ✅ Fetch all quizzes for the current lesson
   const fetchQuizzes = async () => {
     if (!currentLesson?._id) return;
-    
+
     // Check if the lesson has quiz IDs
     if (!currentLesson.quizIds || currentLesson.quizIds.length === 0) {
       console.log('📚 No quiz IDs found for this lesson');
@@ -186,7 +186,7 @@ export const CoursePlayer: React.FC = () => {
     setLoadingQuizzes(true);
     try {
       console.log(`📚 Fetching ${currentLesson.quizIds.length} quizzes for lesson ${currentLesson._id}`);
-      
+
       const quizPromises = currentLesson.quizIds.map(async (quizId: string) => {
         try {
           const response = await api.get(`/quizzes/public/${quizId}`);
@@ -196,7 +196,7 @@ export const CoursePlayer: React.FC = () => {
           return null;
         }
       });
-      
+
       const quizResults = await Promise.all(quizPromises);
       const validQuizzes = quizResults.filter((q): q is Quiz => q !== null);
       setQuizzes(validQuizzes);
@@ -214,10 +214,10 @@ export const CoursePlayer: React.FC = () => {
     try {
       const response = await api.get('/quizzes/attempts');
       const attempts = response.data.data || [];
-      
+
       const statusMap: Record<string, { completed: boolean; score?: number; passed?: boolean }> = {};
       const completedSet = new Set<string>();
-      
+
       attempts.forEach((attempt: any) => {
         if (attempt.completedAt) {
           const quizId = attempt.quizId?._id || attempt.quizId;
@@ -231,10 +231,10 @@ export const CoursePlayer: React.FC = () => {
           }
         }
       });
-      
+
       setCompletedQuizzes(completedSet);
       setQuizStatusMap(statusMap);
-      
+
       // Update quiz completion status
       setQuizzes(prev => prev.map(quiz => ({
         ...quiz,
@@ -242,7 +242,7 @@ export const CoursePlayer: React.FC = () => {
         completedScore: statusMap[quiz._id]?.score,
         passed: statusMap[quiz._id]?.passed,
       })));
-      
+
     } catch (error) {
       console.error('Error fetching quiz attempts:', error);
     }
@@ -251,7 +251,7 @@ export const CoursePlayer: React.FC = () => {
   // Fetch problems for a lesson using public endpoint
   const fetchLessonProblems = async (lessonId: string) => {
     if (!course) return;
-    
+
     const currentLesson = course.lessons.find(l => l._id === lessonId);
     if (!currentLesson || !currentLesson.problemIds || currentLesson.problemIds.length === 0) {
       console.log(`📚 No problem IDs found for lesson ${lessonId}`);
@@ -279,7 +279,7 @@ export const CoursePlayer: React.FC = () => {
           }
         })
       );
-      
+
       const validProblems = problemDetails.filter((p): p is Problem => p !== null);
       console.log(`✅ Found ${validProblems.length} valid problems`);
       setLessonProblems(prev => ({ ...prev, [lessonId]: validProblems }));
@@ -295,9 +295,9 @@ export const CoursePlayer: React.FC = () => {
     try {
       const response = await api.post(`/courses/${courseId}/${lessonId}/complete`);
       setXpEarned(response.data.data.xpEarned || 10);
-      
+
       await fetchProgress();
-      
+
       if (course && currentLessonIndex < course.lessons.length - 1) {
         setTimeout(() => {
           setCurrentLessonIndex(currentLessonIndex + 1);
@@ -316,18 +316,18 @@ export const CoursePlayer: React.FC = () => {
       ...prev,
       [quizId]: { completed: true, score, passed },
     }));
-    
+
     // Update quiz in the list
-    setQuizzes(prev => prev.map(q => 
-      q._id === quizId 
+    setQuizzes(prev => prev.map(q =>
+      q._id === quizId
         ? { ...q, isCompleted: true, completedScore: score, passed }
         : q
     ));
-    
+
     fetchCourse();
     fetchProgress();
     fetchAllQuizAttempts();
-    
+
     if (passed) {
       toast.success(`🎉 Quiz passed! Score: ${score}%`);
     } else {
@@ -346,9 +346,9 @@ export const CoursePlayer: React.FC = () => {
 
   const getDifficultyBadge = (difficulty: string) => {
     const colors: Record<string, string> = {
-      easy: 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30',
-      medium: 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30',
-      hard: 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30',
+      easy: 'bg-[#1951FC]/20 text-[#1951FC] border-[#1951FC]/30',
+      medium: 'bg-[#3781FC]/20 text-[#3781FC] border-[#3781FC]/30',
+      hard: 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30',
     };
     return colors[difficulty] || colors.easy;
   };
@@ -369,7 +369,7 @@ export const CoursePlayer: React.FC = () => {
   if (!course) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#9CA3A0]">Course not found</p>
+        <p className="text-[#CBE9FD]">Course not found</p>
         <Button variant="primary" onClick={() => navigate('/courses')} className="mt-4">
           Back to Courses
         </Button>
@@ -384,60 +384,60 @@ export const CoursePlayer: React.FC = () => {
   const hasQuizzes = currentLesson?.quizIds && currentLesson.quizIds.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#0D0F0F]">
+    <div className="min-h-screen bg-[#000000]">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1600px] mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <button
             onClick={() => navigate('/courses')}
-            className="p-2 hover:bg-[#1E2322] rounded-lg transition-colors self-start"
+            className="p-2 hover:bg-[#0B2CB1] rounded-lg transition-colors self-start"
           >
-            <ArrowLeft className="w-5 h-5 text-[#9CA3A0]" />
+            <ArrowLeft className="w-5 h-5 text-[#CBE9FD]" />
           </button>
           <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#EDEFEE]">{course.title}</h1>
-            <p className="text-[#9CA3A0] text-sm">Instructor: {course.instructor?.name || 'Unknown'}</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#FFFFFF]">{course.title}</h1>
+            <p className="text-[#CBE9FD] text-sm">Instructor: {course.instructor?.name || 'Unknown'}</p>
             <div className="flex flex-wrap items-center gap-4 mt-1">
               {course.rating && course.rating > 0 && (
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-[#FBBF24] text-[#FBBF24]" />
-                  <span className="text-sm font-medium text-[#EDEFEE]">{course.rating.toFixed(1)}</span>
-                  <span className="text-xs text-[#5C6360]">({course.totalReviews || 0} reviews)</span>
+                  <Star className="w-4 h-4 fill-[#3781FC] text-[#3781FC]" />
+                  <span className="text-sm font-medium text-[#FFFFFF]">{course.rating.toFixed(1)}</span>
+                  <span className="text-xs text-[#5BB8FB]">({course.totalReviews || 0} reviews)</span>
                 </div>
               )}
-              <span className="text-xs text-[#5C6360]">•</span>
-              <span className="text-xs text-[#5C6360]">
+              <span className="text-xs text-[#5BB8FB]">•</span>
+              <span className="text-xs text-[#5BB8FB]">
                 <Clock className="w-3 h-3 inline mr-1" />
                 {course.lessons.reduce((acc, l) => acc + (l.duration || 0), 0)} min total
               </span>
             </div>
           </div>
           <div className="flex-shrink-0">
-            <span className="text-sm text-[#5C6360]">
+            <span className="text-sm text-[#5BB8FB]">
               {completedCount} / {totalLessons} lessons
             </span>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 mb-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm text-[#9CA3A0] mb-2">
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 mb-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm text-[#CBE9FD] mb-2">
             <span>Course Progress</span>
-            <span className="text-[#10B981] font-semibold">{progress}% Complete</span>
+            <span className="text-[#1951FC] font-semibold">{progress}% Complete</span>
           </div>
-          <div className="w-full h-1.5 bg-[#0D0F0F] rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-full transition-all duration-500"
+          <div className="w-full h-1.5 bg-[#000000] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-[#1951FC] to-[#3781FC] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-[#5C6360]">
+          <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-[#5BB8FB]">
             <span>{completedCount} of {totalLessons} lessons completed</span>
             {xpEarned > 0 && (
-              <span className="text-[#10B981] font-medium">+{xpEarned} XP earned!</span>
+              <span className="text-[#1951FC] font-medium">+{xpEarned} XP earned!</span>
             )}
             {allLessonsCompleted && (
-              <span className="text-[#FBBF24] font-medium">🎉 Course Complete!</span>
+              <span className="text-[#3781FC] font-medium">🎉 Course Complete!</span>
             )}
           </div>
         </div>
@@ -447,33 +447,33 @@ export const CoursePlayer: React.FC = () => {
           {/* Left Panel */}
           <div className="lg:col-span-3">
             {/* Tab Navigation */}
-            <div className="flex border-b border-[#2A302E] mb-4">
+            <div className="flex border-b border-[#0B2CB1] mb-4">
               <button
                 onClick={() => setActiveTab('session')}
                 className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
                   activeTab === 'session'
-                    ? 'border-[#10B981] text-[#10B981]'
-                    : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                    ? 'border-[#1951FC] text-[#1951FC]'
+                    : 'border-transparent text-[#5BB8FB] hover:text-[#FFFFFF]'
                 }`}
               >
                 <Video className="w-4 h-4" />
                 Session
                 {currentLesson && isLessonCompleted(currentLesson._id) && (
-                  <CheckCircle className="w-3 h-3 text-[#10B981]" />
+                  <CheckCircle className="w-3 h-3 text-[#1951FC]" />
                 )}
               </button>
               <button
                 onClick={() => setActiveTab('practice')}
                 className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
                   activeTab === 'practice'
-                    ? 'border-[#10B981] text-[#10B981]'
-                    : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                    ? 'border-[#1951FC] text-[#1951FC]'
+                    : 'border-transparent text-[#5BB8FB] hover:text-[#FFFFFF]'
                 }`}
               >
                 <ClipboardCheck className="w-4 h-4" />
                 Practice
                 {(hasProblems || hasQuizzes) && (
-                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981]">
+                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#1951FC]/20 text-[#1951FC]">
                     {hasProblems && (lessonProblems[currentLesson?._id || '']?.length || 0)}
                     {hasProblems && hasQuizzes && ' + '}
                     {hasQuizzes && `${quizzes.length} Quiz${quizzes.length > 1 ? 'zes' : ''}`}
@@ -509,12 +509,12 @@ export const CoursePlayer: React.FC = () => {
 
           {/* Right Panel - Lesson List */}
           <div className="lg:col-span-1">
-            <div className="bg-[#161A19] border border-[#2A302E] rounded-xl shadow-sm sticky top-4">
-              <div className="p-4 border-b border-[#2A302E]">
-                <h3 className="font-semibold text-[#EDEFEE]">Course Content</h3>
-                <p className="text-xs text-[#5C6360]">{totalLessons} lessons</p>
+            <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl shadow-sm sticky top-4">
+              <div className="p-4 border-b border-[#0B2CB1]">
+                <h3 className="font-semibold text-[#FFFFFF]">Course Content</h3>
+                <p className="text-xs text-[#5BB8FB]">{totalLessons} lessons</p>
               </div>
-              <div className="divide-y divide-[#2A302E] max-h-[600px] overflow-y-auto">
+              <div className="divide-y divide-[#0B2CB1] max-h-[600px] overflow-y-auto">
                 {course.lessons.map((lesson, index) => {
                   const isCompleted = isLessonCompleted(lesson._id);
                   const isCurrent = index === currentLessonIndex;
@@ -529,36 +529,36 @@ export const CoursePlayer: React.FC = () => {
                         setActiveTab('session');
                       }}
                       className={`
-                        w-full text-left p-4 hover:bg-[#1E2322] transition-colors flex items-start gap-3
-                        ${isCurrent ? 'bg-[#10B981]/5 border-l-4 border-[#10B981]' : ''}
+                        w-full text-left p-4 hover:bg-[#0B2CB1] transition-colors flex items-start gap-3
+                        ${isCurrent ? 'bg-[#1951FC]/5 border-l-4 border-[#1951FC]' : ''}
                         ${isCompleted ? 'opacity-75' : ''}
                       `}
                     >
                       <div className="flex-shrink-0 mt-0.5">
                         {isCompleted ? (
-                          <CheckCircle className="w-5 h-5 text-[#10B981]" />
+                          <CheckCircle className="w-5 h-5 text-[#1951FC]" />
                         ) : (
-                          <span className="w-5 h-5 flex items-center justify-center text-xs font-medium text-[#5C6360]">
+                          <span className="w-5 h-5 flex items-center justify-center text-xs font-medium text-[#5BB8FB]">
                             {index + 1}
                           </span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm truncate ${isCurrent ? 'text-[#10B981] font-medium' : 'text-[#9CA3A0]'}`}>
+                        <p className={`text-sm truncate ${isCurrent ? 'text-[#1951FC] font-medium' : 'text-[#CBE9FD]'}`}>
                           {lesson.title}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           {lesson.duration && (
-                            <span className="text-xs text-[#5C6360]">{lesson.duration} min</span>
+                            <span className="text-xs text-[#5BB8FB]">{lesson.duration} min</span>
                           )}
                           {hasProblems && (
-                            <span className="text-xs text-[#10B981] flex items-center gap-1">
+                            <span className="text-xs text-[#1951FC] flex items-center gap-1">
                               <Code2 className="w-3 h-3" />
                               {lesson.problemIds?.length}
                             </span>
                           )}
                           {hasQuizzes && (
-                            <span className="text-xs text-[#FBBF24] flex items-center gap-1">
+                            <span className="text-xs text-[#3781FC] flex items-center gap-1">
                               <Zap className="w-3 h-3" />
                               {lesson.quizIds?.length}
                             </span>
@@ -566,7 +566,7 @@ export const CoursePlayer: React.FC = () => {
                         </div>
                       </div>
                       {isCompleted && (
-                        <span className="text-xs text-[#10B981] font-medium flex-shrink-0">Done</span>
+                        <span className="text-xs text-[#1951FC] font-medium flex-shrink-0">Done</span>
                       )}
                     </button>
                   );
@@ -611,10 +611,10 @@ export const CoursePlayer: React.FC = () => {
         </div>
 
         {/* Reviews Section */}
-        <div className="mt-8 pt-8 border-t border-[#2A302E]">
-          <h2 className="text-xl font-bold text-[#EDEFEE] mb-4">Course Reviews</h2>
-          <CourseReviews 
-            courseId={course._id} 
+        <div className="mt-8 pt-8 border-t border-[#0B2CB1]">
+          <h2 className="text-xl font-bold text-[#FFFFFF] mb-4">Course Reviews</h2>
+          <CourseReviews
+            courseId={course._id}
             onReviewChange={() => {
               fetchCourse();
             }}
@@ -663,17 +663,17 @@ const SessionTab: React.FC<SessionTabProps> = ({
 }) => {
   if (!currentLesson) {
     return (
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
-        <Video className="w-12 h-12 text-[#5C6360] mx-auto mb-4 opacity-40" />
-        <p className="text-[#9CA3A0]">No lesson selected</p>
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-12 text-center">
+        <Video className="w-12 h-12 text-[#5BB8FB] mx-auto mb-4 opacity-40" />
+        <p className="text-[#CBE9FD]">No lesson selected</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
-        <div className="aspect-video bg-[#0D0F0F] flex items-center justify-center relative">
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden shadow-sm">
+        <div className="aspect-video bg-[#000000] flex items-center justify-center relative">
           {currentLesson.videoUrl ? (
             <iframe
               src={currentLesson.videoUrl.replace('watch?v=', 'embed/')}
@@ -683,19 +683,19 @@ const SessionTab: React.FC<SessionTabProps> = ({
             />
           ) : (
             <div className="text-center">
-              <Play className="w-16 h-16 text-[#5C6360] mx-auto" />
-              <p className="text-[#5C6360] mt-2">Video coming soon</p>
+              <Play className="w-16 h-16 text-[#5BB8FB] mx-auto" />
+              <p className="text-[#5BB8FB] mt-2">Video coming soon</p>
             </div>
           )}
-          
-          <div className="absolute top-4 left-4 bg-[#0D0F0F]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#2A302E]">
-            <span className="text-xs text-[#5C6360]">
+
+          <div className="absolute top-4 left-4 bg-[#000000]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#0B2CB1]">
+            <span className="text-xs text-[#5BB8FB]">
               Lesson {currentLessonIndex + 1} of {course.lessons.length}
             </span>
           </div>
-          
+
           {isLessonCompleted(currentLesson._id) && (
-            <div className="absolute top-4 right-4 bg-[#10B981]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#10B981]/30">
+            <div className="absolute top-4 right-4 bg-[#1951FC]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#1951FC]/30">
               <span className="text-xs font-medium text-white flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
                 Completed
@@ -703,19 +703,19 @@ const SessionTab: React.FC<SessionTabProps> = ({
             </div>
           )}
         </div>
-        
+
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-[#EDEFEE]">
+              <h2 className="text-lg sm:text-xl font-semibold text-[#FFFFFF]">
                 {currentLesson.title}
               </h2>
               {currentLesson.description && (
-                <p className="text-[#9CA3A0] mt-2 text-sm leading-relaxed">
+                <p className="text-[#CBE9FD] mt-2 text-sm leading-relaxed">
                   {currentLesson.description}
                 </p>
               )}
-              <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#5C6360]">
+              <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#5BB8FB]">
                 {currentLesson.duration && (
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
@@ -723,7 +723,7 @@ const SessionTab: React.FC<SessionTabProps> = ({
                   </span>
                 )}
                 {currentLesson.isFree && (
-                  <span className="text-[#10B981]">Free Preview</span>
+                  <span className="text-[#1951FC]">Free Preview</span>
                 )}
               </div>
             </div>
@@ -747,8 +747,8 @@ const SessionTab: React.FC<SessionTabProps> = ({
             </Button>
           </div>
           {xpEarned > 0 && (
-            <div className="mt-3 p-3 bg-[#10B981]/10 border border-[#10B981]/20 rounded-lg">
-              <p className="text-sm text-[#10B981] flex items-center gap-2">
+            <div className="mt-3 p-3 bg-[#1951FC]/10 border border-[#1951FC]/20 rounded-lg">
+              <p className="text-sm text-[#1951FC] flex items-center gap-2">
                 <Zap className="w-4 h-4" />
                 +{xpEarned} XP earned!
               </p>
@@ -758,46 +758,46 @@ const SessionTab: React.FC<SessionTabProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-          <h4 className="text-sm font-medium text-[#EDEFEE] mb-2 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-[#10B981]" />
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+          <h4 className="text-sm font-medium text-[#FFFFFF] mb-2 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-[#1951FC]" />
             Key Concepts
           </h4>
-          <ul className="space-y-1.5 text-sm text-[#9CA3A0]">
+          <ul className="space-y-1.5 text-sm text-[#CBE9FD]">
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-3.5 h-3.5 text-[#10B981] mt-0.5 flex-shrink-0" />
+              <CheckCircle className="w-3.5 h-3.5 text-[#1951FC] mt-0.5 flex-shrink-0" />
               <span>Understand the core concepts covered in this lesson</span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-3.5 h-3.5 text-[#10B981] mt-0.5 flex-shrink-0" />
+              <CheckCircle className="w-3.5 h-3.5 text-[#1951FC] mt-0.5 flex-shrink-0" />
               <span>Apply the knowledge in the practice section</span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-3.5 h-3.5 text-[#10B981] mt-0.5 flex-shrink-0" />
+              <CheckCircle className="w-3.5 h-3.5 text-[#1951FC] mt-0.5 flex-shrink-0" />
               <span>Complete the quizzes to test your understanding</span>
             </li>
           </ul>
         </div>
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-          <h4 className="text-sm font-medium text-[#EDEFEE] mb-2 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#FBBF24]" />
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+          <h4 className="text-sm font-medium text-[#FFFFFF] mb-2 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-[#3781FC]" />
             Progress
           </h4>
           <div className="space-y-2">
-            <div className="flex justify-between text-sm text-[#5C6360]">
+            <div className="flex justify-between text-sm text-[#5BB8FB]">
               <span>Lesson Status</span>
-              <span className={isLessonCompleted(currentLesson._id) ? 'text-[#10B981]' : 'text-[#FBBF24]'}>
+              <span className={isLessonCompleted(currentLesson._id) ? 'text-[#1951FC]' : 'text-[#3781FC]'}>
                 {isLessonCompleted(currentLesson._id) ? '✅ Completed' : '⏳ In Progress'}
               </span>
             </div>
-            <div className="flex justify-between text-sm text-[#5C6360]">
+            <div className="flex justify-between text-sm text-[#5BB8FB]">
               <span>Course Progress</span>
-              <span className="text-[#10B981]">{Math.round((course.lessons.filter(l => isLessonCompleted(l._id)).length / course.lessons.length) * 100)}%</span>
+              <span className="text-[#1951FC]">{Math.round((course.lessons.filter(l => isLessonCompleted(l._id)).length / course.lessons.length) * 100)}%</span>
             </div>
             {xpEarned > 0 && (
-              <div className="flex justify-between text-sm text-[#5C6360]">
+              <div className="flex justify-between text-sm text-[#5BB8FB]">
                 <span>XP Earned This Session</span>
-                <span className="text-[#10B981]">+{xpEarned} XP</span>
+                <span className="text-[#1951FC]">+{xpEarned} XP</span>
               </div>
             )}
           </div>
@@ -835,9 +835,9 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
 
   if (!currentLesson) {
     return (
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
-        <ClipboardCheck className="w-12 h-12 text-[#5C6360] mx-auto mb-4 opacity-40" />
-        <p className="text-[#9CA3A0]">No lesson selected</p>
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-12 text-center">
+        <ClipboardCheck className="w-12 h-12 text-[#5BB8FB] mx-auto mb-4 opacity-40" />
+        <p className="text-[#CBE9FD]">No lesson selected</p>
       </div>
     );
   }
@@ -859,13 +859,13 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
 
   if (!hasProblems && !hasQuizzes) {
     return (
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
-        <ClipboardCheck className="w-12 h-12 text-[#5C6360] mx-auto mb-4 opacity-40" />
-        <p className="text-lg font-medium text-[#EDEFEE]">No Practice Content</p>
-        <p className="text-sm text-[#9CA3A0] mt-2">
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-12 text-center">
+        <ClipboardCheck className="w-12 h-12 text-[#5BB8FB] mx-auto mb-4 opacity-40" />
+        <p className="text-lg font-medium text-[#FFFFFF]">No Practice Content</p>
+        <p className="text-sm text-[#CBE9FD] mt-2">
           This lesson doesn't have any coding problems or quizzes yet.
         </p>
-        <p className="text-xs text-[#5C6360] mt-1">
+        <p className="text-xs text-[#5BB8FB] mt-1">
           Check back later or explore other lessons.
         </p>
       </div>
@@ -878,19 +878,19 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
   return (
     <div className="space-y-4">
       {/* Practice Tab Navigation */}
-      <div className="flex border-b border-[#2A302E] bg-[#0D0F0F] rounded-t-lg overflow-x-auto">
+      <div className="flex border-b border-[#0B2CB1] bg-[#000000] rounded-t-lg overflow-x-auto">
         {hasProblems && (
           <button
             onClick={() => setActivePracticeTab('problems')}
             className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
               activePracticeTab === 'problems'
-                ? 'border-[#10B981] text-[#10B981]'
-                : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                ? 'border-[#1951FC] text-[#1951FC]'
+                : 'border-transparent text-[#5BB8FB] hover:text-[#FFFFFF]'
             }`}
           >
             <Code2 className="w-4 h-4" />
             Coding Problems
-            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#2A302E] text-[#5C6360]">
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#0B2CB1] text-[#5BB8FB]">
               {problems.length}
             </span>
           </button>
@@ -900,13 +900,13 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
             onClick={() => setActivePracticeTab('quizzes')}
             className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
               activePracticeTab === 'quizzes'
-                ? 'border-[#10B981] text-[#10B981]'
-                : 'border-transparent text-[#5C6360] hover:text-[#EDEFEE]'
+                ? 'border-[#1951FC] text-[#1951FC]'
+                : 'border-transparent text-[#5BB8FB] hover:text-[#FFFFFF]'
             }`}
           >
             <Zap className="w-4 h-4" />
             Quizzes
-            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#2A302E] text-[#5C6360]">
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#0B2CB1] text-[#5BB8FB]">
               {completedQuizCount}/{quizzes.length}
             </span>
           </button>
@@ -918,12 +918,12 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-[#EDEFEE]">Practice Problems</h3>
-              <p className="text-xs text-[#5C6360]">
+              <h3 className="text-sm font-medium text-[#FFFFFF]">Practice Problems</h3>
+              <p className="text-xs text-[#5BB8FB]">
                 Solve these problems to reinforce what you learned
               </p>
             </div>
-            <span className="text-xs text-[#5C6360]">
+            <span className="text-xs text-[#5BB8FB]">
               {problems.filter(p => solvedProblems.has(p._id)).length} / {problems.length} solved
             </span>
           </div>
@@ -941,21 +941,21 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
                     key={problem._id}
                     to={`/problems/${problem.slug}`}
                     target="_blank"
-                    className="block p-4 bg-[#161A19] border border-[#2A302E] rounded-lg hover:border-[#10B981]/30 hover:bg-[#1E2322] transition-all group"
+                    className="block p-4 bg-[#03195B] border border-[#0B2CB1] rounded-lg hover:border-[#1951FC]/30 hover:bg-[#0B2CB1] transition-all group"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-xs text-[#5C6360] font-mono flex-shrink-0 flex items-center gap-1">
+                        <span className="text-xs text-[#5BB8FB] font-mono flex-shrink-0 flex items-center gap-1">
                           <Hash className="w-3 h-3" />
                           {problem.problemNumber}
                         </span>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-[#EDEFEE] group-hover:text-[#10B981] transition-colors truncate">
+                            <span className="text-sm font-medium text-[#FFFFFF] group-hover:text-[#1951FC] transition-colors truncate">
                               {problem.title}
                             </span>
                             {isSolved && (
-                              <span className="text-xs text-[#10B981] flex-shrink-0">✅ Solved</span>
+                              <span className="text-xs text-[#1951FC] flex-shrink-0">✅ Solved</span>
                             )}
                           </div>
                           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -963,12 +963,12 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
                               {getDifficultyIcon(problem.difficulty)} {problem.difficulty}
                             </span>
                             {problem.tags?.slice(0, 2).map((tag) => (
-                              <span key={tag} className="text-[#5C6360]">
+                              <span key={tag} className="text-[#5BB8FB]">
                                 {tag}
                               </span>
                             ))}
                             {problem.acceptanceRate && (
-                              <span className="text-[#5C6360]">
+                              <span className="text-[#5BB8FB]">
                                 • {problem.acceptanceRate}% acceptance
                               </span>
                             )}
@@ -987,7 +987,7 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
                         >
                           {isSolved ? 'Review' : 'Solve'}
                         </Button>
-                        <ChevronRightIcon className="w-4 h-4 text-[#5C6360] group-hover:text-[#10B981] transition-colors" />
+                        <ChevronRightIcon className="w-4 h-4 text-[#5BB8FB] group-hover:text-[#1951FC] transition-colors" />
                       </div>
                     </div>
                   </Link>
@@ -1002,12 +1002,12 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-[#EDEFEE]">Quizzes</h3>
-              <p className="text-xs text-[#5C6360]">
+              <h3 className="text-sm font-medium text-[#FFFFFF]">Quizzes</h3>
+              <p className="text-xs text-[#5BB8FB]">
                 Test your knowledge with these quizzes
               </p>
             </div>
-            <span className="text-xs text-[#5C6360]">
+            <span className="text-xs text-[#5BB8FB]">
               {completedQuizCount} / {quizzes.length} completed
             </span>
           </div>
@@ -1025,17 +1025,17 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
                 const passed = status?.passed;
 
                 return (
-                  <div key={quiz._id} className="bg-[#161A19] border border-[#2A302E] rounded-xl p-5">
+                  <div key={quiz._id} className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-5">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Zap className="w-5 h-5 text-[#FBBF24]" />
-                          <h4 className="text-base font-semibold text-[#EDEFEE]">{quiz.title}</h4>
+                          <Zap className="w-5 h-5 text-[#3781FC]" />
+                          <h4 className="text-base font-semibold text-[#FFFFFF]">{quiz.title}</h4>
                           {isCompleted && (
                             <span className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 ${
-                              passed 
-                                ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' 
-                                : 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
+                              passed
+                                ? 'bg-[#1951FC]/20 text-[#1951FC] border-[#1951FC]/30'
+                                : 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30'
                             }`}>
                               {passed ? (
                                 <CheckCircle className="w-3 h-3" />
@@ -1047,10 +1047,10 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
                           )}
                         </div>
                         {quiz.description && (
-                          <p className="text-sm text-[#9CA3A0] mb-3">{quiz.description}</p>
+                          <p className="text-sm text-[#CBE9FD] mb-3">{quiz.description}</p>
                         )}
-                        
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-[#5C6360]">
+
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-[#5BB8FB]">
                           <span className="flex items-center gap-1">
                             <FileText className="w-3.5 h-3.5" />
                             {quiz.questions.length} questions
@@ -1105,9 +1105,9 @@ const PracticeTab: React.FC<PracticeTabProps> = ({
 // Helper functions
 const getDifficultyBadge = (difficulty: string) => {
   const colors: Record<string, string> = {
-    easy: 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30',
-    medium: 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30',
-    hard: 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30',
+    easy: 'bg-[#1951FC]/20 text-[#1951FC] border-[#1951FC]/30',
+    medium: 'bg-[#3781FC]/20 text-[#3781FC] border-[#3781FC]/30',
+    hard: 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30',
   };
   return colors[difficulty] || colors.easy;
 };

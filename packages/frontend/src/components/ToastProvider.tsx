@@ -5,40 +5,40 @@ export const ToastProvider: React.FC = () => {
   const toastOptions = {
     duration: 4000,
     style: {
-      background: '#161A19',
-      color: '#EDEFEE',
-      border: '1px solid #2A302E',
+      background: '#03195B',
+      color: '#FFFFFF',
+      border: '1px solid #0B2CB1',
       borderRadius: '12px',
       padding: '12px 16px',
     },
     success: {
       style: {
-        background: '#161A19',
-        border: '1px solid #10B981',
+        background: '#03195B',
+        border: '1px solid #1951FC',
       },
       iconTheme: {
-        primary: '#10B981',
-        secondary: '#0D0F0F',
+        primary: '#1951FC',
+        secondary: '#000000',
       },
     },
     error: {
       style: {
-        background: '#161A19',
-        border: '1px solid #F87171',
+        background: '#03195B',
+        border: '1px solid #5BB8FB',
       },
       iconTheme: {
-        primary: '#F87171',
-        secondary: '#0D0F0F',
+        primary: '#5BB8FB',
+        secondary: '#000000',
       },
     },
     loading: {
       style: {
-        background: '#161A19',
-        border: '1px solid #60A5FA',
+        background: '#03195B',
+        border: '1px solid #5BB8FB',
       },
       iconTheme: {
-        primary: '#60A5FA',
-        secondary: '#0D0F0F',
+        primary: '#5BB8FB',
+        secondary: '#000000',
       },
     },
   };

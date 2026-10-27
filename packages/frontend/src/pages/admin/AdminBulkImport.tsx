@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Upload, Download, FileJson, CheckCircle, XCircle, AlertCircle,
   Trash2, Copy, Check, ArrowLeft, Sparkles, RefreshCw,
   ChevronDown, ChevronUp, FileText, Code2, Loader2
@@ -67,7 +67,7 @@ export const AdminBulkImport: React.FC = () => {
       const response = await api.post('/problems/import/validate', {
         jsonData: jsonInput,
       });
-      
+
       if (response.data.success) {
         setIsValid(true);
         setValidationErrors([]);
@@ -102,7 +102,7 @@ export const AdminBulkImport: React.FC = () => {
       });
 
       setResult(response.data.data);
-      
+
       if (response.data.success) {
         alert(`✅ Successfully imported ${response.data.data.imported} problems!`);
       } else {
@@ -143,7 +143,7 @@ export const AdminBulkImport: React.FC = () => {
 
   const handleDownloadTemplate = () => {
     if (!template) return;
-    
+
     const blob = new Blob(
       [JSON.stringify(template.template, null, 2)],
       { type: 'application/json' }
@@ -160,7 +160,7 @@ export const AdminBulkImport: React.FC = () => {
 
   const handleDownloadErrors = () => {
     if (!result || result.errors.length === 0) return;
-    
+
     const errorData = {
       summary: {
         total: result.total,
@@ -170,7 +170,7 @@ export const AdminBulkImport: React.FC = () => {
       },
       errors: result.errors,
     };
-    
+
     const blob = new Blob(
       [JSON.stringify(errorData, null, 2)],
       { type: 'application/json' }
@@ -218,20 +218,20 @@ export const AdminBulkImport: React.FC = () => {
   return (
     <div className="py-8 max-w-7xl mx-auto px-4">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#2A302E]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#0B2CB1]">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/admin/problems')}
-            className="p-2 hover:bg-[#1E2322] rounded-lg transition-colors"
+            className="p-2 hover:bg-[#0B2CB1] rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-[#9CA3A0]" />
+            <ArrowLeft className="w-5 h-5 text-[#CBE9FD]" />
           </button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#EDEFEE] flex items-center gap-2">
-              <FileJson className="w-8 h-8 text-[#10B981]" />
+            <h1 className="text-2xl md:text-3xl font-bold text-[#FFFFFF] flex items-center gap-2">
+              <FileJson className="w-8 h-8 text-[#1951FC]" />
               Bulk Import Problems
             </h1>
-            <p className="text-[#9CA3A0] mt-1">Import multiple coding problems at once using JSON</p>
+            <p className="text-[#CBE9FD] mt-1">Import multiple coding problems at once using JSON</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -252,7 +252,7 @@ export const AdminBulkImport: React.FC = () => {
             className="gap-1"
             disabled={!template}
           >
-            {copied ? <Check className="w-4 h-4 text-[#10B981]" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-[#1951FC]" /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copied!' : 'Copy Template'}
           </Button>
         </div>
@@ -262,23 +262,23 @@ export const AdminBulkImport: React.FC = () => {
         {/* Left Column - Import Area */}
         <div className="lg:col-span-2 space-y-4">
           {/* JSON Input */}
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
-            <div className="px-4 py-3 border-b border-[#2A302E] bg-[#1A1D1E] flex items-center justify-between">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-[#0B2CB1] bg-[#03195B] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <FileJson className="w-4 h-4 text-[#10B981]" />
-                <span className="font-medium text-[#EDEFEE]">JSON Data</span>
+                <FileJson className="w-4 h-4 text-[#1951FC]" />
+                <span className="font-medium text-[#FFFFFF]">JSON Data</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={formatJSON}
-                  className="text-xs text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
+                  className="text-xs text-[#CBE9FD] hover:text-[#FFFFFF] transition-colors"
                   title="Format JSON"
                 >
                   <Code2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={clearAll}
-                  className="text-xs text-[#9CA3A0] hover:text-[#F87171] transition-colors"
+                  className="text-xs text-[#CBE9FD] hover:text-[#5BB8FB] transition-colors"
                   title="Clear"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -307,7 +307,7 @@ export const AdminBulkImport: React.FC = () => {
     ]
   }
 ]`}
-                className="w-full h-[400px] px-4 py-3 bg-[#0D0F0F] text-[#EDEFEE] font-mono text-sm resize-none focus:outline-none"
+                className="w-full h-[400px] px-4 py-3 bg-[#000000] text-[#FFFFFF] font-mono text-sm resize-none focus:outline-none"
                 spellCheck={false}
               />
               {/* Upload Overlay */}
@@ -320,7 +320,7 @@ export const AdminBulkImport: React.FC = () => {
                     onChange={handleFileUpload}
                     className="hidden"
                   />
-                  <div className="px-3 py-1.5 bg-[#1A1D1E] border border-[#2A302E] rounded-lg text-xs text-[#9CA3A0] hover:text-[#EDEFEE] hover:border-[#10B981]/30 transition-colors flex items-center gap-1">
+                  <div className="px-3 py-1.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg text-xs text-[#CBE9FD] hover:text-[#FFFFFF] hover:border-[#1951FC]/30 transition-colors flex items-center gap-1">
                     <Upload className="w-3 h-3" />
                     Upload JSON
                   </div>
@@ -332,24 +332,24 @@ export const AdminBulkImport: React.FC = () => {
           {/* Validation Status */}
           {isValid !== null && (
             <div className={`p-4 rounded-lg border ${
-              isValid 
-                ? 'bg-[#10B981]/10 border-[#10B981]/30' 
-                : 'bg-[#F87171]/10 border-[#F87171]/30'
+              isValid
+                ? 'bg-[#1951FC]/10 border-[#1951FC]/30'
+                : 'bg-[#5BB8FB]/10 border-[#5BB8FB]/30'
             }`}>
               <div className="flex items-center gap-2">
                 {isValid ? (
-                  <CheckCircle className="w-5 h-5 text-[#10B981]" />
+                  <CheckCircle className="w-5 h-5 text-[#1951FC]" />
                 ) : (
-                  <XCircle className="w-5 h-5 text-[#F87171]" />
+                  <XCircle className="w-5 h-5 text-[#5BB8FB]" />
                 )}
-                <span className="font-medium text-[#EDEFEE]">
+                <span className="font-medium text-[#FFFFFF]">
                   {isValid ? '✅ JSON is valid' : '❌ JSON has errors'}
                 </span>
               </div>
               {validationErrors.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {validationErrors.map((error, index) => (
-                    <p key={index} className="text-sm text-[#F87171]">• {error}</p>
+                    <p key={index} className="text-sm text-[#5BB8FB]">• {error}</p>
                   ))}
                 </div>
               )}
@@ -388,27 +388,27 @@ export const AdminBulkImport: React.FC = () => {
 
           {/* Import Results */}
           {result && (
-            <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 shadow-sm">
-              <h3 className="font-semibold text-[#EDEFEE] mb-3">Import Results</h3>
+            <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 shadow-sm">
+              <h3 className="font-semibold text-[#FFFFFF] mb-3">Import Results</h3>
               <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="bg-[#0D0F0F] rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-[#EDEFEE]">{result.total}</p>
-                  <p className="text-xs text-[#5C6360]">Total</p>
+                <div className="bg-[#000000] rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-[#FFFFFF]">{result.total}</p>
+                  <p className="text-xs text-[#5BB8FB]">Total</p>
                 </div>
-                <div className="bg-[#0D0F0F] rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-[#10B981]">{result.imported}</p>
-                  <p className="text-xs text-[#5C6360]">Imported ✅</p>
+                <div className="bg-[#000000] rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-[#1951FC]">{result.imported}</p>
+                  <p className="text-xs text-[#5BB8FB]">Imported ✅</p>
                 </div>
-                <div className="bg-[#0D0F0F] rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-[#F87171]">{result.failed}</p>
-                  <p className="text-xs text-[#5C6360]">Failed ❌</p>
+                <div className="bg-[#000000] rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-[#5BB8FB]">{result.failed}</p>
+                  <p className="text-xs text-[#5BB8FB]">Failed ❌</p>
                 </div>
               </div>
 
               {result.errors.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-[#F87171]">Errors ({result.errors.length})</span>
+                    <span className="text-sm font-medium text-[#5BB8FB]">Errors ({result.errors.length})</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -423,30 +423,30 @@ export const AdminBulkImport: React.FC = () => {
                     {result.errors.map((error, index) => (
                       <div
                         key={index}
-                        className="bg-[#0D0F0F] border border-[#F87171]/20 rounded-lg overflow-hidden"
+                        className="bg-[#000000] border border-[#5BB8FB]/20 rounded-lg overflow-hidden"
                       >
                         <div
-                          className="p-3 cursor-pointer hover:bg-[#1E2322] transition-colors flex items-center justify-between"
+                          className="p-3 cursor-pointer hover:bg-[#0B2CB1] transition-colors flex items-center justify-between"
                           onClick={() => toggleErrorExpand(index)}
                         >
                           <div className="flex items-center gap-2">
-                            <XCircle className="w-4 h-4 text-[#F87171]" />
-                            <span className="text-sm text-[#EDEFEE]">
+                            <XCircle className="w-4 h-4 text-[#5BB8FB]" />
+                            <span className="text-sm text-[#FFFFFF]">
                               #{error.index + 1}: {error.title || 'Untitled'}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-[#F87171]">{error.error}</span>
+                            <span className="text-xs text-[#5BB8FB]">{error.error}</span>
                             {expandedErrors[index] ? (
-                              <ChevronUp className="w-4 h-4 text-[#5C6360]" />
+                              <ChevronUp className="w-4 h-4 text-[#5BB8FB]" />
                             ) : (
-                              <ChevronDown className="w-4 h-4 text-[#5C6360]" />
+                              <ChevronDown className="w-4 h-4 text-[#5BB8FB]" />
                             )}
                           </div>
                         </div>
                         {expandedErrors[index] && error.data && (
-                          <div className="p-3 pt-0 border-t border-[#2A302E]">
-                            <pre className="text-xs text-[#9CA3A0] font-mono whitespace-pre-wrap break-all bg-[#0D0F0F] p-2 rounded">
+                          <div className="p-3 pt-0 border-t border-[#0B2CB1]">
+                            <pre className="text-xs text-[#CBE9FD] font-mono whitespace-pre-wrap break-all bg-[#000000] p-2 rounded">
                               {JSON.stringify(error.data, null, 2)}
                             </pre>
                           </div>
@@ -463,50 +463,50 @@ export const AdminBulkImport: React.FC = () => {
         {/* Right Column - Info & Template */}
         <div className="lg:col-span-1 space-y-4">
           {/* Quick Guide */}
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-5 shadow-sm">
-            <h3 className="font-semibold text-[#EDEFEE] mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#10B981]" />
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-5 shadow-sm">
+            <h3 className="font-semibold text-[#FFFFFF] mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#1951FC]" />
               Quick Guide
             </h3>
-            <div className="space-y-3 text-sm text-[#9CA3A0]">
+            <div className="space-y-3 text-sm text-[#CBE9FD]">
               <div className="flex items-start gap-2">
-                <span className="text-[#10B981] font-bold">1.</span>
+                <span className="text-[#1951FC] font-bold">1.</span>
                 <span>Prepare your JSON data (use the template below)</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-[#10B981] font-bold">2.</span>
+                <span className="text-[#1951FC] font-bold">2.</span>
                 <span>Paste or upload your JSON in the editor</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-[#10B981] font-bold">3.</span>
+                <span className="text-[#1951FC] font-bold">3.</span>
                 <span>Click <strong>Validate JSON</strong> to check for errors</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-[#10B981] font-bold">4.</span>
+                <span className="text-[#1951FC] font-bold">4.</span>
                 <span>Click <strong>Import Problems</strong> to bulk create</span>
               </div>
             </div>
           </div>
 
           {/* Template Preview */}
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden shadow-sm">
             <button
               onClick={() => setShowTemplate(!showTemplate)}
-              className="w-full px-5 py-3 flex items-center justify-between hover:bg-[#1E2322] transition-colors"
+              className="w-full px-5 py-3 flex items-center justify-between hover:bg-[#0B2CB1] transition-colors"
             >
-              <span className="font-semibold text-[#EDEFEE] flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#10B981]" />
+              <span className="font-semibold text-[#FFFFFF] flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#1951FC]" />
                 Template Preview
               </span>
               {showTemplate ? (
-                <ChevronUp className="w-4 h-4 text-[#5C6360]" />
+                <ChevronUp className="w-4 h-4 text-[#5BB8FB]" />
               ) : (
-                <ChevronDown className="w-4 h-4 text-[#5C6360]" />
+                <ChevronDown className="w-4 h-4 text-[#5BB8FB]" />
               )}
             </button>
             {showTemplate && template && (
-              <div className="p-4 pt-0 border-t border-[#2A302E]">
-                <pre className="text-xs text-[#9CA3A0] font-mono whitespace-pre-wrap break-all bg-[#0D0F0F] p-3 rounded max-h-[400px] overflow-y-auto">
+              <div className="p-4 pt-0 border-t border-[#0B2CB1]">
+                <pre className="text-xs text-[#CBE9FD] font-mono whitespace-pre-wrap break-all bg-[#000000] p-3 rounded max-h-[400px] overflow-y-auto">
                   {JSON.stringify(template.template, null, 2)}
                 </pre>
               </div>
@@ -514,25 +514,25 @@ export const AdminBulkImport: React.FC = () => {
           </div>
 
           {/* Schema Info */}
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-5 shadow-sm">
-            <h3 className="font-semibold text-[#EDEFEE] mb-3 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-[#10B981]" />
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-5 shadow-sm">
+            <h3 className="font-semibold text-[#FFFFFF] mb-3 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-[#1951FC]" />
               Supported Fields
             </h3>
-            <div className="space-y-2 text-xs text-[#9CA3A0]">
-              <div><span className="text-[#10B981] font-medium">title</span> <span className="text-[#5C6360]">(required)</span> - Problem title</div>
-              <div><span className="text-[#10B981] font-medium">difficulty</span> <span className="text-[#5C6360]">(required)</span> - easy | medium | hard</div>
-              <div><span className="text-[#10B981] font-medium">description</span> <span className="text-[#5C6360]">(required)</span> - Problem description</div>
-              <div><span className="text-[#10B981] font-medium">testCases</span> <span className="text-[#5C6360]">(required)</span> - Array of test cases</div>
-              <div><span className="text-[#10B981] font-medium">examples</span> - Array of examples</div>
-              <div><span className="text-[#10B981] font-medium">constraints</span> - Array of constraints</div>
-              <div><span className="text-[#10B981] font-medium">starterCode</span> - Starter code template</div>
-              <div><span className="text-[#10B981] font-medium">solutionCode</span> - Official solution</div>
-              <div><span className="text-[#10B981] font-medium">hints</span> - Array of hints</div>
-              <div><span className="text-[#10B981] font-medium">tags</span> - Array of tags</div>
-              <div><span className="text-[#10B981] font-medium">timeLimit</span> - Time limit in ms (default: 2000)</div>
-              <div><span className="text-[#10B981] font-medium">memoryLimit</span> - Memory limit in MB (default: 256)</div>
-              <div><span className="text-[#10B981] font-medium">isPublished</span> - Publish immediately (default: false)</div>
+            <div className="space-y-2 text-xs text-[#CBE9FD]">
+              <div><span className="text-[#1951FC] font-medium">title</span> <span className="text-[#5BB8FB]">(required)</span> - Problem title</div>
+              <div><span className="text-[#1951FC] font-medium">difficulty</span> <span className="text-[#5BB8FB]">(required)</span> - easy | medium | hard</div>
+              <div><span className="text-[#1951FC] font-medium">description</span> <span className="text-[#5BB8FB]">(required)</span> - Problem description</div>
+              <div><span className="text-[#1951FC] font-medium">testCases</span> <span className="text-[#5BB8FB]">(required)</span> - Array of test cases</div>
+              <div><span className="text-[#1951FC] font-medium">examples</span> - Array of examples</div>
+              <div><span className="text-[#1951FC] font-medium">constraints</span> - Array of constraints</div>
+              <div><span className="text-[#1951FC] font-medium">starterCode</span> - Starter code template</div>
+              <div><span className="text-[#1951FC] font-medium">solutionCode</span> - Official solution</div>
+              <div><span className="text-[#1951FC] font-medium">hints</span> - Array of hints</div>
+              <div><span className="text-[#1951FC] font-medium">tags</span> - Array of tags</div>
+              <div><span className="text-[#1951FC] font-medium">timeLimit</span> - Time limit in ms (default: 2000)</div>
+              <div><span className="text-[#1951FC] font-medium">memoryLimit</span> - Memory limit in MB (default: 256)</div>
+              <div><span className="text-[#1951FC] font-medium">isPublished</span> - Publish immediately (default: false)</div>
             </div>
           </div>
         </div>

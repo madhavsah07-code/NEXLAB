@@ -9,33 +9,33 @@ interface StatCardProps {
   rating?: number;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ 
-  title, 
-  value, 
-  icon, 
+export const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
   color = 'emerald',
   rating,
 }) => {
   const colorMap = {
-    emerald: 'border-[#10B981]/20',
-    info: 'border-[#60A5FA]/20',
-    warning: 'border-[#FBBF24]/20',
-    error: 'border-[#F87171]/20',
+    emerald: 'border-[#1951FC]/20',
+    info: 'border-[#5BB8FB]/20',
+    warning: 'border-[#3781FC]/20',
+    error: 'border-[#5BB8FB]/20',
   };
 
   const iconColorMap = {
-    emerald: 'text-[#10B981]',
-    info: 'text-[#60A5FA]',
-    warning: 'text-[#FBBF24]',
-    error: 'text-[#F87171]',
+    emerald: 'text-[#1951FC]',
+    info: 'text-[#5BB8FB]',
+    warning: 'text-[#3781FC]',
+    error: 'text-[#5BB8FB]',
   };
 
   return (
-    <div className={`bg-[#161A19] rounded-xl border ${colorMap[color]} p-6 shadow-sm hover:shadow-[#10B981]/5 hover:shadow-lg transition-all duration-300`}>
+    <div className={`bg-[#03195B] rounded-xl border ${colorMap[color]} p-6 shadow-sm hover:shadow-[#1951FC]/5 hover:shadow-lg transition-all duration-300`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-[#9CA3A0]">{title}</p>
-          <p className="text-2xl font-bold text-[#EDEFEE] mt-1">{value}</p>
+          <p className="text-sm font-medium text-[#CBE9FD]">{title}</p>
+          <p className="text-2xl font-bold text-[#FFFFFF] mt-1">{value}</p>
           {rating !== undefined && rating > 0 && (
             <div className="flex items-center gap-1 mt-1">
               <div className="flex items-center gap-0.5">
@@ -44,17 +44,17 @@ export const StatCard: React.FC<StatCardProps> = ({
                     key={star}
                     className={`w-3 h-3 ${
                       star <= Math.round(rating)
-                        ? 'fill-[#FBBF24] text-[#FBBF24]'
-                        : 'text-[#2A302E]'
+                        ? 'fill-[#3781FC] text-[#3781FC]'
+                        : 'text-[#0B2CB1]'
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-xs text-[#5C6360]">({rating.toFixed(1)})</span>
+              <span className="text-xs text-[#5BB8FB]">({rating.toFixed(1)})</span>
             </div>
           )}
         </div>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-[#161A19] border border-[#2A302E] ${iconColorMap[color]}`}>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-[#03195B] border border-[#0B2CB1] ${iconColorMap[color]}`}>
           {icon}
         </div>
       </div>

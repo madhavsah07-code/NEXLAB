@@ -7,53 +7,61 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Backgrounds
+        // Luminous Blue Glass — base surfaces
         background: {
-          base: '#0D0F0F',
-          surface: '#161A19',
-          elevated: '#1E2322',
+          base: '#000000',
+          surface: '#03195B',
+          elevated: '#0B2CB1',
         },
-        // Emerald Primary
-        emerald: {
-          DEFAULT: '#10B981',
-          hover: '#34D399',
-          active: '#059669',
-          border: 'rgba(16,185,129,0.35)',
+        blue: {
+          100: '#CBE9FD',
+          500: '#5BB8FB',
+          600: '#3781FC',
+          700: '#1951FC',
+          800: '#0B2CB1',
+          900: '#03195B',
+        },
+        brand: {
+          DEFAULT: '#1951FC',
+          hover: '#3781FC',
+          active: '#03195B',
+          border: 'rgba(91, 184, 251, 0.35)',
         },
         // Text
         text: {
-          primary: '#EDEFEE',
-          secondary: '#9CA3A0',
-          muted: '#5C6360',
+          primary: '#FFFFFF',
+          secondary: '#CBE9FD',
+          muted: '#5BB8FB',
         },
         // Borders
         border: {
-          DEFAULT: '#2A302E',
+          DEFAULT: 'rgba(203, 233, 253, 0.35)',
         },
         // Semantic States
-        error: '#F87171',
-        warning: '#FBBF24',
-        info: '#60A5FA',
-        // Dark Forest Colors
+        error: '#5BB8FB',
+        warning: '#3781FC',
+        info: '#5BB8FB',
         dark: {
-          50: '#D6F2DC',
-          100: '#B5E0BF',
-          200: '#94CEA2',
-          300: '#73BC85',
-          400: '#52AA68',
-          500: '#31984B',
-          600: '#1F3725',
-          700: '#182D1E',
-          800: '#132016',
-          900: '#060B07',
-        },
-        forest: {
-          600: '#2F6B44',
-          700: '#244F33',
+          50: '#CBE9FD',
+          100: '#B5D9FC',
+          200: '#91C4FB',
+          300: '#6EAEFB',
+          400: '#5BB8FB',
+          500: '#3781FC',
+          600: '#1951FC',
+          700: '#0B2CB1',
+          800: '#03195B',
+          900: '#000000',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Outfit', 'Urbanist', 'Sora', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      borderRadius: {
+        pill: '9999px',
+      },
+      boxShadow: {
+        glow: '0 0 40px rgba(55, 129, 252, 0.45)',
       },
     },
   },

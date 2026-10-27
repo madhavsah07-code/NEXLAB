@@ -1,643 +1,338 @@
-// packages/frontend/src/pages/LandingPage.tsx
-
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { BrandLogo } from '../components/BrandLogo';
 import { Button } from '../components/ui/Button';
-import { 
-  BookOpen, Code2, Trophy, Users, Sparkles, 
-  ArrowRight, CheckCircle, Star, Play, 
-  Award, Zap, Shield, Globe, MessageCircle,
-  ChevronRight, Menu, X, GraduationCap,
-  Clock, Briefcase, Rocket, Heart, 
-  Twitter, Linkedin, Github, Youtube,
-  Mail, MapPin, Phone, ChevronUp,
-  Instagram, Facebook
+import {
+  ArrowRight,
+  BookOpen,
+  Check,
+  ChevronRight,
+  Code2,
+  Menu,
+  Sparkles,
+  Trophy,
+  Users,
+  X,
+  Zap,
 } from 'lucide-react';
+
+const features = [
+  {
+    icon: BookOpen,
+    title: 'Interactive paths',
+    description: 'Build confidence through focused lessons, guided practice, and projects that make ideas stick.',
+  },
+  {
+    icon: Code2,
+    title: 'Code in the moment',
+    description: 'Move from concept to working code in a responsive browser-based sandbox.',
+  },
+  {
+    icon: Trophy,
+    title: 'Progress that matters',
+    description: 'Set a pace, collect milestones, and see each completed step add up to real momentum.',
+  },
+  {
+    icon: Users,
+    title: 'Learn with others',
+    description: 'Stay motivated with a community of curious builders moving in the same direction.',
+  },
+];
+
+const languages = [
+  { label: 'Python', shorthand: 'Py' },
+  { label: 'JavaScript', shorthand: 'JS' },
+  { label: 'Java', shorthand: 'Ja' },
+  { label: 'C++', shorthand: 'C+' },
+];
+
+const testimonials = [
+  {
+    name: 'Priya Sharma',
+    role: 'Software developer · Mumbai',
+    quote: 'The lessons feel focused, and the sandbox lets me turn a new concept into something real straight away.',
+  },
+  {
+    name: 'Rahul Verma',
+    role: 'Data scientist · Bengaluru',
+    quote: 'NexLab gave my learning a rhythm. Small wins and visible progress kept me coming back every day.',
+  },
+  {
+    name: 'Ananya Reddy',
+    role: 'Full-stack developer · Hyderabad',
+    quote: 'It is the rare platform where the course, practice, and community all feel like one experience.',
+  },
+];
+
+const faqs = [
+  {
+    question: 'Is NexLab free to use?',
+    answer: 'Yes. You can start with free courses and the code sandbox right away. Premium courses are available separately.',
+  },
+  {
+    question: 'Which languages can I practice?',
+    answer: 'NexLab supports Python, JavaScript, Java, and C++. Additional languages can be added as the curriculum grows.',
+  },
+  {
+    question: 'Can I track my learning progress?',
+    answer: 'Yes. Your dashboard brings lessons, practice, XP, and milestones into a single clear view.',
+  },
+  {
+    question: 'Does the experience work on mobile?',
+    answer: 'Yes. The learning experience adapts to smaller screens, so you can study wherever you have a browser.',
+  },
+];
+
+const LayeredLearningObject: React.FC = () => (
+  <div className="relative mx-auto h-[320px] w-full max-w-[510px] sm:h-[380px]" aria-hidden="true">
+    <div className="animate-blue-breathe absolute left-[7%] top-[36px] h-[210px] w-[86%] rounded-[999px] border border-white/20 bg-[#03195B] shadow-[0_0_64px_rgba(25,81,252,0.35)]" />
+    <div className="animate-glass-rise absolute left-[2%] top-[95px] h-[208px] w-[88%] rounded-[999px] border border-white/25 bg-[linear-gradient(135deg,#03195B,#0B2CB1)] shadow-[inset_0_2px_8px_rgba(255,255,255,0.26),0_0_54px_rgba(25,81,252,0.42)] [animation-delay:80ms]" />
+    <div className="animate-glass-rise absolute left-[9%] top-[153px] h-[205px] w-[88%] rounded-[999px] border border-white/30 bg-[linear-gradient(135deg,#0B2CB1,#1951FC)] shadow-[inset_0_2px_8px_rgba(255,255,255,0.35),0_0_58px_rgba(55,129,252,0.48)] [animation-delay:160ms]" />
+    <div className="animate-glass-rise absolute left-[16%] top-[209px] h-[186px] w-[78%] rounded-[999px] border-[1.5px] border-white/40 bg-[radial-gradient(120%_140%_at_15%_0%,rgba(255,255,255,0.5),rgba(255,255,255,0)_55%),linear-gradient(135deg,#3781FC,#CBE9FD)] shadow-[inset_0_2px_8px_rgba(255,255,255,0.5),inset_0_-10px_24px_rgba(3,25,91,0.25),0_0_62px_rgba(91,184,251,0.72)] [animation-delay:240ms]" />
+    <div className="absolute left-1/2 top-[266px] flex h-20 w-20 -translate-x-1/2 items-center justify-center rounded-full border border-white/50 bg-[#CBE9FD] text-[#03195B] shadow-[0_0_52px_rgba(203,233,253,0.8)]">
+      <Code2 className="h-8 w-8" strokeWidth={1.6} />
+    </div>
+    <div className="absolute right-0 top-3 hidden items-center gap-2 sm:flex">
+      <span className="h-px w-11 bg-white/35" />
+      <span className="h-2 w-2 rounded-full bg-[#CBE9FD] shadow-[0_0_12px_#CBE9FD]" />
+      <span className="text-xs tracking-[0.16em] text-white/80">BUILD</span>
+    </div>
+    <div className="absolute bottom-2 left-0 hidden items-center gap-2 sm:flex">
+      <span className="text-xs tracking-[0.16em] text-white/80">LEARN</span>
+      <span className="h-2 w-2 rounded-full bg-[#3781FC] shadow-[0_0_12px_#3781FC]" />
+      <span className="h-px w-11 bg-white/35" />
+    </div>
+  </div>
+);
 
 export const LandingPage: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const [showScrollTop, setShowScrollTop] = React.useState(false);
-
-  // Handle scroll for scroll-to-top button
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setIsMobileMenuOpen(false);
   };
 
-  // Static Data
-  const features = [
-    {
-      icon: <BookOpen className="w-6 h-6" />,
-      title: 'Interactive Courses',
-      description: 'Learn from expert-led courses with hands-on projects and real-world applications.',
-      color: 'text-[#10B981]',
-      bgColor: 'bg-[#10B981]/10',
-    },
-    {
-      icon: <Code2 className="w-6 h-6" />,
-      title: 'Code Sandbox',
-      description: 'Write and test code in Python, JavaScript, Java, and C++ with real-time execution.',
-      color: 'text-[#60A5FA]',
-      bgColor: 'bg-[#60A5FA]/10',
-    },
-    {
-      icon: <Trophy className="w-6 h-6" />,
-      title: 'Gamification',
-      description: 'Earn XP, level up, and unlock badges as you progress through your learning journey.',
-      color: 'text-[#FBBF24]',
-      bgColor: 'bg-[#FBBF24]/10',
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: 'Community Learning',
-      description: 'Join thousands of students across India and collaborate on projects and discussions.',
-      color: 'text-[#F87171]',
-      bgColor: 'bg-[#F87171]/10',
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: 'Priya Sharma',
-      role: 'Software Developer',
-      company: 'Tech Mahindra',
-      image: 'https://ui-avatars.com/api/?name=Priya+Sharma&background=10B981&color=fff&size=60',
-      quote: 'NexLab transformed my coding journey. The interactive courses and sandbox made learning so much easier!',
-      rating: 5,
-      location: 'Mumbai, India'
-    },
-    {
-      name: 'Rahul Verma',
-      role: 'Data Scientist',
-      company: 'Flipkart',
-      image: 'https://ui-avatars.com/api/?name=Rahul+Verma&background=60A5FA&color=fff&size=60',
-      quote: 'The Python courses and the code sandbox are exceptional. This platform is a game-changer for self-learning.',
-      rating: 5,
-      location: 'Bangalore, India'
-    },
-    {
-      name: 'Ananya Reddy',
-      role: 'Full Stack Developer',
-      company: 'Freelance',
-      image: 'https://ui-avatars.com/api/?name=Ananya+Reddy&background=FBBF24&color=fff&size=60',
-      quote: 'I\'ve tried many learning platforms, but NexLab stands out with its gamification and community. Absolutely love it!',
-      rating: 5,
-      location: 'Hyderabad, India'
-    },
-  ];
-
-  const faqs = [
-    {
-      question: 'Is NexLab free to use?',
-      answer: 'Yes! NexLab offers free courses with a powerful code sandbox. Premium courses start at just ₹499.'
-    },
-    {
-      question: 'What programming languages are supported?',
-      answer: 'Currently we support Python, JavaScript, Java, and C++. More languages coming soon!'
-    },
-    {
-      question: 'Can I earn certificates?',
-      answer: 'Yes! Upon course completion, you\'ll receive a certificate that you can share on LinkedIn and your resume.'
-    },
-    {
-      question: 'How does the gamification work?',
-      answer: 'You earn XP for completing lessons and quizzes. Level up, unlock badges, and compete on the leaderboard!'
-    },
-    {
-      question: 'Is there a mobile app?',
-      answer: 'Not yet, but our platform is fully responsive and works great on mobile browsers!'
-    },
-    {
-      question: 'How do I get started?',
-      answer: 'Simply create a free account and start exploring our courses. You can begin learning immediately!'
-    },
-  ];
-
-  const languages = [
-    { name: 'Python', icon: '🐍', color: 'text-[#10B981]' },
-    { name: 'JavaScript', icon: '⚡', color: 'text-[#FBBF24]' },
-    { name: 'Java', icon: '☕', color: 'text-[#F87171]' },
-    { name: 'C++', icon: '⚙️', color: 'text-[#60A5FA]' },
-  ];
-
-  const currentYear = new Date().getFullYear();
+  const handlePrimaryAction = () => navigate(user ? '/dashboard' : '/register');
 
   return (
-    <div className="min-h-screen bg-[#0D0F0F] overflow-x-hidden">
-      {/* Navigation - Static */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0D0F0F]/95 backdrop-blur-sm border-b border-[#2A302E]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <BrandLogo size="md" showText={true} />
+    <div className="page-orbit min-h-screen overflow-x-hidden text-white">
+      <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-xl">
+        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
+          <BrandLogo size="md" showText />
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              <button 
-                onClick={() => scrollToSection('features')} 
-                className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
+          <div className="hidden items-center gap-7 lg:flex">
+            {['features', 'languages', 'stories', 'questions'].map((item) => (
+              <button
+                key={item}
+                onClick={() => scrollToSection(item)}
+                className="text-sm tracking-wide text-white/65 transition-colors hover:text-[#CBE9FD]"
               >
-                Features
+                {{ features: 'Experience', languages: 'Languages', stories: 'Stories', questions: 'FAQ' }[item]}
               </button>
-              <button 
-                onClick={() => scrollToSection('languages')} 
-                className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
-              >
-                Languages
-              </button>
-              <button 
-                onClick={() => scrollToSection('testimonials')} 
-                className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
-              >
-                Testimonials
-              </button>
-              <button 
-                onClick={() => scrollToSection('faq')} 
-                className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
-              >
-                FAQ
-              </button>
-            </div>
-
-            {/* Desktop Auth Buttons */}
-            <div className="hidden md:flex items-center gap-3">
-              {user ? (
-                <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                  Dashboard <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              ) : (
-                <>
-                  <Button variant="ghost" onClick={() => navigate('/login')}>
-                    Sign In
-                  </Button>
-                  <Button variant="primary" onClick={() => navigate('/register')}>
-                    Get Started Free
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            ))}
           </div>
 
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-[#2A302E]">
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => scrollToSection('features')} 
-                  className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors px-4 py-2 rounded-lg hover:bg-[#1E2322] text-left"
-                >
-                  Features
+          <div className="hidden items-center gap-3 lg:flex">
+            {!user && <Button variant="ghost" onClick={() => navigate('/login')}>Sign in</Button>}
+            <Button size="sm" onClick={handlePrimaryAction}>
+              {user ? 'Dashboard' : 'Start learning'} <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          <button
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-[#0B2CB1]/50 text-white lg:hidden"
+            aria-label="Toggle menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+
+        {isMobileMenuOpen && (
+          <div className="border-t border-white/10 bg-black/95 px-5 py-5 backdrop-blur-xl lg:hidden">
+            <div className="mx-auto flex max-w-7xl flex-col gap-1">
+              {[
+                ['features', 'Experience'],
+                ['languages', 'Languages'],
+                ['stories', 'Stories'],
+                ['questions', 'FAQ'],
+              ].map(([id, label]) => (
+                <button key={id} onClick={() => scrollToSection(id)} className="rounded-2xl px-4 py-3 text-left text-sm text-white/75 hover:bg-[#1951FC]/20 hover:text-white">
+                  {label}
                 </button>
-                <button 
-                  onClick={() => scrollToSection('languages')} 
-                  className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors px-4 py-2 rounded-lg hover:bg-[#1E2322] text-left"
-                >
-                  Languages
-                </button>
-                <button 
-                  onClick={() => scrollToSection('testimonials')} 
-                  className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors px-4 py-2 rounded-lg hover:bg-[#1E2322] text-left"
-                >
-                  Testimonials
-                </button>
-                <button 
-                  onClick={() => scrollToSection('faq')} 
-                  className="text-sm text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors px-4 py-2 rounded-lg hover:bg-[#1E2322] text-left"
-                >
-                  FAQ
-                </button>
-                <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-[#2A302E]">
-                  {user ? (
-                    <Button variant="primary" onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }}>
-                      Dashboard
-                    </Button>
-                  ) : (
-                    <>
-                      <Button variant="ghost" onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }}>
-                        Sign In
-                      </Button>
-                      <Button variant="primary" onClick={() => { navigate('/register'); setIsMobileMenuOpen(false); }}>
-                        Get Started Free
-                      </Button>
-                    </>
-                  )}
-                </div>
+              ))}
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                {!user && <Button variant="secondary" fullWidth onClick={() => navigate('/login')}>Sign in</Button>}
+                <Button fullWidth onClick={handlePrimaryAction}>{user ? 'Dashboard' : 'Get started'}</Button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </nav>
 
-      {/* Hero Section - Static */}
-      <section className="pt-32 pb-20 md:pt-40 md:pb-32 px-4 relative overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#10B981]/5 to-transparent pointer-events-none" />
-        <div className="absolute top-20 right-20 w-64 h-64 bg-[#10B981]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-20 left-20 w-64 h-64 bg-[#60A5FA]/5 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto text-center relative">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 mb-6">
-            <Sparkles className="w-4 h-4 text-[#10B981]" />
-            <span className="text-xs font-medium text-[#10B981]">🇮🇳 10,000+ Students Trust NexLab India</span>
-          </div>
-
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-[#EDEFEE] mb-6 leading-tight">
-            Learn, Code, and
-            <span className="text-[#10B981]"> Grow</span>
-            <span className="block text-2xl md:text-3xl lg:text-4xl text-[#9CA3A0] mt-2">
-              From 🇮🇳 India, For the World
-            </span>
-          </h1>
-          
-          <p className="text-xl text-[#9CA3A0] max-w-2xl mx-auto mb-8 leading-relaxed">
-            Interactive courses with a powerful code sandbox. 
-            Start your learning journey today and become a developer.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {user ? (
-              <Button variant="primary" size="lg" onClick={() => navigate('/dashboard')}>
-                Go to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
+      <main>
+        <section className="relative mx-auto grid min-h-[790px] max-w-7xl items-center gap-8 px-5 pb-20 pt-32 sm:px-8 lg:min-h-[720px] lg:grid-cols-[1.02fr_0.98fr] lg:gap-14 lg:pt-24">
+          <div className="relative z-10 max-w-2xl">
+            <div className="animate-glass-rise mb-7 inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#1951FC]/15 px-4 py-2 text-xs tracking-[0.1em] text-[#CBE9FD] shadow-[0_0_24px_rgba(55,129,252,0.22)]">
+              <Sparkles className="h-3.5 w-3.5" />
+              A clearer way to become a developer
+            </div>
+            <h1 className="animate-glass-rise text-balance text-[clamp(3.2rem,7vw,6.15rem)] font-light leading-[0.93] tracking-[-0.055em] [animation-delay:80ms]">
+              Learn in <span className="text-[#5BB8FB]">full</span> color.
+            </h1>
+            <p className="animate-glass-rise mt-7 max-w-xl text-lg leading-relaxed text-white/65 [animation-delay:160ms] sm:text-xl">
+              Courses, practice, and a live code workspace—layered into one focused learning environment.
+            </p>
+            <div className="animate-glass-rise mt-9 flex flex-col gap-3 sm:flex-row [animation-delay:240ms]">
+              <Button size="lg" onClick={handlePrimaryAction}>
+                {user ? 'Open my dashboard' : 'Start learning free'} <ArrowRight className="h-4 w-4" />
               </Button>
-            ) : (
-              <>
-                <Button variant="primary" size="lg" onClick={() => navigate('/register')}>
-                  Start Learning Free <ArrowRight className="w-4 h-4 ml-1" />
+              {!user && (
+                <Button size="lg" variant="secondary" onClick={() => navigate('/login')}>
+                  I already have an account
                 </Button>
-                <Button variant="secondary" size="lg" onClick={() => navigate('/login')}>
-                  Sign In
-                </Button>
-              </>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-[#5C6360]">
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-[#10B981]" />
-              No credit card required
-            </span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-[#10B981]" />
-              Cancel anytime
-            </span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-[#10B981]" />
-              UPI & Indian payments accepted
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section - Static */}
-      <section className="py-16 px-4 border-t border-[#2A302E] bg-[#0D0F0F]">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="p-6 bg-[#161A19] rounded-xl border border-[#2A302E]">
-              <p className="text-3xl md:text-4xl font-bold text-[#10B981]">15,000+</p>
-              <p className="text-sm text-[#9CA3A0] mt-1">Students</p>
+              )}
             </div>
-            <div className="p-6 bg-[#161A19] rounded-xl border border-[#2A302E]">
-              <p className="text-3xl md:text-4xl font-bold text-[#60A5FA]">120+</p>
-              <p className="text-sm text-[#9CA3A0] mt-1">Courses</p>
-            </div>
-            <div className="p-6 bg-[#161A19] rounded-xl border border-[#2A302E]">
-              <p className="text-3xl md:text-4xl font-bold text-[#FBBF24]">850+</p>
-              <p className="text-sm text-[#9CA3A0] mt-1">Lessons</p>
-            </div>
-            <div className="p-6 bg-[#161A19] rounded-xl border border-[#2A302E]">
-              <p className="text-3xl md:text-4xl font-bold text-[#F87171]">12.5L+</p>
-              <p className="text-sm text-[#9CA3A0] mt-1">XP Earned</p>
+            <div className="animate-glass-rise mt-8 flex flex-wrap gap-x-5 gap-y-3 text-sm text-white/60 [animation-delay:320ms]">
+              {['No card required', 'Learn at your pace', 'Made for builders'].map((label) => (
+                <span key={label} className="flex items-center gap-2"><Check className="h-4 w-4 text-[#5BB8FB]" />{label}</span>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Features Section - Static */}
-      <section id="features" className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#EDEFEE]">
-              Everything You Need to <span className="text-[#10B981]">Learn Coding</span>
-            </h2>
-            <p className="text-[#9CA3A0] mt-4 max-w-2xl mx-auto">
-              Our platform combines interactive courses, a powerful code sandbox, and gamification to make learning fun and effective.
-            </p>
+          <div className="relative mt-1 lg:mt-0">
+            <div className="absolute inset-4 rounded-full bg-[#1951FC]/25 blur-[100px]" />
+            <LayeredLearningObject />
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="group bg-[#161A19] border border-[#2A302E] rounded-xl p-6 hover:bg-[#1E2322] hover:border-[#10B981]/20 transition-all duration-300"
-              >
-                <div className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <div className={feature.color}>{feature.icon}</div>
-                </div>
-                <h3 className="text-lg font-semibold text-[#EDEFEE] mb-2">{feature.title}</h3>
-                <p className="text-sm text-[#9CA3A0] leading-relaxed">{feature.description}</p>
+        <section className="relative z-10 mx-auto max-w-7xl px-5 pb-20 sm:px-8 lg:pb-28">
+          <div className="glass-card grid grid-cols-2 divide-x divide-y divide-white/15 overflow-hidden sm:grid-cols-4 sm:divide-y-0">
+            {[
+              ['15k+', 'curious learners'],
+              ['120+', 'guided courses'],
+              ['850+', 'focused lessons'],
+              ['4', 'languages to explore'],
+            ].map(([value, label], index) => (
+              <div key={label} className={`px-5 py-7 text-center sm:px-7 ${index > 1 ? 'sm:border-l sm:border-white/15' : ''}`}>
+                <p className="text-3xl font-light tracking-[-0.04em] text-[#CBE9FD] sm:text-4xl">{value}</p>
+                <p className="mt-1 text-xs tracking-[0.08em] text-white/55">{label}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Languages Section - Static */}
-      <section id="languages" className="py-20 px-4 bg-[#161A19] border-y border-[#2A302E]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#EDEFEE]">
-              <span className="text-[#10B981]">Multi-Language</span> Code Sandbox
-            </h2>
-            <p className="text-[#9CA3A0] mt-4 max-w-2xl mx-auto">
-              Write and execute code in your favorite programming languages directly in the browser.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            {languages.map((lang, index) => (
-              <div
-                key={index}
-                className="bg-[#0D0F0F] border border-[#2A302E] rounded-xl p-6 text-center hover:border-[#10B981]/30 transition-all duration-300"
-              >
-                <div className="text-4xl mb-2">{lang.icon}</div>
-                <p className={`font-semibold ${lang.color}`}>{lang.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works - Static */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#EDEFEE]">
-              How <span className="text-[#10B981]">It Works</span>
-            </h2>
-            <p className="text-[#9CA3A0] mt-4 max-w-2xl mx-auto">
-              Get started in three simple steps and begin your learning journey.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#10B981]/20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-[#10B981]">
-                1
-              </div>
-              <h3 className="text-lg font-semibold text-[#EDEFEE] mb-2">Create Account</h3>
-              <p className="text-sm text-[#9CA3A0]">Sign up for free and access all courses instantly.</p>
+        <section id="features" className="scroll-mt-24 border-y border-white/10 bg-[#03195B]/20 px-5 py-24 sm:px-8 lg:py-32">
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-xs tracking-[0.18em] text-[#5BB8FB]">THE NEXLAB EXPERIENCE</p>
+              <h2 className="mt-4 text-4xl font-light tracking-[-0.04em] sm:text-5xl">Every layer has a purpose.</h2>
+              <p className="mt-5 text-lg leading-relaxed text-white/60">An intentionally quiet interface keeps your attention on the work and makes the next useful action obvious.</p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#10B981]/20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-[#10B981]">
-                2
-              </div>
-              <h3 className="text-lg font-semibold text-[#EDEFEE] mb-2">Choose a Course</h3>
-              <p className="text-sm text-[#9CA3A0]">Browse our catalog and pick your learning path.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#10B981]/20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-[#10B981]">
-                3
-              </div>
-              <h3 className="text-lg font-semibold text-[#EDEFEE] mb-2">Start Learning</h3>
-              <p className="text-sm text-[#9CA3A0]">Watch lessons, write code, and earn XP as you progress.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section - Static */}
-      <section id="testimonials" className="py-20 px-4 bg-[#161A19] border-y border-[#2A302E]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#EDEFEE]">
-              What Our <span className="text-[#10B981]">Students Say</span>
-            </h2>
-            <p className="text-[#9CA3A0] mt-4 max-w-2xl mx-auto">
-              Hear from real students across India who transformed their careers with NexLab.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="bg-[#0D0F0F] border border-[#2A302E] rounded-xl p-6 hover:border-[#10B981]/20 transition-all duration-300"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div>
-                    <p className="font-semibold text-[#EDEFEE]">{testimonial.name}</p>
-                    <p className="text-xs text-[#9CA3A0]">{testimonial.role} • {testimonial.company}</p>
-                    <p className="text-xs text-[#5C6360]">📍 {testimonial.location}</p>
+            <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+              {features.map(({ icon: Icon, title, description }, index) => (
+                <article key={title} className="glass-card group min-h-[265px] p-7 transition duration-500 hover:-translate-y-1 hover:shadow-[0_0_46px_rgba(55,129,252,0.34)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-[#1951FC]/25 text-[#CBE9FD] shadow-[inset_0_1px_4px_rgba(255,255,255,0.28)]">
+                    <Icon className="h-5 w-5" strokeWidth={1.5} />
                   </div>
-                </div>
-                <div className="flex items-center gap-0.5 mb-3">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-4 h-4 ${
-                        star <= testimonial.rating
-                          ? 'fill-[#FBBF24] text-[#FBBF24]'
-                          : 'text-[#2A302E]'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-sm text-[#9CA3A0] leading-relaxed">"{testimonial.quote}"</p>
+                  <p className="mt-8 text-xs tracking-[0.15em] text-[#5BB8FB]">0{index + 1}</p>
+                  <h3 className="mt-2 text-xl tracking-[-0.025em]">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/60">{description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="languages" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:py-32">
+          <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.85fr_1.15fr]">
+            <div>
+              <p className="text-xs tracking-[0.18em] text-[#5BB8FB]">YOUR WORKSPACE</p>
+              <h2 className="mt-4 text-4xl font-light tracking-[-0.04em] sm:text-5xl">Bring the idea to life while it is still fresh.</h2>
+              <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/60">Choose a language, open the sandbox, and turn the lesson into a working solution without losing context.</p>
+              <button onClick={handlePrimaryAction} className="mt-8 inline-flex items-center gap-2 text-sm text-[#CBE9FD] transition-colors hover:text-white">
+                Explore the sandbox <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="glass-card p-5 sm:p-8">
+              <div className="flex items-center justify-between border-b border-white/15 pb-5">
+                <div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3781FC]/30 text-[#CBE9FD]"><Code2 className="h-4 w-4" /></div><span className="text-sm text-white/80">sandbox.nexlab</span></div>
+                <span className="rounded-full border border-[#5BB8FB]/40 px-3 py-1 text-[10px] tracking-[0.13em] text-[#CBE9FD]">READY</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section - Static */}
-      <section id="faq" className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#EDEFEE]">
-              Frequently Asked <span className="text-[#10B981]">Questions</span>
-            </h2>
-            <p className="text-[#9CA3A0] mt-4">
-              Find answers to common questions about NexLab.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <details
-                key={index}
-                className="group bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden"
-              >
-                <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-[#1E2322] transition-colors">
-                  <span className="font-medium text-[#EDEFEE]">{faq.question}</span>
-                  <ChevronRight className="w-5 h-5 text-[#9CA3A0] group-open:rotate-90 transition-transform" />
-                </summary>
-                <div className="px-5 pb-5">
-                  <p className="text-sm text-[#9CA3A0] leading-relaxed">{faq.answer}</p>
-                </div>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Static */}
-      <section className="py-20 px-4 border-t border-[#2A302E]">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-[#10B981] to-[#059669] rounded-2xl p-8 md:p-12 text-center shadow-xl shadow-[#10B981]/10">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Start Learning?
-            </h2>
-            <p className="text-white/80 mb-6 max-w-2xl mx-auto">
-              Join thousands of students across India and start your coding journey today.
-            </p>
-            {user ? (
-              <Button variant="secondary" size="lg" onClick={() => navigate('/dashboard')}>
-                Go to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            ) : (
-              <Button variant="secondary" size="lg" onClick={() => navigate('/register')}>
-                Create Free Account <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-            <p className="text-white/60 text-xs mt-4">
-              No credit card required • Free forever • UPI & Indian payments accepted
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer - Static */}
-      <footer className="bg-[#161A19] border-t border-[#2A302E] pt-12 pb-6 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            {/* Brand */}
-            <div className="col-span-2 md:col-span-1">
-              <BrandLogo size="lg" showText={true} />
-              <p className="text-sm text-[#9CA3A0] mt-4 mb-4">
-                Learn, Code, and Grow with interactive courses and a powerful code sandbox.
-              </p>
-              <div className="flex items-center gap-4">
-                <a href="#" className="text-[#5C6360] hover:text-[#EDEFEE] transition-colors">
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-[#5C6360] hover:text-[#EDEFEE] transition-colors">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-[#5C6360] hover:text-[#EDEFEE] transition-colors">
-                  <Github className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-[#5C6360] hover:text-[#EDEFEE] transition-colors">
-                  <Youtube className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-[#5C6360] hover:text-[#EDEFEE] transition-colors">
-                  <Instagram className="w-5 h-5" />
-                </a>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {languages.map(({ label, shorthand }) => (
+                  <div key={label} className="group flex items-center justify-between rounded-[24px] border border-white/20 bg-[#0B2CB1]/35 p-4 transition hover:border-[#CBE9FD]/60 hover:bg-[#1951FC]/30">
+                    <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-[#1951FC] text-xs text-white shadow-[0_0_16px_rgba(55,129,252,0.55)]">{shorthand}</span><span className="text-sm">{label}</span></div>
+                    <ChevronRight className="h-4 w-4 text-[#5BB8FB] transition-transform group-hover:translate-x-1" />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 rounded-[22px] border border-white/15 bg-black/35 p-5 font-mono text-xs leading-7 text-[#CBE9FD]/75">
+                <span className="text-[#5BB8FB]">01</span> <span className="text-white/45">// write, run, learn</span><br />
+                <span className="text-[#5BB8FB]">02</span> solution = <span className="text-white">learn</span>(concept)<br />
+                <span className="text-[#5BB8FB]">03</span> <span className="text-white">print</span>(solution)
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Quick Links */}
-            <div>
-              <h4 className="font-semibold text-[#EDEFEE] mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm">
-                <li><button onClick={() => scrollToSection('features')} className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">Features</button></li>
-                <li><button onClick={() => scrollToSection('languages')} className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">Languages</button></li>
-                <li><button onClick={() => scrollToSection('testimonials')} className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">Testimonials</button></li>
-                <li><button onClick={() => scrollToSection('faq')} className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">FAQ</button></li>
-              </ul>
-            </div>
-
-            {/* Resources */}
-            <div>
-              <h4 className="font-semibold text-[#EDEFEE] mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">Blog</a></li>
-                <li><a href="#" className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">Documentation</a></li>
-                <li><a href="#" className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">Support</a></li>
-                <li><a href="#" className="text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors">Privacy Policy</a></li>
-              </ul>
-            </div>
-
-            {/* Contact */}
-            <div>
-              <h4 className="font-semibold text-[#EDEFEE] mb-4">Contact Us</h4>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-2 text-[#9CA3A0]">
-                  <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>support@nexlab.in</span>
-                </li>
-                <li className="flex items-start gap-2 text-[#9CA3A0]">
-                  <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>+91 98765 43210</span>
-                </li>
-                <li className="flex items-start gap-2 text-[#9CA3A0]">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs leading-relaxed">
-                    Nexus Tower, Hitech City,<br />
-                    Hyderabad, Telangana - 500081<br />
-                    🇮🇳 India
-                  </span>
-                </li>
-              </ul>
+        <section className="border-y border-white/10 bg-[#03195B]/20 px-5 py-24 sm:px-8 lg:py-32">
+          <div className="mx-auto max-w-5xl">
+            <div className="text-center"><p className="text-xs tracking-[0.18em] text-[#5BB8FB]">A CALMER ROUTE FORWARD</p><h2 className="mt-4 text-4xl font-light tracking-[-0.04em] sm:text-5xl">Find your flow, one clear step at a time.</h2></div>
+            <div className="mt-14 grid gap-5 md:grid-cols-3">
+              {[
+                ['01', 'Choose a direction', 'Start with a course that matches what you want to make next.'],
+                ['02', 'Practice in context', 'Use the sandbox as you learn—not later, after the details have faded.'],
+                ['03', 'See momentum compound', 'Track your work, return with confidence, and take on the next challenge.'],
+              ].map(([number, title, description]) => (
+                <article key={number} className="rounded-[32px] border border-white/20 bg-[#03195B]/60 p-7 shadow-[inset_0_1px_3px_rgba(255,255,255,0.18)]">
+                  <span className="text-4xl font-light tracking-[-0.04em] text-[#5BB8FB]">{number}</span>
+                  <h3 className="mt-8 text-xl">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/60">{description}</p>
+                </article>
+              ))}
             </div>
           </div>
+        </section>
 
-          {/* Bottom */}
-          <div className="pt-8 border-t border-[#2A302E] flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[#5C6360]">
-            <p>© {currentYear} NexLab. All rights reserved. 🇮🇳 Made in India</p>
-            <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-[#9CA3A0] transition-colors">Terms</a>
-              <a href="#" className="hover:text-[#9CA3A0] transition-colors">Privacy</a>
-              <a href="#" className="hover:text-[#9CA3A0] transition-colors">Cookies</a>
-              <a href="#" className="hover:text-[#9CA3A0] transition-colors">Refund Policy</a>
+        <section id="stories" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:py-32">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs tracking-[0.18em] text-[#5BB8FB]">STORIES FROM THE COMMUNITY</p><h2 className="mt-4 text-4xl font-light tracking-[-0.04em] sm:text-5xl">The glow is in the progress.</h2></div><p className="max-w-sm text-sm leading-relaxed text-white/55">Real learners making space for a little more curiosity, practice, and possibility.</p></div>
+            <div className="mt-14 grid gap-5 lg:grid-cols-3">
+              {testimonials.map(({ name, role, quote }) => (
+                <figure key={name} className="glass-card p-7"><div className="flex gap-1 text-[#5BB8FB]">{Array.from({ length: 5 }, (_, index) => <span key={index}>✦</span>)}</div><blockquote className="mt-7 text-lg font-light leading-relaxed text-white/90">“{quote}”</blockquote><figcaption className="mt-8 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1951FC] text-sm shadow-[0_0_18px_rgba(55,129,252,0.5)]">{name.charAt(0)}</span><span><span className="block text-sm">{name}</span><span className="mt-0.5 block text-xs text-white/50">{role}</span></span></figcaption></figure>
+              ))}
             </div>
           </div>
-        </div>
+        </section>
+
+        <section id="questions" className="scroll-mt-24 border-y border-white/10 bg-[#03195B]/20 px-5 py-24 sm:px-8 lg:py-32">
+          <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.75fr_1.25fr]">
+            <div><p className="text-xs tracking-[0.18em] text-[#5BB8FB]">GOOD QUESTIONS</p><h2 className="mt-4 text-4xl font-light tracking-[-0.04em] sm:text-5xl">A few answers before you begin.</h2><p className="mt-5 text-lg leading-relaxed text-white/60">Everything you need to know to take the first step is right here.</p></div>
+            <div className="space-y-3">
+              {faqs.map(({ question, answer }) => (
+                <details key={question} className="group rounded-[24px] border border-white/20 bg-[#03195B]/60 px-6 py-1 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15)]"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 py-5 text-base text-white/90"><span>{question}</span><ChevronRight className="h-5 w-5 shrink-0 text-[#5BB8FB] transition-transform group-open:rotate-90" /></summary><p className="max-w-2xl pb-5 text-sm leading-relaxed text-white/60">{answer}</p></details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-5 py-24 sm:px-8 lg:py-32">
+          <div className="glass-card relative mx-auto max-w-5xl overflow-hidden px-7 py-16 text-center sm:px-12">
+            <div className="absolute inset-x-1/4 top-0 h-40 rounded-full bg-[#5BB8FB]/20 blur-[75px]" />
+            <div className="relative"><Zap className="mx-auto h-6 w-6 text-[#CBE9FD]" strokeWidth={1.5} /><h2 className="mt-5 text-4xl font-light tracking-[-0.045em] sm:text-5xl">Your next chapter is ready.</h2><p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-white/65">Bring your questions. We will give them a place to become skills.</p><Button size="lg" className="mt-9" onClick={handlePrimaryAction}>{user ? 'Return to my dashboard' : 'Create your free account'} <ArrowRight className="h-4 w-4" /></Button></div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-white/10 px-5 py-10 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between"><BrandLogo size="sm" showText /><div className="flex flex-wrap gap-x-6 gap-y-2"><span>Learn with intention</span><span>Build with confidence</span><span>© {new Date().getFullYear()} NexLab</span></div></div>
       </footer>
-
-      {/* Scroll to Top */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 p-3 bg-[#10B981] hover:bg-[#34D399] text-white rounded-full shadow-lg shadow-[#10B981]/20 transition-all duration-300 z-40"
-        >
-          <ChevronUp className="w-5 h-5" />
-        </button>
-      )}
     </div>
   );
 };
-
-export default LandingPage;

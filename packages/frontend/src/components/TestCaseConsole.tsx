@@ -25,7 +25,7 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
   const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
 
   if (visibleTestCases.length === 0) {
-    return <p className="text-sm text-[#5C6360]">No test cases available</p>;
+    return <p className="text-sm text-[#5BB8FB]">No test cases available</p>;
   }
 
   const toggleExpand = (index: number) => {
@@ -41,24 +41,24 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
     <div>
       {/* Summary Bar */}
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <span className="text-xs text-[#5C6360]">Test Cases</span>
+        <span className="text-xs text-[#5BB8FB]">Test Cases</span>
         {hasResult && (
           <div className="flex items-center gap-3">
             <span className={`text-xs font-medium ${
               getPassedVisibleCount() === getTotalVisibleCount() && result.status === 'accepted'
-                ? 'text-[#10B981]' 
-                : 'text-[#F87171]'
+                ? 'text-[#1951FC]'
+                : 'text-[#5BB8FB]'
             }`}>
               {getPassedVisibleCount()} / {getTotalVisibleCount()} visible passed
-              {result.totalTests > getTotalVisibleCount() && 
+              {result.totalTests > getTotalVisibleCount() &&
                 ` (${result.totalTests} total)`
               }
             </span>
             {result.status && (
               <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
                 result.status === 'accepted'
-                  ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30'
-                  : 'bg-[#F87171]/20 text-[#F87171] border border-[#F87171]/30'
+                  ? 'bg-[#1951FC]/20 text-[#1951FC] border border-[#1951FC]/30'
+                  : 'bg-[#5BB8FB]/20 text-[#5BB8FB] border border-[#5BB8FB]/30'
               }`}>
                 {result.status === 'accepted' ? '✅ Accepted' : '❌ Failed'}
               </span>
@@ -80,19 +80,19 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
             <div
               key={index}
               className={`rounded-lg border transition-all duration-200 ${
-                isSelected 
-                  ? 'border-[#10B981]/50 bg-[#10B981]/5' 
-                  : hasResultForTest 
-                    ? passed 
-                      ? 'border-[#10B981]/30 bg-[#0D0F0F]' 
-                      : 'border-[#F87171]/30 bg-[#0D0F0F]'
-                    : 'border-[#2A302E] bg-[#0D0F0F]'
-              } hover:border-[#10B981]/30 transition-colors`}
+                isSelected
+                  ? 'border-[#1951FC]/50 bg-[#1951FC]/5'
+                  : hasResultForTest
+                    ? passed
+                      ? 'border-[#1951FC]/30 bg-[#000000]'
+                      : 'border-[#5BB8FB]/30 bg-[#000000]'
+                    : 'border-[#0B2CB1] bg-[#000000]'
+              } hover:border-[#1951FC]/30 transition-colors`}
             >
               {/* Test Case Header - Clickable */}
-              <div 
+              <div
                 className={`p-3 cursor-pointer flex items-center justify-between ${
-                  isSelected ? 'bg-[#10B981]/10 rounded-t-lg' : ''
+                  isSelected ? 'bg-[#1951FC]/10 rounded-t-lg' : ''
                 }`}
                 onClick={() => setSelectedTestCase(index)}
               >
@@ -100,38 +100,38 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
                   {/* Status Icon */}
                   <div className="flex-shrink-0">
                     {!hasResultForTest ? (
-                      <div className="w-5 h-5 rounded-full border-2 border-[#2A302E] flex items-center justify-center">
-                        <span className="text-xs text-[#5C6360]">{index + 1}</span>
+                      <div className="w-5 h-5 rounded-full border-2 border-[#0B2CB1] flex items-center justify-center">
+                        <span className="text-xs text-[#5BB8FB]">{index + 1}</span>
                       </div>
                     ) : passed ? (
-                      <CheckCircle className="w-5 h-5 text-[#10B981]" />
+                      <CheckCircle className="w-5 h-5 text-[#1951FC]" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-[#F87171]" />
+                      <XCircle className="w-5 h-5 text-[#5BB8FB]" />
                     )}
                   </div>
 
                   {/* Test Case Info */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium text-[#EDEFEE]">
+                      <span className="text-sm font-medium text-[#FFFFFF]">
                         Test Case {index + 1}
                       </span>
                       {hasResultForTest && (
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          passed 
-                            ? 'bg-[#10B981]/20 text-[#10B981]' 
-                            : 'bg-[#F87171]/20 text-[#F87171]'
+                          passed
+                            ? 'bg-[#1951FC]/20 text-[#1951FC]'
+                            : 'bg-[#5BB8FB]/20 text-[#5BB8FB]'
                         }`}>
                           {passed ? 'Passed ✅' : 'Failed ❌'}
                         </span>
                       )}
                       {testResult?.runtime !== undefined && testResult.runtime > 0 && (
-                        <span className="text-xs text-[#5C6360]">
+                        <span className="text-xs text-[#5BB8FB]">
                           {testResult.runtime}ms
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-[#5C6360] truncate">
+                    <div className="text-xs text-[#5BB8FB] truncate">
                       Input: {testCase.input.substring(0, 50)}
                       {testCase.input.length > 50 && '...'}
                     </div>
@@ -144,7 +144,7 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
                     e.stopPropagation();
                     toggleExpand(index);
                   }}
-                  className="p-1 text-[#5C6360] hover:text-[#EDEFEE] transition-colors flex-shrink-0"
+                  className="p-1 text-[#5BB8FB] hover:text-[#FFFFFF] transition-colors flex-shrink-0"
                 >
                   {isExpanded ? (
                     <ChevronUp className="w-4 h-4" />
@@ -156,29 +156,29 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
 
               {/* Expanded Details */}
               {isExpanded && (
-                <div className="p-3 pt-0 border-t border-[#2A302E] space-y-2">
+                <div className="p-3 pt-0 border-t border-[#0B2CB1] space-y-2">
                   {/* Input */}
-                  <div className="bg-[#0D0F0F] rounded-lg p-2">
-                    <span className="text-xs text-[#5C6360]">Input:</span>
-                    <pre className="text-sm text-[#EDEFEE] font-mono mt-1 whitespace-pre-wrap break-all">
+                  <div className="bg-[#000000] rounded-lg p-2">
+                    <span className="text-xs text-[#5BB8FB]">Input:</span>
+                    <pre className="text-sm text-[#FFFFFF] font-mono mt-1 whitespace-pre-wrap break-all">
                       {testCase.input}
                     </pre>
                   </div>
 
                   {/* Expected Output */}
-                  <div className="bg-[#0D0F0F] rounded-lg p-2">
-                    <span className="text-xs text-[#5C6360]">Expected Output:</span>
-                    <pre className="text-sm text-[#10B981] font-mono mt-1 whitespace-pre-wrap break-all">
+                  <div className="bg-[#000000] rounded-lg p-2">
+                    <span className="text-xs text-[#5BB8FB]">Expected Output:</span>
+                    <pre className="text-sm text-[#1951FC] font-mono mt-1 whitespace-pre-wrap break-all">
                       {testCase.expectedOutput}
                     </pre>
                   </div>
 
                   {/* Actual Output - Only if executed */}
                   {hasResultForTest && (
-                    <div className="bg-[#0D0F0F] rounded-lg p-2">
-                      <span className="text-xs text-[#5C6360]">Your Output:</span>
+                    <div className="bg-[#000000] rounded-lg p-2">
+                      <span className="text-xs text-[#5BB8FB]">Your Output:</span>
                       <pre className={`text-sm font-mono mt-1 whitespace-pre-wrap break-all ${
-                        passed ? 'text-[#10B981]' : testResult.got ? 'text-[#F87171]' : 'text-[#5C6360] italic'
+                        passed ? 'text-[#1951FC]' : testResult.got ? 'text-[#5BB8FB]' : 'text-[#5BB8FB] italic'
                       }`}>
                         {testResult.got || 'No output'}
                       </pre>
@@ -187,9 +187,9 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
 
                   {/* Error Message */}
                   {hasResultForTest && testResult.error && (
-                    <div className="bg-[#F87171]/10 rounded-lg p-2 border border-[#F87171]/20">
-                      <span className="text-xs text-[#F87171]">Error:</span>
-                      <pre className="text-sm text-[#F87171] font-mono mt-1 whitespace-pre-wrap break-all">
+                    <div className="bg-[#5BB8FB]/10 rounded-lg p-2 border border-[#5BB8FB]/20">
+                      <span className="text-xs text-[#5BB8FB]">Error:</span>
+                      <pre className="text-sm text-[#5BB8FB] font-mono mt-1 whitespace-pre-wrap break-all">
                         {testResult.error}
                       </pre>
                     </div>
@@ -197,10 +197,10 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
 
                   {/* Runtime Info */}
                   {hasResultForTest && testResult.runtime !== undefined && (
-                    <div className="flex items-center gap-4 text-xs text-[#5C6360]">
-                      <span>⏱️ Runtime: <span className="text-[#EDEFEE]">{testResult.runtime}ms</span></span>
+                    <div className="flex items-center gap-4 text-xs text-[#5BB8FB]">
+                      <span>⏱️ Runtime: <span className="text-[#FFFFFF]">{testResult.runtime}ms</span></span>
                       {testResult.memory !== undefined && (
-                        <span>💾 Memory: <span className="text-[#EDEFEE]">{testResult.memory}MB</span></span>
+                        <span>💾 Memory: <span className="text-[#FFFFFF]">{testResult.memory}MB</span></span>
                       )}
                     </div>
                   )}
@@ -215,8 +215,8 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
       {hasResult && (
         <div className={`mt-4 p-3 rounded-lg text-sm ${
           getPassedVisibleCount() === getTotalVisibleCount() && result.status === 'accepted'
-            ? 'bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981]'
-            : 'bg-[#F87171]/10 border border-[#F87171]/20 text-[#F87171]'
+            ? 'bg-[#1951FC]/10 border border-[#1951FC]/20 text-[#1951FC]'
+            : 'bg-[#5BB8FB]/10 border border-[#5BB8FB]/20 text-[#5BB8FB]'
         }`}>
           {getPassedVisibleCount() === getTotalVisibleCount() && result.status === 'accepted' ? (
             <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
               <AlertCircle className="w-5 h-5" />
               <span>
                 {getPassedVisibleCount()} of {getTotalVisibleCount()} visible test cases passed.
-                {result.totalTests > getTotalVisibleCount() && 
+                {result.totalTests > getTotalVisibleCount() &&
                   ` ${result.totalTests - getTotalVisibleCount()} hidden test(s) not shown.`
                 }
               </span>
@@ -239,13 +239,13 @@ export const TestCaseConsole: React.FC<TestCaseConsoleProps> = ({
 
       {/* Hidden Test Cases Info */}
       {result && result.totalTests > visibleTestCases.length && (
-        <div className="mt-2 text-xs text-[#5C6360]">
+        <div className="mt-2 text-xs text-[#5BB8FB]">
           <span>🔒 {result.totalTests - visibleTestCases.length} hidden test case(s) not shown</span>
           {result.status === 'accepted' && (
-            <span className="ml-2 text-[#10B981]">(All passed!)</span>
+            <span className="ml-2 text-[#1951FC]">(All passed!)</span>
           )}
           {result.status === 'wrong_answer' && getPassedVisibleCount() === getTotalVisibleCount() && (
-            <span className="ml-2 text-[#F87171]">(Some hidden tests failed)</span>
+            <span className="ml-2 text-[#5BB8FB]">(Some hidden tests failed)</span>
           )}
         </div>
       )}

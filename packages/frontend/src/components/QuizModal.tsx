@@ -1,8 +1,8 @@
 // packages/frontend/src/components/QuizModal.tsx
 
 import React, { useState, useEffect } from 'react';
-import { 
-  X, Clock, CheckCircle, XCircle, Award, Zap, AlertCircle, 
+import {
+  X, Clock, CheckCircle, XCircle, Award, Zap, AlertCircle,
   ChevronLeft, ChevronRight, Eye, EyeOff, RotateCcw,
   FileText, BarChart3, ChevronDown, ChevronUp, Lock
 } from 'lucide-react';
@@ -77,12 +77,12 @@ export const QuizModal: React.FC<QuizModalProps> = ({
   const [result, setResult] = useState<QuizResult | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [showResults, setShowResults] = useState(false);
-  
+
   // Review mode state
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [expandedExplanations, setExpandedExplanations] = useState<Record<number, boolean>>({});
   const [reviewQuestionIndex, setReviewQuestionIndex] = useState(0);
-  
+
   // Track if quiz is already completed
   const [isCompleted, setIsCompleted] = useState(false);
   const [completedResult, setCompletedResult] = useState<QuizResult | null>(null);
@@ -123,29 +123,29 @@ export const QuizModal: React.FC<QuizModalProps> = ({
       const attemptsResponse = await api.get('/quizzes/attempts', {
         params: { quizId }
       });
-      
+
       const attempts = attemptsResponse.data.data || [];
       const completedAttempt = attempts.find((a: any) => a.completedAt && a.quizId === quizId);
-      
+
       if (completedAttempt) {
         console.log('✅ Quiz already completed, showing results');
         setIsCompleted(true);
-        
+
         // Fetch quiz details for the UI (title, description, questions without correct answers)
         const quizResponse = await api.get(`/quizzes/public/${quizId}`);
         setQuiz(quizResponse.data.data);
-        
+
         // ✅ Build feedback from the completed attempt
         // The attempt has answers array and we need to match with quiz questions
         const quizQuestions = quizResponse.data.data.questions;
         const userAnswers = completedAttempt.answers || [];
-        
+
         // Build feedback array from attempt data
         const feedback: FeedbackItem[] = quizQuestions.map((q: any, index: number) => {
           const userAnswerIndex = userAnswers[index] ?? -1;
           const correctAnswerIndex = q.correctAnswer ?? 0;
           const isCorrect = userAnswerIndex === correctAnswerIndex;
-          
+
           return {
             question: q.question,
             userAnswer: userAnswerIndex === -1 ? 'Not answered' : (q.options[userAnswerIndex] || 'Invalid'),
@@ -154,7 +154,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
             explanation: q.explanation || '',
           };
         });
-        
+
         setCompletedResult({
           score: completedAttempt.score || 0,
           passed: completedAttempt.passed || false,
@@ -166,14 +166,14 @@ export const QuizModal: React.FC<QuizModalProps> = ({
         setLoading(false);
         return;
       }
-      
+
       console.log('✅ Quiz not completed, starting fresh');
       const response = await api.get(`/quizzes/attempt/${quizId}`);
       const data = response.data.data;
       setQuiz(data.quiz);
       setAttempt(data.attempt);
       setIsCompleted(false);
-      
+
       const initialAnswers: Record<number, number> = {};
       data.quiz.questions.forEach((_: any, index: number) => {
         initialAnswers[index] = -1;
@@ -181,36 +181,36 @@ export const QuizModal: React.FC<QuizModalProps> = ({
       setAnswers(initialAnswers);
     } catch (error: any) {
       console.error('Error fetching quiz:', error);
-      
+
       // If the error is "already passed/complete", handle it gracefully
-      if (error.response?.data?.message?.includes('already passed') || 
+      if (error.response?.data?.message?.includes('already passed') ||
           error.response?.data?.message?.includes('already completed')) {
         console.log('✅ Quiz already completed (caught from error), showing results');
         setIsCompleted(true);
-        
+
         try {
           // Fetch quiz details
           const quizResponse = await api.get(`/quizzes/public/${quizId}`);
           setQuiz(quizResponse.data.data);
-          
+
           // ✅ Fetch attempts to get the completed attempt data
           const attemptsResponse = await api.get('/quizzes/attempts', {
             params: { quizId }
           });
-          
+
           const attempts = attemptsResponse.data.data || [];
           const completedAttempt = attempts.find((a: any) => a.completedAt);
-          
+
           if (completedAttempt) {
             const quizQuestions = quizResponse.data.data.questions;
             const userAnswers = completedAttempt.answers || [];
-            
+
             // Build feedback from attempt data
             const feedback: FeedbackItem[] = quizQuestions.map((q: any, index: number) => {
               const userAnswerIndex = userAnswers[index] ?? -1;
               const correctAnswerIndex = q.correctAnswer ?? 0;
               const isCorrect = userAnswerIndex === correctAnswerIndex;
-              
+
               return {
                 question: q.question,
                 userAnswer: userAnswerIndex === -1 ? 'Not answered' : (q.options[userAnswerIndex] || 'Invalid'),
@@ -219,7 +219,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                 explanation: q.explanation || '',
               };
             });
-            
+
             setCompletedResult({
               score: completedAttempt.score || 0,
               passed: completedAttempt.passed || false,
@@ -249,7 +249,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
           return;
         }
       }
-      
+
       toast.error(error.response?.data?.message || 'Failed to load quiz');
       onClose();
       setLoading(false);
@@ -281,17 +281,17 @@ export const QuizModal: React.FC<QuizModalProps> = ({
       const response = await api.post(`/quizzes/${quizId}/submit`, {
         answers: Object.values(answers),
       });
-      
+
       const data = response.data.data;
       setResult(data);
       setShowResults(true);
-      
+
       if (data.passed) {
         toast.success(`🎉 Congratulations! You passed with ${data.score}%! +${data.xpEarned} XP`);
       } else {
         toast(`📝 You scored ${data.score}%. Keep learning and try again!`);
       }
-      
+
       onComplete?.(data.score, data.passed);
     } catch (error: any) {
       console.error('Error submitting quiz:', error);
@@ -374,10 +374,10 @@ export const QuizModal: React.FC<QuizModalProps> = ({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0D0F0F]/80 backdrop-blur-sm">
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent mx-auto" />
-          <p className="text-[#9CA3A0] mt-4">Loading quiz...</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/80 backdrop-blur-sm">
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#1951FC] border-t-transparent mx-auto" />
+          <p className="text-[#CBE9FD] mt-4">Loading quiz...</p>
         </div>
       </div>
     );
@@ -389,51 +389,51 @@ export const QuizModal: React.FC<QuizModalProps> = ({
     if (!displayResult) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0D0F0F]/80 backdrop-blur-sm p-4">
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/80 backdrop-blur-sm p-4">
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-[#2A302E] flex-shrink-0">
+          <div className="flex items-center justify-between p-6 border-b border-[#0B2CB1] flex-shrink-0">
             <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-[#10B981]" />
-              <h2 className="text-xl font-bold text-[#EDEFEE]">
+              <FileText className="w-5 h-5 text-[#1951FC]" />
+              <h2 className="text-xl font-bold text-[#FFFFFF]">
                 {isCompleted ? 'Quiz Results (Completed)' : 'Quiz Results'}
               </h2>
             </div>
-            <button onClick={onClose} className="text-[#5C6360] hover:text-[#EDEFEE]">
+            <button onClick={onClose} className="text-[#5BB8FB] hover:text-[#FFFFFF]">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Score Display */}
-          <div className="p-6 border-b border-[#2A302E] flex-shrink-0">
+          <div className="p-6 border-b border-[#0B2CB1] flex-shrink-0">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center">
-                <div className={`text-5xl font-bold ${displayResult.passed ? 'text-[#10B981]' : 'text-[#F87171]'}`}>
+                <div className={`text-5xl font-bold ${displayResult.passed ? 'text-[#1951FC]' : 'text-[#5BB8FB]'}`}>
                   {displayResult.score}%
                 </div>
                 <div className="flex items-center justify-center gap-2 mt-2">
                   {displayResult.passed ? (
                     <>
-                      <CheckCircle className="w-6 h-6 text-[#10B981]" />
-                      <span className="text-lg font-medium text-[#10B981]">Passed! 🎉</span>
+                      <CheckCircle className="w-6 h-6 text-[#1951FC]" />
+                      <span className="text-lg font-medium text-[#1951FC]">Passed! 🎉</span>
                     </>
                   ) : (
                     <>
-                      <XCircle className="w-6 h-6 text-[#F87171]" />
-                      <span className="text-lg font-medium text-[#F87171]">Keep Learning! 📚</span>
+                      <XCircle className="w-6 h-6 text-[#5BB8FB]" />
+                      <span className="text-lg font-medium text-[#5BB8FB]">Keep Learning! 📚</span>
                     </>
                   )}
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 {displayResult.xpEarned > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-[#10B981]/10 border border-[#10B981]/20 rounded-lg">
-                    <Zap className="w-5 h-5 text-[#10B981]" />
-                    <span className="text-sm font-medium text-[#10B981]">+{displayResult.xpEarned} XP</span>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#1951FC]/10 border border-[#1951FC]/20 rounded-lg">
+                    <Zap className="w-5 h-5 text-[#1951FC]" />
+                    <span className="text-sm font-medium text-[#1951FC]">+{displayResult.xpEarned} XP</span>
                   </div>
                 )}
-                <div className="text-sm text-[#5C6360]">
-                  <span className="font-medium text-[#EDEFEE]">
+                <div className="text-sm text-[#5BB8FB]">
+                  <span className="font-medium text-[#FFFFFF]">
                     {displayResult.feedback.filter(f => f.isCorrect).length}
                   </span> / {displayResult.feedback.length} correct
                 </div>
@@ -452,24 +452,24 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                       <button
                         onClick={handlePrevious}
                         disabled={reviewQuestionIndex === 0}
-                        className="p-2 text-[#5C6360] hover:text-[#EDEFEE] disabled:opacity-50 transition-colors"
+                        className="p-2 text-[#5BB8FB] hover:text-[#FFFFFF] disabled:opacity-50 transition-colors"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
-                      <span className="text-sm font-medium text-[#9CA3A0]">
+                      <span className="text-sm font-medium text-[#CBE9FD]">
                         Question {reviewQuestionIndex + 1} of {quiz.questions.length}
                       </span>
                       <button
                         onClick={handleNext}
                         disabled={reviewQuestionIndex === quiz.questions.length - 1}
-                        className="p-2 text-[#5C6360] hover:text-[#EDEFEE] disabled:opacity-50 transition-colors"
+                        className="p-2 text-[#5BB8FB] hover:text-[#FFFFFF] disabled:opacity-50 transition-colors"
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
                     </div>
                     <button
                       onClick={handleExitReview}
-                      className="text-sm text-[#10B981] hover:text-[#34D399] transition-colors"
+                      className="text-sm text-[#1951FC] hover:text-[#3781FC] transition-colors"
                     >
                       <EyeOff className="w-4 h-4 inline mr-1" />
                       Exit Review
@@ -477,12 +477,12 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                   </div>
 
                   {/* Question */}
-                  <div className="bg-[#0D0F0F] rounded-xl p-6 border border-[#2A302E]">
+                  <div className="bg-[#000000] rounded-xl p-6 border border-[#0B2CB1]">
                     <div className="mb-4">
-                      <span className="text-xs font-medium text-[#5C6360]">
+                      <span className="text-xs font-medium text-[#5BB8FB]">
                         Question {reviewQuestionIndex + 1} of {quiz.questions.length}
                       </span>
-                      <p className="text-lg font-medium text-[#EDEFEE] mt-1">
+                      <p className="text-lg font-medium text-[#FFFFFF] mt-1">
                         {quiz.questions[reviewQuestionIndex].question}
                       </p>
                     </div>
@@ -491,23 +491,23 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                       {quiz.questions[reviewQuestionIndex].options.map((option, optionIndex) => {
                         const isCorrect = isCorrectAnswer(reviewQuestionIndex, optionIndex);
                         const isSelected = isSelectedOption(reviewQuestionIndex, optionIndex);
-                        
-                        let borderClass = 'border-[#2A302E]';
+
+                        let borderClass = 'border-[#0B2CB1]';
                         let bgClass = '';
                         let icon = null;
 
                         if (isSelected && isCorrect) {
-                          borderClass = 'border-[#10B981]';
-                          bgClass = 'bg-[#10B981]/10';
-                          icon = <CheckCircle className="w-4 h-4 text-[#10B981] ml-auto" />;
+                          borderClass = 'border-[#1951FC]';
+                          bgClass = 'bg-[#1951FC]/10';
+                          icon = <CheckCircle className="w-4 h-4 text-[#1951FC] ml-auto" />;
                         } else if (isSelected && !isCorrect) {
-                          borderClass = 'border-[#F87171]';
-                          bgClass = 'bg-[#F87171]/10';
-                          icon = <XCircle className="w-4 h-4 text-[#F87171] ml-auto" />;
+                          borderClass = 'border-[#5BB8FB]';
+                          bgClass = 'bg-[#5BB8FB]/10';
+                          icon = <XCircle className="w-4 h-4 text-[#5BB8FB] ml-auto" />;
                         } else if (isCorrect && !isSelected) {
-                          borderClass = 'border-[#10B981]/50';
-                          bgClass = 'bg-[#10B981]/5';
-                          icon = <CheckCircle className="w-4 h-4 text-[#10B981] ml-auto" />;
+                          borderClass = 'border-[#1951FC]/50';
+                          bgClass = 'bg-[#1951FC]/5';
+                          icon = <CheckCircle className="w-4 h-4 text-[#1951FC] ml-auto" />;
                         }
 
                         return (
@@ -515,10 +515,10 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                             key={optionIndex}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${borderClass} ${bgClass} transition-all duration-200`}
                           >
-                            <span className={`text-sm ${isCorrect ? 'text-[#10B981]' : isSelected ? 'text-[#F87171]' : 'text-[#5C6360]'}`}>
+                            <span className={`text-sm ${isCorrect ? 'text-[#1951FC]' : isSelected ? 'text-[#5BB8FB]' : 'text-[#5BB8FB]'}`}>
                               {String.fromCharCode(65 + optionIndex)}.
                             </span>
-                            <span className="text-sm text-[#EDEFEE]">{option}</span>
+                            <span className="text-sm text-[#FFFFFF]">{option}</span>
                             {icon}
                           </div>
                         );
@@ -527,10 +527,10 @@ export const QuizModal: React.FC<QuizModalProps> = ({
 
                     {/* Explanation */}
                     {displayResult.feedback[reviewQuestionIndex]?.explanation && (
-                      <div className="mt-4 p-4 bg-[#161A19] rounded-lg border border-[#2A302E]">
+                      <div className="mt-4 p-4 bg-[#03195B] rounded-lg border border-[#0B2CB1]">
                         <button
                           onClick={() => toggleExplanation(reviewQuestionIndex)}
-                          className="flex items-center gap-2 text-sm font-medium text-[#60A5FA] hover:text-[#93C5FD] transition-colors"
+                          className="flex items-center gap-2 text-sm font-medium text-[#5BB8FB] hover:text-[#CBE9FD] transition-colors"
                         >
                           {expandedExplanations[reviewQuestionIndex] ? (
                             <ChevronUp className="w-4 h-4" />
@@ -539,15 +539,15 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                           )}
                           <span>Explanation</span>
                           <span className={`text-xs ${
-                            displayResult.feedback[reviewQuestionIndex]?.isCorrect 
-                              ? 'text-[#10B981]' 
-                              : 'text-[#F87171]'
+                            displayResult.feedback[reviewQuestionIndex]?.isCorrect
+                              ? 'text-[#1951FC]'
+                              : 'text-[#5BB8FB]'
                           }`}>
                             {displayResult.feedback[reviewQuestionIndex]?.isCorrect ? '✅ Correct' : '❌ Incorrect'}
                           </span>
                         </button>
                         {expandedExplanations[reviewQuestionIndex] && (
-                          <p className="mt-2 text-sm text-[#9CA3A0] leading-relaxed">
+                          <p className="mt-2 text-sm text-[#CBE9FD] leading-relaxed">
                             {displayResult.feedback[reviewQuestionIndex]?.explanation}
                           </p>
                         )}
@@ -566,33 +566,33 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                     key={index}
                     className={`p-4 rounded-lg border ${
                       item.isCorrect
-                        ? 'border-[#10B981]/30 bg-[#10B981]/5'
-                        : 'border-[#F87171]/30 bg-[#F87171]/5'
+                        ? 'border-[#1951FC]/30 bg-[#1951FC]/5'
+                        : 'border-[#5BB8FB]/30 bg-[#5BB8FB]/5'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5">
                         {item.isCorrect ? (
-                          <CheckCircle className="w-5 h-5 text-[#10B981]" />
+                          <CheckCircle className="w-5 h-5 text-[#1951FC]" />
                         ) : (
-                          <XCircle className="w-5 h-5 text-[#F87171]" />
+                          <XCircle className="w-5 h-5 text-[#5BB8FB]" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-[#EDEFEE]">{item.question}</p>
+                        <p className="text-sm font-medium text-[#FFFFFF]">{item.question}</p>
                         <div className="mt-1 space-y-1 text-xs">
-                          <p className="text-[#9CA3A0]">
-                            Your answer: <span className={item.isCorrect ? 'text-[#10B981]' : 'text-[#F87171]'}>
+                          <p className="text-[#CBE9FD]">
+                            Your answer: <span className={item.isCorrect ? 'text-[#1951FC]' : 'text-[#5BB8FB]'}>
                               {item.userAnswer}
                             </span>
                           </p>
                           {!item.isCorrect && (
-                            <p className="text-[#10B981]">
+                            <p className="text-[#1951FC]">
                               Correct answer: {item.correctAnswer}
                             </p>
                           )}
                           {item.explanation && (
-                            <p className="text-[#5C6360] mt-1">{item.explanation}</p>
+                            <p className="text-[#5BB8FB] mt-1">{item.explanation}</p>
                           )}
                         </div>
                       </div>
@@ -604,8 +604,8 @@ export const QuizModal: React.FC<QuizModalProps> = ({
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-6 border-t border-[#2A302E] flex-shrink-0">
-            <div className="text-sm text-[#5C6360]">
+          <div className="flex items-center justify-between p-6 border-t border-[#0B2CB1] flex-shrink-0">
+            <div className="text-sm text-[#5BB8FB]">
               {isReviewMode ? (
                 <span>Reviewing answers</span>
               ) : (
@@ -644,46 +644,46 @@ export const QuizModal: React.FC<QuizModalProps> = ({
   const isFirstQuestion = currentQuestion === 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0D0F0F]/80 backdrop-blur-sm p-4">
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/80 backdrop-blur-sm p-4">
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-[#2A302E] flex-shrink-0">
+        <div className="p-6 border-b border-[#0B2CB1] flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-[#EDEFEE]">{quiz.title}</h2>
+              <h2 className="text-xl font-bold text-[#FFFFFF]">{quiz.title}</h2>
               {quiz.description && (
-                <p className="text-sm text-[#9CA3A0] mt-1">{quiz.description}</p>
+                <p className="text-sm text-[#CBE9FD] mt-1">{quiz.description}</p>
               )}
             </div>
-            <button onClick={onClose} className="text-[#5C6360] hover:text-[#EDEFEE]">
+            <button onClick={onClose} className="text-[#5BB8FB] hover:text-[#FFFFFF]">
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           {/* Progress Info */}
-          <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-[#5C6360]">
+          <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-[#5BB8FB]">
             <span>Question {currentQuestion + 1} of {totalQuestions}</span>
             <span>•</span>
             <span>{answeredCount} of {totalQuestions} answered</span>
             <span>•</span>
-            <span className="text-[#FBBF24]">Pass: {quiz.passingScore}%</span>
+            <span className="text-[#3781FC]">Pass: {quiz.passingScore}%</span>
             <span>•</span>
             <span>Attempt {quiz.attemptNumber} of {quiz.maxAttempts}</span>
             {timeLeft !== null && (
               <>
                 <span>•</span>
-                <span className={`flex items-center gap-1 ${timeLeft < 60 ? 'text-[#F87171]' : ''}`}>
+                <span className={`flex items-center gap-1 ${timeLeft < 60 ? 'text-[#5BB8FB]' : ''}`}>
                   <Clock className="w-4 h-4" />
                   {formatTime(timeLeft)}
                 </span>
               </>
             )}
           </div>
-          
+
           {/* Progress Bar */}
-          <div className="mt-3 w-full h-1 bg-[#0D0F0F] rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-[#10B981] rounded-full transition-all duration-300"
+          <div className="mt-3 w-full h-1 bg-[#000000] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#1951FC] rounded-full transition-all duration-300"
               style={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
             />
           </div>
@@ -693,15 +693,15 @@ export const QuizModal: React.FC<QuizModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-medium text-[#5C6360]">
+              <span className="text-xs font-medium text-[#5BB8FB]">
                 Question {currentQuestion + 1} of {totalQuestions}
               </span>
-              <span className="text-xs text-[#5C6360]">•</span>
-              <span className="text-xs text-[#5C6360]">
+              <span className="text-xs text-[#5BB8FB]">•</span>
+              <span className="text-xs text-[#5BB8FB]">
                 {answeredCount > currentQuestion ? '✅ Answered' : '⏳ Not answered'}
               </span>
             </div>
-            <p className="text-lg font-medium text-[#EDEFEE]">
+            <p className="text-lg font-medium text-[#FFFFFF]">
               {currentQuestionData.question}
             </p>
           </div>
@@ -715,14 +715,14 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                   onClick={() => handleAnswer(currentQuestion, optionIndex)}
                   className={`w-full text-left px-4 py-3 rounded-lg border transition-all duration-200 flex items-center gap-3 ${
                     isSelected
-                      ? 'border-[#10B981] bg-[#10B981]/10 text-[#EDEFEE]'
-                      : 'border-[#2A302E] hover:border-[#10B981]/30 text-[#9CA3A0] hover:text-[#EDEFEE]'
+                      ? 'border-[#1951FC] bg-[#1951FC]/10 text-[#FFFFFF]'
+                      : 'border-[#0B2CB1] hover:border-[#1951FC]/30 text-[#CBE9FD] hover:text-[#FFFFFF]'
                   }`}
                 >
                   <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-medium flex-shrink-0 ${
                     isSelected
-                      ? 'border-[#10B981] bg-[#10B981] text-white'
-                      : 'border-[#2A302E] text-[#5C6360]'
+                      ? 'border-[#1951FC] bg-[#1951FC] text-white'
+                      : 'border-[#0B2CB1] text-[#5BB8FB]'
                   }`}>
                     {String.fromCharCode(65 + optionIndex)}
                   </span>
@@ -734,19 +734,19 @@ export const QuizModal: React.FC<QuizModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-[#2A302E] flex items-center justify-between flex-shrink-0">
+        <div className="p-6 border-t border-[#0B2CB1] flex items-center justify-between flex-shrink-0">
           <div className="flex gap-2">
             <button
               onClick={handlePrevious}
               disabled={isFirstQuestion}
-              className="p-2 text-[#5C6360] hover:text-[#EDEFEE] disabled:opacity-50 transition-colors"
+              className="p-2 text-[#5BB8FB] hover:text-[#FFFFFF] disabled:opacity-50 transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             {!isLastQuestion && (
               <button
                 onClick={handleNext}
-                className="p-2 text-[#5C6360] hover:text-[#EDEFEE] transition-colors"
+                className="p-2 text-[#5BB8FB] hover:text-[#FFFFFF] transition-colors"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>

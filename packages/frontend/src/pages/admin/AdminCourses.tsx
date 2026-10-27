@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, Edit, Trash2, Eye, EyeOff, Search, 
+import {
+  Plus, Edit, Trash2, Eye, EyeOff, Search,
   BookOpen, Users, Clock, CheckCircle, XCircle,
   RefreshCw, Filter
 } from 'lucide-react';
@@ -93,11 +93,11 @@ export const AdminCourses: React.FC = () => {
 
   const getLevelBadge = (level: string) => {
     const colors: Record<string, string> = {
-      beginner: 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20',
-      intermediate: 'bg-[#60A5FA]/10 text-[#60A5FA] border-[#60A5FA]/20',
-      advanced: 'bg-[#FBBF24]/10 text-[#FBBF24] border-[#FBBF24]/20',
+      beginner: 'bg-[#1951FC]/10 text-[#1951FC] border-[#1951FC]/20',
+      intermediate: 'bg-[#5BB8FB]/10 text-[#5BB8FB] border-[#5BB8FB]/20',
+      advanced: 'bg-[#3781FC]/10 text-[#3781FC] border-[#3781FC]/20',
     };
-    return colors[level] || 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20';
+    return colors[level] || 'bg-[#1951FC]/10 text-[#1951FC] border-[#1951FC]/20';
   };
 
   const filteredCourses = courses.filter(c =>
@@ -109,7 +109,7 @@ export const AdminCourses: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#1951FC] border-t-transparent" />
       </div>
     );
   }
@@ -119,13 +119,13 @@ export const AdminCourses: React.FC = () => {
       <ConfirmDialogComponent />
       <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1600px] mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#2A302E]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#0B2CB1]">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#EDEFEE] flex items-center gap-2">
-              <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-[#10B981]" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF] flex items-center gap-2">
+              <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-[#1951FC]" />
               Manage Courses
             </h1>
-            <p className="text-[#9CA3A0] mt-1">Create, edit, and publish your course content</p>
+            <p className="text-[#CBE9FD] mt-1">Create, edit, and publish your course content</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -152,38 +152,38 @@ export const AdminCourses: React.FC = () => {
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5BB8FB]" />
             <input
               type="text"
               placeholder="Search courses by title, category, or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
             />
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-            <p className="text-sm text-[#9CA3A0]">Total Courses</p>
-            <p className="text-2xl font-bold text-[#EDEFEE]">{courses.length}</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+            <p className="text-sm text-[#CBE9FD]">Total Courses</p>
+            <p className="text-2xl font-bold text-[#FFFFFF]">{courses.length}</p>
           </div>
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-            <p className="text-sm text-[#9CA3A0]">Published</p>
-            <p className="text-2xl font-bold text-[#10B981]">{courses.filter(c => c.isPublished).length}</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+            <p className="text-sm text-[#CBE9FD]">Published</p>
+            <p className="text-2xl font-bold text-[#1951FC]">{courses.filter(c => c.isPublished).length}</p>
           </div>
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-            <p className="text-sm text-[#9CA3A0]">Drafts</p>
-            <p className="text-2xl font-bold text-[#FBBF24]">{courses.filter(c => !c.isPublished).length}</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+            <p className="text-sm text-[#CBE9FD]">Drafts</p>
+            <p className="text-2xl font-bold text-[#3781FC]">{courses.filter(c => !c.isPublished).length}</p>
           </div>
         </div>
 
         {/* Course List */}
         {filteredCourses.length === 0 ? (
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
-            <BookOpen className="w-12 h-12 text-[#10B981] mx-auto mb-4 opacity-40" />
-            <p className="text-[#9CA3A0]">No courses found. Create your first course!</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-12 text-center">
+            <BookOpen className="w-12 h-12 text-[#1951FC] mx-auto mb-4 opacity-40" />
+            <p className="text-[#CBE9FD]">No courses found. Create your first course!</p>
             <Button
               variant="primary"
               onClick={() => navigate('/admin/courses/create')}
@@ -198,31 +198,31 @@ export const AdminCourses: React.FC = () => {
             {filteredCourses.map((course) => (
               <div
                 key={course._id}
-                className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#10B981]/5 hover:shadow-lg transition-shadow"
+                className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#1951FC]/5 hover:shadow-lg transition-shadow"
               >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1 flex-wrap">
-                      <h3 className="text-base sm:text-lg font-semibold text-[#EDEFEE] truncate">
+                      <h3 className="text-base sm:text-lg font-semibold text-[#FFFFFF] truncate">
                         {course.title}
                       </h3>
                       <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${getLevelBadge(course.level)}`}>
                         {course.level}
                       </span>
                       {course.isPublished ? (
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] font-medium border border-[#10B981]/20 flex items-center gap-1">
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#1951FC]/20 text-[#1951FC] font-medium border border-[#1951FC]/20 flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" />
                           Published
                         </span>
                       ) : (
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FBBF24]/20 text-[#FBBF24] font-medium border border-[#FBBF24]/20 flex items-center gap-1">
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#3781FC]/20 text-[#3781FC] font-medium border border-[#3781FC]/20 flex items-center gap-1">
                           <XCircle className="w-3 h-3" />
                           Draft
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-[#9CA3A0] line-clamp-1">{course.description}</p>
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 text-xs text-[#5C6360]">
+                    <p className="text-sm text-[#CBE9FD] line-clamp-1">{course.description}</p>
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 text-xs text-[#5BB8FB]">
                       <span>Category: {course.category}</span>
                       <span>•</span>
                       <span>₹{course.price}</span>
@@ -245,9 +245,9 @@ export const AdminCourses: React.FC = () => {
                       onClick={() => handleTogglePublish(course._id, course.isPublished)}
                       disabled={actionLoading === course._id}
                       className={`p-2 rounded-lg transition-colors ${
-                        course.isPublished 
-                          ? 'text-[#FBBF24] hover:bg-[#FBBF24]/10' 
-                          : 'text-[#10B981] hover:bg-[#10B981]/10'
+                        course.isPublished
+                          ? 'text-[#3781FC] hover:bg-[#3781FC]/10'
+                          : 'text-[#1951FC] hover:bg-[#1951FC]/10'
                       }`}
                       title={course.isPublished ? 'Unpublish' : 'Publish'}
                     >
@@ -261,7 +261,7 @@ export const AdminCourses: React.FC = () => {
                     </button>
                     <button
                       onClick={() => navigate(`/admin/courses/edit/${course._id}`)}
-                      className="p-2 text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
+                      className="p-2 text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] rounded-lg transition-colors"
                       title="Edit"
                     >
                       <Edit className="w-4 h-4" />
@@ -269,7 +269,7 @@ export const AdminCourses: React.FC = () => {
                     <button
                       onClick={() => handleDelete(course._id, course.title)}
                       disabled={actionLoading === course._id}
-                      className="p-2 text-[#9CA3A0] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
+                      className="p-2 text-[#CBE9FD] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />

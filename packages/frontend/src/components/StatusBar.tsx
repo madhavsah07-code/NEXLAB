@@ -9,20 +9,20 @@ interface StatusBarProps {
 export const StatusBar: React.FC<StatusBarProps> = ({ result, problem }) => {
   const getStatusIcon = (status: string) => {
     const icons: Record<string, JSX.Element> = {
-      accepted: <CheckCircle className="w-4 h-4 text-[#10B981]" />,
-      wrong_answer: <XCircle className="w-4 h-4 text-[#F87171]" />,
-      time_limit: <Clock className="w-4 h-4 text-[#FBBF24]" />,
-      memory_limit: <AlertCircle className="w-4 h-4 text-[#FBBF24]" />,
-      runtime_error: <XCircle className="w-4 h-4 text-[#F87171]" />,
-      compile_error: <XCircle className="w-4 h-4 text-[#F87171]" />,
+      accepted: <CheckCircle className="w-4 h-4 text-[#1951FC]" />,
+      wrong_answer: <XCircle className="w-4 h-4 text-[#5BB8FB]" />,
+      time_limit: <Clock className="w-4 h-4 text-[#3781FC]" />,
+      memory_limit: <AlertCircle className="w-4 h-4 text-[#3781FC]" />,
+      runtime_error: <XCircle className="w-4 h-4 text-[#5BB8FB]" />,
+      compile_error: <XCircle className="w-4 h-4 text-[#5BB8FB]" />,
     };
-    return icons[status] || <AlertCircle className="w-4 h-4 text-[#5C6360]" />;
+    return icons[status] || <AlertCircle className="w-4 h-4 text-[#5BB8FB]" />;
   };
 
   const getStatusColor = (status: string) => {
-    if (status === 'accepted') return 'text-[#10B981]';
-    if (status === 'wrong_answer' || status === 'runtime_error' || status === 'compile_error') return 'text-[#F87171]';
-    return 'text-[#FBBF24]';
+    if (status === 'accepted') return 'text-[#1951FC]';
+    if (status === 'wrong_answer' || status === 'runtime_error' || status === 'compile_error') return 'text-[#5BB8FB]';
+    return 'text-[#3781FC]';
   };
 
   const getStatusText = (status: string) => {
@@ -38,7 +38,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({ result, problem }) => {
   };
 
   return (
-    <div className="bg-[#1A1D1E] border-t border-[#2A302E] px-4 py-1.5 flex items-center justify-between text-xs text-[#5C6360] flex-shrink-0">
+    <div className="bg-[#03195B] border-t border-[#0B2CB1] px-4 py-1.5 flex items-center justify-between text-xs text-[#5BB8FB] flex-shrink-0">
       <div className="flex items-center gap-4">
         {result ? (
           <>
@@ -47,13 +47,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({ result, problem }) => {
               <span className="font-medium">{getStatusText(result.status)}</span>
             </div>
             {result.runtime !== undefined && (
-              <span>Runtime: <span className="text-[#EDEFEE]">{result.runtime}ms</span></span>
+              <span>Runtime: <span className="text-[#FFFFFF]">{result.runtime}ms</span></span>
             )}
             {result.memory !== undefined && (
-              <span>Memory: <span className="text-[#EDEFEE]">{result.memory}MB</span></span>
+              <span>Memory: <span className="text-[#FFFFFF]">{result.memory}MB</span></span>
             )}
             {result.passedTests !== undefined && result.totalTests !== undefined && (
-              <span>Tests: <span className={result.passedTests === result.totalTests ? 'text-[#10B981]' : 'text-[#F87171]'}>
+              <span>Tests: <span className={result.passedTests === result.totalTests ? 'text-[#1951FC]' : 'text-[#5BB8FB]'}>
                 {result.passedTests}/{result.totalTests}
               </span> passed</span>
             )}

@@ -58,12 +58,12 @@ export const ProblemSearch: React.FC<ProblemSearchProps> = ({
       try {
         const response = await api.get(`/problems/search?query=${encodeURIComponent(query)}&limit=10`);
         const data = response.data.data || [];
-        
+
         // Filter out already selected problems
         const filtered = data.filter(
           (p: Problem) => !selectedProblemIds.includes(p._id)
         );
-        
+
         setProblems(filtered);
         setIsOpen(filtered.length > 0);
       } catch (error) {
@@ -115,9 +115,9 @@ export const ProblemSearch: React.FC<ProblemSearchProps> = ({
 
   const getDifficultyBadge = (difficulty: string) => {
     const colors: Record<string, string> = {
-      easy: 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30',
-      medium: 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30',
-      hard: 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30',
+      easy: 'bg-[#1951FC]/20 text-[#1951FC] border-[#1951FC]/30',
+      medium: 'bg-[#3781FC]/20 text-[#3781FC] border-[#3781FC]/30',
+      hard: 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30',
     };
     return colors[difficulty] || colors.easy;
   };
@@ -125,7 +125,7 @@ export const ProblemSearch: React.FC<ProblemSearchProps> = ({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5BB8FB]" />
         <input
           ref={inputRef}
           type="text"
@@ -134,28 +134,28 @@ export const ProblemSearch: React.FC<ProblemSearchProps> = ({
           onFocus={() => query.trim().length >= 1 && problems.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+          className="w-full pl-10 pr-10 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
         />
         {query && (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5C6360] hover:text-[#EDEFEE] transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5BB8FB] hover:text-[#FFFFFF] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         )}
         {isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Loader2 className="w-4 h-4 text-[#10B981] animate-spin" />
+            <Loader2 className="w-4 h-4 text-[#1951FC] animate-spin" />
           </div>
         )}
       </div>
 
       {/* Dropdown Results */}
       {isOpen && problems.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-[#161A19] border border-[#2A302E] rounded-lg shadow-xl max-h-80 overflow-y-auto">
-          <div className="p-2 border-b border-[#2A302E]">
-            <span className="text-xs text-[#5C6360]">
+        <div className="absolute z-50 mt-1 w-full bg-[#03195B] border border-[#0B2CB1] rounded-lg shadow-xl max-h-80 overflow-y-auto">
+          <div className="p-2 border-b border-[#0B2CB1]">
+            <span className="text-xs text-[#5BB8FB]">
               Found {problems.length} problem{problems.length > 1 ? 's' : ''}
             </span>
           </div>
@@ -163,16 +163,16 @@ export const ProblemSearch: React.FC<ProblemSearchProps> = ({
             <div
               key={problem._id}
               onClick={() => handleSelectProblem(problem)}
-              className={`w-full text-left px-4 py-3 hover:bg-[#1E2322] transition-colors flex items-center justify-between group cursor-pointer ${
-                index === selectedIndex ? 'bg-[#1E2322]' : ''
+              className={`w-full text-left px-4 py-3 hover:bg-[#0B2CB1] transition-colors flex items-center justify-between group cursor-pointer ${
+                index === selectedIndex ? 'bg-[#0B2CB1]' : ''
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <span className="text-sm text-[#5C6360] font-mono flex-shrink-0">
+                <span className="text-sm text-[#5BB8FB] font-mono flex-shrink-0">
                   #{problem.problemNumber}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#EDEFEE] truncate group-hover:text-[#10B981] transition-colors">
+                  <p className="text-sm font-medium text-[#FFFFFF] truncate group-hover:text-[#1951FC] transition-colors">
                     {problem.title}
                   </p>
                   <div className="flex items-center gap-2 text-xs">
@@ -180,19 +180,19 @@ export const ProblemSearch: React.FC<ProblemSearchProps> = ({
                       {problem.difficulty}
                     </span>
                     {problem.tags?.slice(0, 2).map((tag) => (
-                      <span key={tag} className="text-[#5C6360]">
+                      <span key={tag} className="text-[#5BB8FB]">
                         {tag}
                       </span>
                     ))}
                     {problem.tags?.length > 2 && (
-                      <span className="text-[#5C6360]">+{problem.tags.length - 2}</span>
+                      <span className="text-[#5BB8FB]">+{problem.tags.length - 2}</span>
                     )}
                   </div>
                 </div>
               </div>
               {/* ✅ FIXED: Using div instead of button to prevent nesting warning */}
               <div
-                className="flex-shrink-0 gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer px-3 py-1.5 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] flex items-center"
+                className="flex-shrink-0 gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer px-3 py-1.5 bg-[#1951FC] text-white rounded-lg hover:bg-[#03195B] flex items-center"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSelectProblem(problem);
@@ -208,9 +208,9 @@ export const ProblemSearch: React.FC<ProblemSearchProps> = ({
 
       {/* No Results */}
       {isOpen && query.trim().length >= 1 && problems.length === 0 && !isLoading && (
-        <div className="absolute z-50 mt-1 w-full bg-[#161A19] border border-[#2A302E] rounded-lg shadow-xl p-6 text-center">
-          <p className="text-sm text-[#5C6360]">No problems found for "{query}"</p>
-          <p className="text-xs text-[#5C6360] mt-1">Try searching with a different keyword or problem ID</p>
+        <div className="absolute z-50 mt-1 w-full bg-[#03195B] border border-[#0B2CB1] rounded-lg shadow-xl p-6 text-center">
+          <p className="text-sm text-[#5BB8FB]">No problems found for "{query}"</p>
+          <p className="text-xs text-[#5BB8FB] mt-1">Try searching with a different keyword or problem ID</p>
         </div>
       )}
     </div>

@@ -51,7 +51,7 @@ export const StudentCourses: React.FC = () => {
       const response = await api.get('/courses/published');
       const courseData = response.data.data || [];
       setCourses(courseData);
-      
+
       const uniqueCategories: string[] = [
         ...new Set<string>(
           courseData
@@ -96,17 +96,17 @@ export const StudentCourses: React.FC = () => {
 
   const isUserEnrolled = (course: Course): boolean => {
     const userId = user?._id || user?.id;
-    return (userId ? course.enrolledStudents?.includes(userId) : false) || 
+    return (userId ? course.enrolledStudents?.includes(userId) : false) ||
            user?.enrolledCourses?.includes(course._id) || false;
   };
 
   const getLevelColor = (level: string) => {
     const colors: Record<string, string> = {
-      beginner: 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20',
-      intermediate: 'bg-[#60A5FA]/10 text-[#60A5FA] border-[#60A5FA]/20',
-      advanced: 'bg-[#FBBF24]/10 text-[#FBBF24] border-[#FBBF24]/20',
+      beginner: 'bg-[#1951FC]/10 text-[#1951FC] border-[#1951FC]/20',
+      intermediate: 'bg-[#5BB8FB]/10 text-[#5BB8FB] border-[#5BB8FB]/20',
+      advanced: 'bg-[#3781FC]/10 text-[#3781FC] border-[#3781FC]/20',
     };
-    return colors[level] || 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20';
+    return colors[level] || 'bg-[#1951FC]/10 text-[#1951FC] border-[#1951FC]/20';
   };
 
   const formatPrice = (amount: number): string => {
@@ -144,11 +144,11 @@ export const StudentCourses: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#EDEFEE] flex items-center gap-2">
-            <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-[#10B981]" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF] flex items-center gap-2">
+            <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-[#1951FC]" />
             Browse Courses
           </h1>
-          <p className="text-[#9CA3A0] mt-1">Expand your skills with our curated content</p>
+          <p className="text-[#CBE9FD] mt-1">Expand your skills with our curated content</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -165,21 +165,21 @@ export const StudentCourses: React.FC = () => {
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5BB8FB]" />
           <input
             type="text"
             placeholder="Search courses by title, category, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+            className="w-full pl-10 pr-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
           />
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <select
             value={filterLevel}
             onChange={(e) => setFilterLevel(e.target.value)}
-            className="px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] min-w-[130px]"
+            className="px-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] min-w-[130px]"
           >
             <option value="">All Levels</option>
             <option value="beginner">🟢 Beginner</option>
@@ -191,7 +191,7 @@ export const StudentCourses: React.FC = () => {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] min-w-[130px]"
+              className="px-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] min-w-[130px]"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -205,7 +205,7 @@ export const StudentCourses: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="gap-1 text-[#F87171] hover:text-[#F87171] hover:bg-[#F87171]/10"
+              className="gap-1 text-[#5BB8FB] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10"
             >
               <X className="w-4 h-4" />
               Clear Filters
@@ -216,11 +216,11 @@ export const StudentCourses: React.FC = () => {
 
       {/* Results Count */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-[#5C6360]">
-          Showing <span className="text-[#EDEFEE] font-medium">{filteredCourses.length}</span> courses
+        <p className="text-sm text-[#5BB8FB]">
+          Showing <span className="text-[#FFFFFF] font-medium">{filteredCourses.length}</span> courses
         </p>
         {filteredCourses.length > 0 && (
-          <p className="text-xs text-[#5C6360]">
+          <p className="text-xs text-[#5BB8FB]">
             {filteredCourses.filter(c => isUserEnrolled(c)).length} enrolled
           </p>
         )}
@@ -228,12 +228,12 @@ export const StudentCourses: React.FC = () => {
 
       {/* Course Grid */}
       {filteredCourses.length === 0 ? (
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
-          <BookOpen className="w-12 h-12 text-[#10B981] mx-auto mb-4 opacity-40" />
-          <p className="text-[#9CA3A0]">No courses found</p>
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-12 text-center">
+          <BookOpen className="w-12 h-12 text-[#1951FC] mx-auto mb-4 opacity-40" />
+          <p className="text-[#CBE9FD]">No courses found</p>
           {hasActiveFilters ? (
             <>
-              <p className="text-[#5C6360] text-sm mt-1">Try adjusting your filters</p>
+              <p className="text-[#5BB8FB] text-sm mt-1">Try adjusting your filters</p>
               <Button
                 variant="primary"
                 onClick={clearFilters}
@@ -243,7 +243,7 @@ export const StudentCourses: React.FC = () => {
               </Button>
             </>
           ) : (
-            <p className="text-[#5C6360] text-sm mt-1">Check back soon for new courses!</p>
+            <p className="text-[#5BB8FB] text-sm mt-1">Check back soon for new courses!</p>
           )}
         </div>
       ) : (
@@ -257,12 +257,12 @@ export const StudentCourses: React.FC = () => {
               <div
                 key={course._id}
                 onClick={() => handleCourseClick(course)}
-                className={`bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm hover:shadow-[#10B981]/5 hover:shadow-lg transition-shadow flex flex-col group ${
-                  isEnrolled ? 'cursor-pointer hover:border-[#10B981]/30' : 'cursor-default'
+                className={`bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden shadow-sm hover:shadow-[#1951FC]/5 hover:shadow-lg transition-shadow flex flex-col group ${
+                  isEnrolled ? 'cursor-pointer hover:border-[#1951FC]/30' : 'cursor-default'
                 }`}
               >
                 {/* Thumbnail */}
-                <div className="h-48 bg-gradient-to-br from-[#10B981]/20 to-[#059669]/10 flex items-center justify-center relative overflow-hidden">
+                <div className="h-48 bg-gradient-to-br from-[#1951FC]/20 to-[#03195B]/10 flex items-center justify-center relative overflow-hidden">
                   {(course.coverImage || course.thumbnail) ? (
                     <img
                       src={course.coverImage || course.thumbnail}
@@ -270,39 +270,39 @@ export const StudentCourses: React.FC = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-[#10B981]/20', 'to-[#059669]/10');
+                        e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-[#1951FC]/20', 'to-[#03195B]/10');
                         e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
                       }}
                     />
                   ) : (
-                    <BookOpen className="w-12 h-12 text-[#10B981] opacity-40 fallback-icon" />
+                    <BookOpen className="w-12 h-12 text-[#1951FC] opacity-40 fallback-icon" />
                   )}
-                  
+
                   {/* Rating Badge */}
                   {course.rating && course.rating > 0 && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1 bg-[#0D0F0F]/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-[#2A302E]">
-                      <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
-                      <span className="text-xs font-medium text-[#EDEFEE]">{course.rating.toFixed(1)}</span>
-                      <span className="text-xs text-[#5C6360]">({course.totalReviews || 0})</span>
+                    <div className="absolute top-3 right-3 flex items-center gap-1 bg-[#000000]/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-[#0B2CB1]">
+                      <Star className="w-3.5 h-3.5 fill-[#3781FC] text-[#3781FC]" />
+                      <span className="text-xs font-medium text-[#FFFFFF]">{course.rating.toFixed(1)}</span>
+                      <span className="text-xs text-[#5BB8FB]">({course.totalReviews || 0})</span>
                     </div>
                   )}
 
                   {/* Price Badge */}
                   {course.price > 0 && (
-                    <div className="absolute bottom-3 left-3 bg-[#0D0F0F]/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-[#2A302E]">
-                      <span className="text-sm font-bold text-[#10B981]">{formatPrice(course.price)}</span>
+                    <div className="absolute bottom-3 left-3 bg-[#000000]/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-[#0B2CB1]">
+                      <span className="text-sm font-bold text-[#1951FC]">{formatPrice(course.price)}</span>
                     </div>
                   )}
-                  
+
                   {course.price === 0 && !isEnrolled && (
-                    <div className="absolute bottom-3 left-3 bg-[#0D0F0F]/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-[#2A302E]">
-                      <span className="text-sm font-medium text-[#10B981]">Free</span>
+                    <div className="absolute bottom-3 left-3 bg-[#000000]/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-[#0B2CB1]">
+                      <span className="text-sm font-medium text-[#1951FC]">Free</span>
                     </div>
                   )}
 
                   {/* Enrolled Badge */}
                   {isEnrolled && (
-                    <div className="absolute top-3 left-3 bg-[#10B981]/90 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-[#10B981]/30">
+                    <div className="absolute top-3 left-3 bg-[#1951FC]/90 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-[#1951FC]/30">
                       <span className="text-xs font-medium text-white flex items-center gap-1">
                         <Play className="w-3 h-3" />
                         Enrolled
@@ -316,20 +316,20 @@ export const StudentCourses: React.FC = () => {
                     <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${getLevelColor(course.level)}`}>
                       {course.level}
                     </span>
-                    <span className="text-xs text-[#5C6360]">• {lessonCount} lessons</span>
+                    <span className="text-xs text-[#5BB8FB]">• {lessonCount} lessons</span>
                     {course.category && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#2A302E] text-[#5C6360] border border-[#2A302E]">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#0B2CB1] text-[#5BB8FB] border border-[#0B2CB1]">
                         {course.category}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-semibold text-[#EDEFEE] line-clamp-1 group-hover:text-[#10B981] transition-colors">
+                  <h3 className="text-base sm:text-lg font-semibold text-[#FFFFFF] line-clamp-1 group-hover:text-[#1951FC] transition-colors">
                     {course.title}
                   </h3>
-                  <p className="text-sm text-[#9CA3A0] mt-1 line-clamp-2 flex-1">{course.description}</p>
+                  <p className="text-sm text-[#CBE9FD] mt-1 line-clamp-2 flex-1">{course.description}</p>
 
-                  <div className="flex items-center gap-3 mt-2 text-xs text-[#5C6360]">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-[#5BB8FB]">
                     <span className="flex items-center gap-1">
                       <Users className="w-3.5 h-3.5" />
                       {studentCount}
@@ -340,7 +340,7 @@ export const StudentCourses: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-[#2A302E]">
+                  <div className="mt-4 pt-4 border-t border-[#0B2CB1]">
                     {isEnrolled ? (
                       <div className="flex gap-2">
                         <Button

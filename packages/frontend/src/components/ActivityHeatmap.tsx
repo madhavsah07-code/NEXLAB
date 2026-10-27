@@ -15,17 +15,17 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
   const now = new Date();
   const istOffset = 5.5 * 60 * 60 * 1000;
   const istNow = new Date(now.getTime() + istOffset);
-  
+
   const endDate = new Date(istNow);
   const startDate = new Date(istNow);
   startDate.setFullYear(startDate.getFullYear() - 1);
 
   return (
-    <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 shadow-sm">
+    <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
-        <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#10B981]" />
-        <h3 className="text-sm font-medium text-[#EDEFEE]">Coding Activity</h3>
-        <span className="text-xs text-[#5C6360] ml-auto">Last 365 days (IST)</span>
+        <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#1951FC]" />
+        <h3 className="text-sm font-medium text-[#FFFFFF]">Coding Activity</h3>
+        <span className="text-xs text-[#5BB8FB] ml-auto">Last 365 days (IST)</span>
       </div>
       <div className="overflow-x-auto">
         <CalendarHeatmap
@@ -46,16 +46,16 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
         />
       </div>
       <div className="flex items-center justify-end gap-2 mt-2">
-        <span className="text-xs text-[#5C6360]">Less</span>
+        <span className="text-xs text-[#5BB8FB]">Less</span>
         <div className="flex gap-1">
-          <div className="w-3 h-3 rounded bg-[#0D0F0F]" />
+          <div className="w-3 h-3 rounded bg-[#000000]" />
           <div className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)' }} />
           <div className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(16, 185, 129, 0.4)' }} />
           <div className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(16, 185, 129, 0.6)' }} />
           <div className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(16, 185, 129, 0.8)' }} />
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#10B981' }} />
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#1951FC' }} />
         </div>
-        <span className="text-xs text-[#5C6360]">More</span>
+        <span className="text-xs text-[#5BB8FB]">More</span>
       </div>
     </div>
   );

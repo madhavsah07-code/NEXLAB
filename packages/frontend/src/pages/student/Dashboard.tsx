@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { StatCard } from '../../components/ui/StatCard';
 import { ActivityHeatmap } from '../../components/ActivityHeatmap';
 import { formatISTDateOnly, getTodayIST } from '../../utils/dateUtils';
-import { 
+import {
   Flame, Zap, Award, BookOpen, TrendingUp, CheckCircle, ArrowRight,
   Code2, Trophy, Target, Calendar, Clock, BarChart3, Brain, Rocket
 } from 'lucide-react';
@@ -63,7 +63,7 @@ export const StudentDashboard: React.FC = () => {
     setLoading(true);
     try {
       const userId = user?._id || user?.id;
-      
+
       let allCourses = [];
       try {
         const response = await api.get('/courses/published');
@@ -71,8 +71,8 @@ export const StudentDashboard: React.FC = () => {
       } catch (error) {
         console.error('Error fetching courses:', error);
       }
-      
-      const enrolled = allCourses.filter((c: any) => 
+
+      const enrolled = allCourses.filter((c: any) =>
         c.enrolledStudents?.includes(userId) || user?.enrolledCourses?.includes(c._id)
       );
       setEnrolledCourses(enrolled);
@@ -103,16 +103,16 @@ export const StudentDashboard: React.FC = () => {
     try {
       const response = await api.get('/problems/submissions');
       const submissions = response.data.data || [];
-      
+
       const solvedIds = submissions
         .filter((s: any) => s.status === 'accepted')
         .map((s: any) => s.problemId?._id || s.problemId);
-      
+
       const uniqueSolved = [...new Set(solvedIds)];
-      
+
       const problemsRes = await api.get('/problems');
       const allProblems = problemsRes.data.data || [];
-      
+
       let easy = 0, medium = 0, hard = 0;
       for (const problem of allProblems) {
         if (uniqueSolved.includes(problem._id)) {
@@ -121,7 +121,7 @@ export const StudentDashboard: React.FC = () => {
           else if (problem.difficulty === 'hard') hard++;
         }
       }
-      
+
       setProblemStats({
         totalSolved: uniqueSolved.length,
         easySolved: easy,
@@ -137,22 +137,22 @@ export const StudentDashboard: React.FC = () => {
     try {
       const response = await api.get('/problems/submissions');
       const submissions = response.data.data || [];
-      
+
       const dateMap: Record<string, number> = {};
       const now = new Date();
-      
+
       // ✅ Use IST for date calculations
       const istOffset = 5.5 * 60 * 60 * 1000;
       const istNow = new Date(now.getTime() + istOffset);
-      
+
       const oneYearAgo = new Date(istNow);
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
+
       for (let d = new Date(oneYearAgo); d <= istNow; d.setDate(d.getDate() + 1)) {
         const dateStr = formatISTDateOnly(d);
         dateMap[dateStr] = 0;
       }
-      
+
       for (const sub of submissions) {
         if (sub.status === 'accepted') {
           const date = new Date(sub.createdAt || sub.submittedAt);
@@ -162,18 +162,18 @@ export const StudentDashboard: React.FC = () => {
           }
         }
       }
-      
+
       const heatmapData = Object.entries(dateMap).map(([date, count]) => ({
         date,
         count,
       }));
-      
+
       setHeatmapData(heatmapData);
-      
+
       // ✅ Calculate streak using IST dates
       let streak = 0;
       const todayIST = getTodayIST();
-      
+
       for (let i = 0; i < 365; i++) {
         const date = new Date(istNow);
         date.setDate(date.getDate() - i);
@@ -184,7 +184,7 @@ export const StudentDashboard: React.FC = () => {
           break;
         }
       }
-      
+
       setDailyStreak(streak);
     } catch (error) {
       console.error('Error fetching heatmap data:', error);
@@ -203,11 +203,11 @@ export const StudentDashboard: React.FC = () => {
 
   const getLevelColor = (level: string) => {
     const colors: Record<string, string> = {
-      beginner: 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20',
-      intermediate: 'bg-[#60A5FA]/10 text-[#60A5FA] border-[#60A5FA]/20',
-      advanced: 'bg-[#FBBF24]/10 text-[#FBBF24] border-[#FBBF24]/20',
+      beginner: 'bg-[#1951FC]/10 text-[#1951FC] border-[#1951FC]/20',
+      intermediate: 'bg-[#5BB8FB]/10 text-[#5BB8FB] border-[#5BB8FB]/20',
+      advanced: 'bg-[#3781FC]/10 text-[#3781FC] border-[#3781FC]/20',
     };
-    return colors[level] || 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20';
+    return colors[level] || 'bg-[#1951FC]/10 text-[#1951FC] border-[#1951FC]/20';
   };
 
   const getStatusIcon = (status: string) => {
@@ -223,8 +223,8 @@ export const StudentDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 bg-[#0D0F0F]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
+      <div className="flex items-center justify-center h-64 bg-[#000000]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#1951FC] border-t-transparent" />
       </div>
     );
   }
@@ -232,21 +232,21 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1600px] mx-auto">
       {/* Welcome Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#2A302E]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#0B2CB1]">
         <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#EDEFEE]">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#FFFFFF]">
             Welcome back, {user?.name || 'Student'}! 👋
           </h1>
-          <p className="text-sm sm:text-base text-[#9CA3A0] mt-1">
-            {enrolledCourses.length === 0 
-              ? "You haven't enrolled in any courses yet. Start learning today!" 
+          <p className="text-sm sm:text-base text-[#CBE9FD] mt-1">
+            {enrolledCourses.length === 0
+              ? "You haven't enrolled in any courses yet. Start learning today!"
               : `You're making great progress! Keep up the momentum.`}
           </p>
         </div>
         {user && (
-          <div className="flex items-center gap-3 bg-[#161A19] border border-[#10B981]/20 rounded-lg px-3 sm:px-4 py-2 flex-shrink-0">
-            <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-[#10B981]" />
-            <span className="text-sm font-semibold text-[#EDEFEE]">
+          <div className="flex items-center gap-3 bg-[#03195B] border border-[#1951FC]/20 rounded-lg px-3 sm:px-4 py-2 flex-shrink-0">
+            <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-[#1951FC]" />
+            <span className="text-sm font-semibold text-[#FFFFFF]">
               {dailyStreak || user.streak || 0} Day Streak
             </span>
           </div>
@@ -255,41 +255,41 @@ export const StudentDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <StatCard 
-          title="Total XP" 
-          value={user?.xp || 0} 
-          icon={<Zap className="w-5 h-5 sm:w-6 sm:h-6 text-[#10B981]" />} 
+        <StatCard
+          title="Total XP"
+          value={user?.xp || 0}
+          icon={<Zap className="w-5 h-5 sm:w-6 sm:h-6 text-[#1951FC]" />}
           color="emerald"
         />
-        <StatCard 
-          title="Level" 
-          value={user?.level || 1} 
-          icon={<Award className="w-5 h-5 sm:w-6 sm:h-6 text-[#60A5FA]" />} 
+        <StatCard
+          title="Level"
+          value={user?.level || 1}
+          icon={<Award className="w-5 h-5 sm:w-6 sm:h-6 text-[#5BB8FB]" />}
           color="info"
         />
-        <StatCard 
-          title="Problems Solved" 
-          value={problemStats.totalSolved || 0} 
-          icon={<Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#FBBF24]" />} 
+        <StatCard
+          title="Problems Solved"
+          value={problemStats.totalSolved || 0}
+          icon={<Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#3781FC]" />}
           color="warning"
         />
-        <StatCard 
-          title="Courses Enrolled" 
-          value={enrolledCourses.length} 
-          icon={<BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[#F87171]" />} 
+        <StatCard
+          title="Courses Enrolled"
+          value={enrolledCourses.length}
+          icon={<BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[#5BB8FB]" />}
           color="error"
         />
       </div>
 
       {/* XP Progress Bar */}
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-5 mb-6 sm:mb-8 shadow-sm">
-        <div className="flex justify-between text-sm text-[#9CA3A0] mb-1.5">
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-5 mb-6 sm:mb-8 shadow-sm">
+        <div className="flex justify-between text-sm text-[#CBE9FD] mb-1.5">
           <span>Progress to Level {user?.level ? user.level + 1 : 2}</span>
-          <span className="text-[#10B981] font-medium">{currentXp} / {nextLevelXp} XP</span>
+          <span className="text-[#1951FC] font-medium">{currentXp} / {nextLevelXp} XP</span>
         </div>
-        <div className="w-full h-1.5 bg-[#0D0F0F] rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-full transition-all duration-500"
+        <div className="w-full h-1.5 bg-[#000000] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#1951FC] to-[#3781FC] rounded-full transition-all duration-500"
             style={{ width: `${xpProgress}%` }}
           />
         </div>
@@ -300,33 +300,33 @@ export const StudentDashboard: React.FC = () => {
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Problem Solving Progress */}
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 shadow-sm">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
-              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#10B981]" />
-              <h3 className="text-sm font-medium text-[#EDEFEE]">Problem Solving Progress</h3>
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#1951FC]" />
+              <h3 className="text-sm font-medium text-[#FFFFFF]">Problem Solving Progress</h3>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:gap-4">
-              <div className="text-center p-2 sm:p-3 bg-[#0D0F0F] rounded-lg">
-                <div className="text-lg sm:text-2xl font-bold text-[#10B981]">{problemStats.easySolved || 0}</div>
-                <div className="text-xs text-[#5C6360]">🟢 Easy</div>
+              <div className="text-center p-2 sm:p-3 bg-[#000000] rounded-lg">
+                <div className="text-lg sm:text-2xl font-bold text-[#1951FC]">{problemStats.easySolved || 0}</div>
+                <div className="text-xs text-[#5BB8FB]">🟢 Easy</div>
               </div>
-              <div className="text-center p-2 sm:p-3 bg-[#0D0F0F] rounded-lg">
-                <div className="text-lg sm:text-2xl font-bold text-[#FBBF24]">{problemStats.mediumSolved || 0}</div>
-                <div className="text-xs text-[#5C6360]">🟡 Medium</div>
+              <div className="text-center p-2 sm:p-3 bg-[#000000] rounded-lg">
+                <div className="text-lg sm:text-2xl font-bold text-[#3781FC]">{problemStats.mediumSolved || 0}</div>
+                <div className="text-xs text-[#5BB8FB]">🟡 Medium</div>
               </div>
-              <div className="text-center p-2 sm:p-3 bg-[#0D0F0F] rounded-lg">
-                <div className="text-lg sm:text-2xl font-bold text-[#F87171]">{problemStats.hardSolved || 0}</div>
-                <div className="text-xs text-[#5C6360]">🔴 Hard</div>
+              <div className="text-center p-2 sm:p-3 bg-[#000000] rounded-lg">
+                <div className="text-lg sm:text-2xl font-bold text-[#5BB8FB]">{problemStats.hardSolved || 0}</div>
+                <div className="text-xs text-[#5BB8FB]">🔴 Hard</div>
               </div>
             </div>
             <div className="mt-3 sm:mt-4">
-              <div className="flex justify-between text-xs text-[#5C6360] mb-1">
+              <div className="flex justify-between text-xs text-[#5BB8FB] mb-1">
                 <span>Total Solved</span>
-                <span className="text-[#EDEFEE]">{problemStats.totalSolved || 0} problems</span>
+                <span className="text-[#FFFFFF]">{problemStats.totalSolved || 0} problems</span>
               </div>
-              <div className="w-full h-2 bg-[#0D0F0F] rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#10B981] via-[#FBBF24] to-[#F87171] rounded-full transition-all duration-500"
+              <div className="w-full h-2 bg-[#000000] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#1951FC] via-[#3781FC] to-[#5BB8FB] rounded-full transition-all duration-500"
                   style={{ width: `${Math.min((problemStats.totalSolved || 0) / 50 * 100, 100)}%` }}
                 />
               </div>
@@ -341,36 +341,36 @@ export const StudentDashboard: React.FC = () => {
 
         {/* Right Column */}
         <div className="lg:col-span-1">
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 shadow-sm h-full">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 shadow-sm h-full">
             <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#60A5FA]" />
-              <h3 className="text-sm font-medium text-[#EDEFEE]">Recent Activity</h3>
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#5BB8FB]" />
+              <h3 className="text-sm font-medium text-[#FFFFFF]">Recent Activity</h3>
             </div>
             {recentSubmissions.length === 0 ? (
-              <p className="text-sm text-[#5C6360] italic">No recent activity</p>
+              <p className="text-sm text-[#5BB8FB] italic">No recent activity</p>
             ) : (
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                 {recentSubmissions.map((sub, index) => (
-                  <div key={index} className="p-3 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
+                  <div key={index} className="p-3 bg-[#000000] rounded-lg border border-[#0B2CB1]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{getStatusIcon(sub.status)}</span>
                         <div>
-                          <p className="text-sm font-medium text-[#EDEFEE]">
+                          <p className="text-sm font-medium text-[#FFFFFF]">
                             {sub.problemId?.title || 'Problem'}
                           </p>
                           <span className={`text-xs font-medium ${
-                            sub.status === 'accepted' ? 'text-[#10B981]' : 'text-[#F87171]'
+                            sub.status === 'accepted' ? 'text-[#1951FC]' : 'text-[#5BB8FB]'
                           }`}>
                             {sub.status === 'accepted' ? '✅ Solved' : sub.status.replace('_', ' ').toUpperCase()}
                           </span>
                         </div>
                       </div>
-                      <span className="text-xs text-[#5C6360]">
+                      <span className="text-xs text-[#5BB8FB]">
                         {/* ✅ No date here - keeping it clean */}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-[#5C6360]">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-[#5BB8FB]">
                       <span>Runtime: {sub.runtime || 0}ms</span>
                       <span>Memory: {sub.memory || 0}MB</span>
                     </div>
@@ -385,14 +385,14 @@ export const StudentDashboard: React.FC = () => {
       {/* My Courses Section */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base sm:text-xl font-semibold text-[#EDEFEE] flex items-center gap-2">
-            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-[#10B981]" />
+          <h2 className="text-base sm:text-xl font-semibold text-[#FFFFFF] flex items-center gap-2">
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-[#1951FC]" />
             My Learning Paths
           </h2>
           {enrolledCourses.length > 0 && (
-            <button 
+            <button
               onClick={() => navigate('/courses')}
-              className="text-sm text-[#10B981] hover:text-[#34D399] cursor-pointer transition-colors"
+              className="text-sm text-[#1951FC] hover:text-[#3781FC] cursor-pointer transition-colors"
             >
               View all
             </button>
@@ -400,11 +400,11 @@ export const StudentDashboard: React.FC = () => {
         </div>
 
         {enrolledCourses.length === 0 ? (
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-8 sm:p-12 text-center">
-            <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 text-[#10B981] mx-auto mb-4 opacity-40" />
-            <p className="text-[#9CA3A0]">You haven't enrolled in any courses yet.</p>
-            <Button 
-              variant="primary" 
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-8 sm:p-12 text-center">
+            <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 text-[#1951FC] mx-auto mb-4 opacity-40" />
+            <p className="text-[#CBE9FD]">You haven't enrolled in any courses yet.</p>
+            <Button
+              variant="primary"
               onClick={() => navigate('/courses')}
               className="mt-4"
             >
@@ -422,7 +422,7 @@ export const StudentDashboard: React.FC = () => {
               return (
                 <div
                   key={course._id}
-                  className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#10B981]/5 hover:shadow-lg transition-shadow"
+                  className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#1951FC]/5 hover:shadow-lg transition-shadow"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -431,24 +431,24 @@ export const StudentDashboard: React.FC = () => {
                           {course.level}
                         </span>
                         {percentage === 100 && (
-                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] font-medium border border-[#10B981]/20">
+                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#1951FC]/20 text-[#1951FC] font-medium border border-[#1951FC]/20">
                             Completed 🎉
                           </span>
                         )}
                       </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-[#EDEFEE] truncate">{course.title}</h3>
-                      <p className="text-sm text-[#9CA3A0] truncate">{course.description}</p>
+                      <h3 className="text-base sm:text-lg font-semibold text-[#FFFFFF] truncate">{course.title}</h3>
+                      <p className="text-sm text-[#CBE9FD] truncate">{course.description}</p>
                     </div>
                   </div>
 
                   <div className="mt-3">
-                    <div className="flex justify-between text-xs text-[#9CA3A0] mb-1">
+                    <div className="flex justify-between text-xs text-[#CBE9FD] mb-1">
                       <span>{completed} of {total} lessons</span>
-                      <span className="text-[#10B981] font-semibold">{percentage}%</span>
+                      <span className="text-[#1951FC] font-semibold">{percentage}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-[#0D0F0F] rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-[#10B981] rounded-full transition-all duration-500"
+                    <div className="w-full h-1.5 bg-[#000000] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#1951FC] rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -483,31 +483,31 @@ export const StudentDashboard: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         <button
           onClick={() => navigate('/problems')}
-          className="bg-[#161A19] border border-[#2A302E] rounded-xl p-3 sm:p-4 text-center hover:border-[#10B981] transition-colors"
+          className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-3 sm:p-4 text-center hover:border-[#1951FC] transition-colors"
         >
-          <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#10B981] mx-auto mb-1 sm:mb-2" />
-          <span className="text-xs sm:text-sm text-[#EDEFEE]">Practice Problems</span>
+          <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#1951FC] mx-auto mb-1 sm:mb-2" />
+          <span className="text-xs sm:text-sm text-[#FFFFFF]">Practice Problems</span>
         </button>
         <button
           onClick={() => navigate('/courses')}
-          className="bg-[#161A19] border border-[#2A302E] rounded-xl p-3 sm:p-4 text-center hover:border-[#10B981] transition-colors"
+          className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-3 sm:p-4 text-center hover:border-[#1951FC] transition-colors"
         >
-          <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[#60A5FA] mx-auto mb-1 sm:mb-2" />
-          <span className="text-xs sm:text-sm text-[#EDEFEE]">Browse Courses</span>
+          <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[#5BB8FB] mx-auto mb-1 sm:mb-2" />
+          <span className="text-xs sm:text-sm text-[#FFFFFF]">Browse Courses</span>
         </button>
         <button
           onClick={() => navigate('/leaderboard')}
-          className="bg-[#161A19] border border-[#2A302E] rounded-xl p-3 sm:p-4 text-center hover:border-[#10B981] transition-colors"
+          className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-3 sm:p-4 text-center hover:border-[#1951FC] transition-colors"
         >
-          <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FBBF24] mx-auto mb-1 sm:mb-2" />
-          <span className="text-xs sm:text-sm text-[#EDEFEE]">Leaderboard</span>
+          <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#3781FC] mx-auto mb-1 sm:mb-2" />
+          <span className="text-xs sm:text-sm text-[#FFFFFF]">Leaderboard</span>
         </button>
         <button
           onClick={() => navigate('/sandbox')}
-          className="bg-[#161A19] border border-[#2A302E] rounded-xl p-3 sm:p-4 text-center hover:border-[#10B981] transition-colors"
+          className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-3 sm:p-4 text-center hover:border-[#1951FC] transition-colors"
         >
-          <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-[#F87171] mx-auto mb-1 sm:mb-2" />
-          <span className="text-xs sm:text-sm text-[#EDEFEE]">Code Sandbox</span>
+          <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-[#5BB8FB] mx-auto mb-1 sm:mb-2" />
+          <span className="text-xs sm:text-sm text-[#FFFFFF]">Code Sandbox</span>
         </button>
       </div>
     </div>

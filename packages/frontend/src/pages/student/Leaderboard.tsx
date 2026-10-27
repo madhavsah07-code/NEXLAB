@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
-import { 
-  Crown, Medal, Trophy, Star, 
-  TrendingUp, Users, Award, 
-  ChevronLeft, ChevronRight 
+import {
+  Crown, Medal, Trophy, Star,
+  TrendingUp, Users, Award,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface LeaderboardUser {
@@ -55,21 +55,21 @@ export const Leaderboard: React.FC = () => {
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) {
-      return <Crown className="w-6 h-6 text-[#FBBF24]" />;
+      return <Crown className="w-6 h-6 text-[#3781FC]" />;
     } else if (rank === 2) {
-      return <Medal className="w-6 h-6 text-[#9CA3A0]" />;
+      return <Medal className="w-6 h-6 text-[#CBE9FD]" />;
     } else if (rank === 3) {
-      return <Medal className="w-6 h-6 text-[#D4A373]" />;
+      return <Medal className="w-6 h-6 text-[#CBE9FD]" />;
     } else {
-      return <span className="text-sm font-medium text-[#5C6360]">#{rank}</span>;
+      return <span className="text-sm font-medium text-[#5BB8FB]">#{rank}</span>;
     }
   };
 
   const getLevelColor = (level: number) => {
-    if (level <= 3) return 'text-[#10B981]';
-    if (level <= 6) return 'text-[#60A5FA]';
-    if (level <= 10) return 'text-[#FBBF24]';
-    return 'text-[#F87171]';
+    if (level <= 3) return 'text-[#1951FC]';
+    if (level <= 6) return 'text-[#5BB8FB]';
+    if (level <= 10) return 'text-[#3781FC]';
+    return 'text-[#5BB8FB]';
   };
 
   const getBadgeIcon = (badge: string) => {
@@ -89,7 +89,7 @@ export const Leaderboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#10B981] border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#1951FC] border-t-transparent" />
       </div>
     );
   }
@@ -97,13 +97,13 @@ export const Leaderboard: React.FC = () => {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#2A302E]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#0B2CB1]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#EDEFEE] flex items-center gap-2">
-            <Trophy className="w-8 h-8 text-[#FBBF24]" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF] flex items-center gap-2">
+            <Trophy className="w-8 h-8 text-[#3781FC]" />
             Leaderboard
           </h1>
-          <p className="text-[#9CA3A0] mt-1">Top students ranked by experience points</p>
+          <p className="text-[#CBE9FD] mt-1">Top students ranked by experience points</p>
         </div>
         <Button
           variant="secondary"
@@ -118,26 +118,26 @@ export const Leaderboard: React.FC = () => {
 
       {/* User's Rank Card */}
       {userRank && (
-        <div className="bg-[#161A19] border border-[#10B981]/20 rounded-xl p-4 sm:p-5 mb-6 sm:mb-8 shadow-sm shadow-[#10B981]/5">
+        <div className="bg-[#03195B] border border-[#1951FC]/20 rounded-xl p-4 sm:p-5 mb-6 sm:mb-8 shadow-sm shadow-[#1951FC]/5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#10B981]/20 border-2 border-[#10B981] flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-bold text-[#10B981]">
+              <div className="w-12 h-12 rounded-full bg-[#1951FC]/20 border-2 border-[#1951FC] flex items-center justify-center flex-shrink-0">
+                <span className="text-xl font-bold text-[#1951FC]">
                   #{userRank.rank}
                 </span>
               </div>
               <div>
-                <p className="text-sm text-[#9CA3A0]">Your Rank</p>
-                <p className="text-lg font-bold text-[#EDEFEE]">{user?.name || 'You'}</p>
+                <p className="text-sm text-[#CBE9FD]">Your Rank</p>
+                <p className="text-lg font-bold text-[#FFFFFF]">{user?.name || 'You'}</p>
               </div>
             </div>
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <p className="text-sm text-[#9CA3A0]">XP</p>
-                <p className="text-xl font-bold text-[#10B981]">{userRank.xp}</p>
+                <p className="text-sm text-[#CBE9FD]">XP</p>
+                <p className="text-xl font-bold text-[#1951FC]">{userRank.xp}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-[#9CA3A0]">Level</p>
+                <p className="text-sm text-[#CBE9FD]">Level</p>
                 <p className={`text-xl font-bold ${getLevelColor(user?.level || 1)}`}>
                   {user?.level || 1}
                 </p>
@@ -148,24 +148,24 @@ export const Leaderboard: React.FC = () => {
       )}
 
       {/* Leaderboard Table */}
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[600px]">
             <thead>
-              <tr className="border-b border-[#2A302E] bg-[#0D0F0F]">
-                <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+              <tr className="border-b border-[#0B2CB1] bg-[#000000]">
+                <th className="text-left py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                   Rank
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                <th className="text-left py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                   Student
                 </th>
-                <th className="text-center py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                <th className="text-center py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                   Level
                 </th>
-                <th className="text-center py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                <th className="text-center py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                   XP
                 </th>
-                <th className="text-center py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                <th className="text-center py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                   Badges
                 </th>
               </tr>
@@ -173,7 +173,7 @@ export const Leaderboard: React.FC = () => {
             <tbody>
               {leaderboard.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-[#9CA3A0]">
+                  <td colSpan={5} className="text-center py-12 text-[#CBE9FD]">
                     <Users className="w-12 h-12 mx-auto mb-4 opacity-40" />
                     No users on the leaderboard yet
                   </td>
@@ -184,8 +184,8 @@ export const Leaderboard: React.FC = () => {
                   return (
                     <tr
                       key={entry.userId}
-                      className={`border-b border-[#2A302E] transition-colors ${
-                        isCurrentUser ? 'bg-[#10B981]/5 hover:bg-[#10B981]/10' : 'hover:bg-[#1E2322]'
+                      className={`border-b border-[#0B2CB1] transition-colors ${
+                        isCurrentUser ? 'bg-[#1951FC]/5 hover:bg-[#1951FC]/10' : 'hover:bg-[#0B2CB1]'
                       }`}
                     >
                       <td className="py-3 px-4">
@@ -196,18 +196,18 @@ export const Leaderboard: React.FC = () => {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${
-                            isCurrentUser 
-                              ? 'bg-[#10B981] text-white' 
-                              : 'bg-[#2A302E] text-[#EDEFEE]'
+                            isCurrentUser
+                              ? 'bg-[#1951FC] text-white'
+                              : 'bg-[#0B2CB1] text-[#FFFFFF]'
                           }`}>
                             {entry.name?.charAt(0) || 'U'}
                           </div>
                           <div>
-                            <p className={`font-medium ${isCurrentUser ? 'text-[#10B981]' : 'text-[#EDEFEE]'}`}>
+                            <p className={`font-medium ${isCurrentUser ? 'text-[#1951FC]' : 'text-[#FFFFFF]'}`}>
                               {entry.name}
                               {isCurrentUser && ' (You)'}
                             </p>
-                            <p className="text-xs text-[#5C6360]">{entry.email}</p>
+                            <p className="text-xs text-[#5BB8FB]">{entry.email}</p>
                           </div>
                         </div>
                       </td>
@@ -217,7 +217,7 @@ export const Leaderboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className="font-bold text-[#10B981]">{entry.xp}</span>
+                        <span className="font-bold text-[#1951FC]">{entry.xp}</span>
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1 flex-wrap">
@@ -232,10 +232,10 @@ export const Leaderboard: React.FC = () => {
                               </span>
                             ))
                           ) : (
-                            <span className="text-xs text-[#5C6360]">-</span>
+                            <span className="text-xs text-[#5BB8FB]">-</span>
                           )}
                           {entry.badges && entry.badges.length > 3 && (
-                            <span className="text-xs text-[#5C6360]">+{entry.badges.length - 3}</span>
+                            <span className="text-xs text-[#5BB8FB]">+{entry.badges.length - 3}</span>
                           )}
                         </div>
                       </td>
@@ -249,25 +249,25 @@ export const Leaderboard: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-[#2A302E]">
-            <p className="text-sm text-[#5C6360] order-2 sm:order-1">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-[#0B2CB1]">
+            <p className="text-sm text-[#5BB8FB] order-2 sm:order-1">
               Showing {leaderboard.length} of {totalUsers} students
             </p>
             <div className="flex items-center gap-2 order-1 sm:order-2">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-sm text-[#9CA3A0]">
+              <span className="text-sm text-[#CBE9FD]">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -277,21 +277,21 @@ export const Leaderboard: React.FC = () => {
       </div>
 
       {/* Legend */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-[#5C6360]">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-[#5BB8FB]">
         <div className="flex items-center gap-1">
-          <Crown className="w-4 h-4 text-[#FBBF24]" />
+          <Crown className="w-4 h-4 text-[#3781FC]" />
           <span>Gold</span>
         </div>
         <div className="flex items-center gap-1">
-          <Medal className="w-4 h-4 text-[#9CA3A0]" />
+          <Medal className="w-4 h-4 text-[#CBE9FD]" />
           <span>Silver</span>
         </div>
         <div className="flex items-center gap-1">
-          <Medal className="w-4 h-4 text-[#D4A373]" />
+          <Medal className="w-4 h-4 text-[#CBE9FD]" />
           <span>Bronze</span>
         </div>
         <div className="flex items-center gap-1">
-          <Star className="w-4 h-4 text-[#10B981]" />
+          <Star className="w-4 h-4 text-[#1951FC]" />
           <span>Your rank highlighted</span>
         </div>
       </div>

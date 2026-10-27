@@ -14,10 +14,10 @@ interface State {
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { 
-      hasError: false, 
-      error: null, 
-      errorInfo: null 
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
     };
   }
 
@@ -37,17 +37,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-[#0D0F0F] flex items-center justify-center p-4">
-          <div className="bg-[#161A19] border border-[#F87171]/30 rounded-xl p-6 max-w-md w-full text-center shadow-xl">
+        <div className="min-h-screen bg-[#000000] flex items-center justify-center p-4">
+          <div className="bg-[#03195B] border border-[#5BB8FB]/30 rounded-xl p-6 max-w-md w-full text-center shadow-xl">
             <div className="text-5xl mb-4">🔧</div>
-            <h2 className="text-xl font-bold text-[#EDEFEE] mb-2">
+            <h2 className="text-xl font-bold text-[#FFFFFF] mb-2">
               Something went wrong
             </h2>
-            <p className="text-[#9CA3A0] text-sm mb-4">
+            <p className="text-[#CBE9FD] text-sm mb-4">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             {this.state.errorInfo && (
-              <details className="text-left text-xs text-[#5C6360] mb-4 bg-[#0D0F0F] p-3 rounded-lg max-h-40 overflow-auto">
+              <details className="text-left text-xs text-[#5BB8FB] mb-4 bg-[#000000] p-3 rounded-lg max-h-40 overflow-auto">
                 <summary className="cursor-pointer font-medium mb-2">Error Details</summary>
                 <pre className="whitespace-pre-wrap break-all">
                   {this.state.errorInfo.componentStack}
@@ -57,13 +57,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#34D399] transition-colors"
+                className="px-4 py-2 bg-[#1951FC] text-white rounded-lg hover:bg-[#3781FC] transition-colors"
               >
                 Reload Page
               </button>
               <button
                 onClick={() => window.location.href = '/'}
-                className="px-4 py-2 bg-[#161A19] text-[#EDEFEE] rounded-lg hover:bg-[#1E2322] transition-colors border border-[#2A302E]"
+                className="px-4 py-2 bg-[#03195B] text-[#FFFFFF] rounded-lg hover:bg-[#0B2CB1] transition-colors border border-[#0B2CB1]"
               >
                 Go Home
               </button>

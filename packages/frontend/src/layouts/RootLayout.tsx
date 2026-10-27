@@ -4,11 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { BrandLogo } from '../components/BrandLogo';
-import { 
-  Home, BookOpen, Code2, Trophy, User, 
+import {
+  Home, BookOpen, Code2, Trophy, User,
   Users, BarChart3, GraduationCap, LogOut, Menu, X,
-  LayoutDashboard, Sparkles, ChevronLeft, ChevronRight,
-  Settings, FileJson
+  LayoutDashboard, ChevronLeft, ChevronRight, FileJson
 } from 'lucide-react';
 
 // Student Navigation
@@ -78,15 +77,13 @@ export const RootLayout: React.FC = () => {
   };
 
   const sidebarWidth = isCollapsed ? 'w-20' : 'w-72';
-  const isSidebarVisible = isMobile ? isSidebarOpen : true;
-
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#0D0F0F] flex w-full overflow-hidden">
+    <div className="page-orbit min-h-screen flex w-full overflow-hidden">
       {/* Mobile Overlay */}
       {isMobile && isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -95,20 +92,20 @@ export const RootLayout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={`
-          ${isMobile ? 'fixed' : 'fixed'} 
-          top-0 left-0 z-50 
-          h-screen 
+          ${isMobile ? 'fixed' : 'fixed'}
+          top-0 left-0 z-50
+          h-screen
           ${isMobile ? (isSidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
-          ${sidebarWidth} 
-          bg-[#161A19] 
-          border-r border-[#2A302E] 
-          flex flex-col 
+          ${sidebarWidth}
+          bg-[#03195B]/88 backdrop-blur-xl
+          border-r border-white/20
+          flex flex-col
           transition-all duration-300 ease-in-out
           shadow-2xl
         `}
       >
         {/* Branding - Using BrandLogo */}
-        <div className={`px-4 h-16 flex items-center border-b border-[#2A302E] flex-shrink-0 ${isCollapsed ? 'justify-center' : 'px-6'}`}>
+        <div className={`px-4 h-20 flex items-center border-b border-white/15 flex-shrink-0 ${isCollapsed ? 'justify-center' : 'px-6'}`}>
           {!isCollapsed ? (
             <BrandLogo size="md" showText={true} />
           ) : (
@@ -117,17 +114,17 @@ export const RootLayout: React.FC = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               onClick={() => isMobile && setIsSidebarOpen(false)}
               className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                ${isActive 
-                  ? 'bg-[#10B981]/10 text-[#10B981] border-r-2 border-[#10B981]' 
-                  : 'text-[#9CA3A0] hover:bg-[#1E2322] hover:text-[#EDEFEE]'
+                flex items-center gap-3 px-4 py-3 rounded-full text-sm font-normal transition-all duration-300
+                ${isActive
+                  ? 'bg-[#1951FC]/45 text-[#CBE9FD] border border-white/30 shadow-[inset_0_1px_4px_rgba(255,255,255,0.25),0_0_22px_rgba(55,129,252,0.26)]'
+                  : 'text-[#CBE9FD]/75 hover:bg-[#1951FC]/20 hover:text-[#FFFFFF]'
                 }
                 ${isCollapsed ? 'justify-center' : ''}
               `}
@@ -140,22 +137,22 @@ export const RootLayout: React.FC = () => {
         </nav>
 
         {/* Bottom: User + Logout */}
-        <div className={`border-t border-[#2A302E] p-4 flex-shrink-0 ${isCollapsed ? 'flex flex-col items-center gap-3' : ''}`}>
+        <div className={`border-t border-white/15 p-4 flex-shrink-0 ${isCollapsed ? 'flex flex-col items-center gap-3' : ''}`}>
           <div className={`flex items-center gap-3 ${isCollapsed ? 'flex-col' : ''}`}>
-            <div className="w-9 h-9 rounded-full bg-[#10B981]/10 text-[#10B981] flex items-center justify-center font-semibold border border-[#10B981]/20 flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[linear-gradient(135deg,#1951FC,#5BB8FB)] text-[#03195B] flex items-center justify-center font-medium border border-white/45 shadow-[0_0_18px_rgba(91,184,251,0.4)] flex-shrink-0">
               {user?.name?.charAt(0) || 'U'}
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#EDEFEE] truncate">{user?.name}</p>
-                <p className="text-xs text-[#9CA3A0] truncate">{user?.email}</p>
+                <p className="text-sm font-normal text-[#FFFFFF] truncate">{user?.name}</p>
+                <p className="text-xs text-[#CBE9FD]/65 truncate">{user?.email}</p>
               </div>
             )}
           </div>
           {!isCollapsed && (
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 mt-3 text-sm font-medium text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 mt-3 text-sm font-normal text-[#CBE9FD]/75 hover:text-[#FFFFFF] hover:bg-[#1951FC]/20 rounded-full transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Logout
@@ -164,7 +161,7 @@ export const RootLayout: React.FC = () => {
           {isCollapsed && (
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center px-4 py-2 mt-3 text-sm font-medium text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
+              className="w-full flex items-center justify-center px-4 py-2.5 mt-3 text-sm font-normal text-[#CBE9FD]/75 hover:text-[#FFFFFF] hover:bg-[#1951FC]/20 rounded-full transition-colors"
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
@@ -176,12 +173,12 @@ export const RootLayout: React.FC = () => {
         {!isMobile && (
           <button
             onClick={toggleSidebar}
-            className="absolute -right-3 top-20 w-6 h-6 bg-[#1A1D1E] border border-[#2A302E] rounded-full flex items-center justify-center hover:bg-[#10B981]/20 hover:border-[#10B981] transition-colors z-50"
+            className="absolute -right-3 top-24 w-7 h-7 bg-[#0B2CB1] border border-white/35 rounded-full flex items-center justify-center hover:bg-[#1951FC] hover:border-[#CBE9FD] shadow-[0_0_16px_rgba(55,129,252,0.35)] transition-colors z-50"
           >
             {isCollapsed ? (
-              <ChevronRight className="w-3 h-3 text-[#9CA3A0]" />
+              <ChevronRight className="w-3 h-3 text-[#CBE9FD]" />
             ) : (
-              <ChevronLeft className="w-3 h-3 text-[#9CA3A0]" />
+              <ChevronLeft className="w-3 h-3 text-[#CBE9FD]" />
             )}
           </button>
         )}
@@ -191,17 +188,17 @@ export const RootLayout: React.FC = () => {
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={toggleSidebar}
-          className="p-2 rounded-lg bg-[#161A19] border border-[#2A302E] shadow-lg"
+          className="p-2.5 rounded-full bg-[#0B2CB1] border border-white/30 shadow-[0_0_20px_rgba(55,129,252,0.35)]"
         >
-          {isSidebarOpen ? 
-            <X className="w-5 h-5 text-[#EDEFEE]" /> : 
-            <Menu className="w-5 h-5 text-[#EDEFEE]" />
+          {isSidebarOpen ?
+            <X className="w-5 h-5 text-[#FFFFFF]" /> :
+            <Menu className="w-5 h-5 text-[#FFFFFF]" />
           }
         </button>
       </div>
 
       {/* Main Content */}
-      <main 
+      <main
         className={`
           flex-1 min-w-0 w-full overflow-y-auto
           transition-all duration-300 ease-in-out

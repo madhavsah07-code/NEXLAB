@@ -34,43 +34,43 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'danger':
-        return <AlertCircle className="w-6 h-6 text-[#F87171]" />;
+        return <AlertCircle className="w-6 h-6 text-[#5BB8FB]" />;
       case 'warning':
-        return <AlertTriangle className="w-6 h-6 text-[#FBBF24]" />;
+        return <AlertTriangle className="w-6 h-6 text-[#3781FC]" />;
       case 'success':
-        return <CheckCircle className="w-6 h-6 text-[#10B981]" />;
+        return <CheckCircle className="w-6 h-6 text-[#1951FC]" />;
       case 'info':
       default:
-        return <Info className="w-6 h-6 text-[#60A5FA]" />;
+        return <Info className="w-6 h-6 text-[#5BB8FB]" />;
     }
   };
 
   const getButtonColor = () => {
     switch (type) {
       case 'danger':
-        return 'bg-[#F87171] hover:bg-[#F87171]/80 focus:ring-[#F87171] text-white';
+        return 'bg-[#5BB8FB] hover:bg-[#5BB8FB]/80 focus:ring-[#5BB8FB] text-white';
       case 'warning':
-        return 'bg-[#FBBF24] hover:bg-[#FBBF24]/80 focus:ring-[#FBBF24] text-[#0D0F0F]';
+        return 'bg-[#3781FC] hover:bg-[#3781FC]/80 focus:ring-[#3781FC] text-[#000000]';
       case 'success':
-        return 'bg-[#10B981] hover:bg-[#34D399] focus:ring-[#10B981]';
+        return 'bg-[#1951FC] hover:bg-[#3781FC] focus:ring-[#1951FC]';
       case 'info':
       default:
-        return 'bg-[#60A5FA] hover:bg-[#60A5FA]/80 focus:ring-[#60A5FA]';
+        return 'bg-[#5BB8FB] hover:bg-[#5BB8FB]/80 focus:ring-[#5BB8FB]';
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0D0F0F]/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-2xl max-w-md w-full shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#000000]/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-2xl max-w-md w-full shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#2A302E]">
+        <div className="flex items-center justify-between p-6 border-b border-[#0B2CB1]">
           <div className="flex items-center gap-3">
             {getIcon()}
-            <h3 className="text-lg font-semibold text-[#EDEFEE]">{title}</h3>
+            <h3 className="text-lg font-semibold text-[#FFFFFF]">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-[#5C6360] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
+            className="p-1 text-[#5BB8FB] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -78,11 +78,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
         {/* Body */}
         <div className="p-6">
-          <p className="text-[#9CA3A0] text-sm leading-relaxed">{message}</p>
+          <p className="text-[#CBE9FD] text-sm leading-relaxed">{message}</p>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 pt-0 border-t border-[#2A302E]">
+        <div className="flex items-center justify-end gap-3 p-6 pt-0 border-t border-[#0B2CB1]">
           <Button
             variant="ghost"
             onClick={onClose}

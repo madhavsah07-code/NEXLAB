@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
-import { 
-  User, Mail, Award, Zap, BookOpen, 
+import {
+  User, Mail, Award, Zap, BookOpen,
   Flame, TrendingUp, Edit2, Save, X,
   CheckCircle, Clock, Calendar,
   Shield, Crown, Star, Sparkles
@@ -121,22 +121,22 @@ export const Profile: React.FC = () => {
 
   const getBadgeIcon = (badge: string) => {
     const badgeMap: Record<string, { emoji: string; color: string }> = {
-      'First Steps': { emoji: '🎓', color: 'bg-[#10B981]/20 text-[#10B981]' },
-      'Dedicated Learner': { emoji: '📚', color: 'bg-[#60A5FA]/20 text-[#60A5FA]' },
-      'Master Student': { emoji: '🏆', color: 'bg-[#FBBF24]/20 text-[#FBBF24]' },
-      'Streak Starter': { emoji: '🔥', color: 'bg-[#F87171]/20 text-[#F87171]' },
-      'Code Warrior': { emoji: '⚔️', color: 'bg-[#10B981]/20 text-[#10B981]' },
-      'Quick Learner': { emoji: '⚡', color: 'bg-[#FBBF24]/20 text-[#FBBF24]' },
-      'Level Up!': { emoji: '⬆️', color: 'bg-[#60A5FA]/20 text-[#60A5FA]' },
+      'First Steps': { emoji: '🎓', color: 'bg-[#1951FC]/20 text-[#1951FC]' },
+      'Dedicated Learner': { emoji: '📚', color: 'bg-[#5BB8FB]/20 text-[#5BB8FB]' },
+      'Master Student': { emoji: '🏆', color: 'bg-[#3781FC]/20 text-[#3781FC]' },
+      'Streak Starter': { emoji: '🔥', color: 'bg-[#5BB8FB]/20 text-[#5BB8FB]' },
+      'Code Warrior': { emoji: '⚔️', color: 'bg-[#1951FC]/20 text-[#1951FC]' },
+      'Quick Learner': { emoji: '⚡', color: 'bg-[#3781FC]/20 text-[#3781FC]' },
+      'Level Up!': { emoji: '⬆️', color: 'bg-[#5BB8FB]/20 text-[#5BB8FB]' },
     };
-    return badgeMap[badge] || { emoji: '🏅', color: 'bg-[#2A302E]/20 text-[#9CA3A0]' };
+    return badgeMap[badge] || { emoji: '🏅', color: 'bg-[#0B2CB1]/20 text-[#CBE9FD]' };
   };
 
   const getLevelColor = (level: number) => {
-    if (level <= 3) return 'text-[#10B981]';
-    if (level <= 6) return 'text-[#60A5FA]';
-    if (level <= 10) return 'text-[#FBBF24]';
-    return 'text-[#F87171]';
+    if (level <= 3) return 'text-[#1951FC]';
+    if (level <= 6) return 'text-[#5BB8FB]';
+    if (level <= 10) return 'text-[#3781FC]';
+    return 'text-[#5BB8FB]';
   };
 
   if (loading) {
@@ -146,7 +146,7 @@ export const Profile: React.FC = () => {
   if (!profile) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#9CA3A0]">Profile not found</p>
+        <p className="text-[#CBE9FD]">Profile not found</p>
       </div>
     );
   }
@@ -154,14 +154,14 @@ export const Profile: React.FC = () => {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#2A302E]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-[#0B2CB1]">
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-full bg-[#10B981]/20 border-2 border-[#10B981] flex items-center justify-center text-2xl font-bold text-[#10B981]">
+          <div className="w-14 h-14 rounded-full bg-[#1951FC]/20 border-2 border-[#1951FC] flex items-center justify-center text-2xl font-bold text-[#1951FC]">
             {profile.name.charAt(0)}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#EDEFEE]">{profile.name}</h1>
-            <p className="text-sm text-[#9CA3A0]">{profile.role === 'admin' ? '👑 Administrator' : '🎓 Student'}</p>
+            <h1 className="text-2xl font-bold text-[#FFFFFF]">{profile.name}</h1>
+            <p className="text-sm text-[#CBE9FD]">{profile.role === 'admin' ? '👑 Administrator' : '🎓 Student'}</p>
           </div>
         </div>
         <Button
@@ -197,66 +197,66 @@ export const Profile: React.FC = () => {
 
       {/* Edit Form */}
       {isEditing && (
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-          <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Edit Profile</h2>
-          
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+          <h2 className="text-lg font-semibold text-[#FFFFFF] mb-4">Edit Profile</h2>
+
           {error && (
-            <div className="mb-4 p-3 bg-[#F87171]/10 border border-[#F87171]/20 rounded-lg text-[#F87171] text-sm">
+            <div className="mb-4 p-3 bg-[#5BB8FB]/10 border border-[#5BB8FB]/20 rounded-lg text-[#5BB8FB] text-sm">
               {error}
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">Full Name</label>
+              <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">Full Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360]"
+                className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">Email</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360]"
+                className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB]"
               />
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-[#2A302E]">
-            <p className="text-sm font-medium text-[#9CA3A0] mb-3">Change Password (optional)</p>
+          <div className="mt-4 pt-4 border-t border-[#0B2CB1]">
+            <p className="text-sm font-medium text-[#CBE9FD] mb-3">Change Password (optional)</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">Current Password</label>
+                <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">Current Password</label>
                 <input
                   type="password"
                   value={formData.currentPassword}
                   onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360]"
+                  className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB]"
                   placeholder="••••••••"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">New Password</label>
+                <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">New Password</label>
                 <input
                   type="password"
                   value={formData.newPassword}
                   onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360]"
+                  className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB]"
                   placeholder="••••••••"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">Confirm New Password</label>
+                <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">Confirm New Password</label>
                 <input
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360]"
+                  className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB]"
                   placeholder="••••••••"
                 />
               </div>
@@ -295,40 +295,40 @@ export const Profile: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#10B981]/5 transition-shadow">
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#1951FC]/5 transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#9CA3A0]">Total XP</p>
-              <p className="text-2xl font-bold text-[#10B981]">{profile.xp}</p>
+              <p className="text-sm text-[#CBE9FD]">Total XP</p>
+              <p className="text-2xl font-bold text-[#1951FC]">{profile.xp}</p>
             </div>
-            <Zap className="w-6 h-6 text-[#10B981] opacity-60" />
+            <Zap className="w-6 h-6 text-[#1951FC] opacity-60" />
           </div>
         </div>
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#10B981]/5 transition-shadow">
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#1951FC]/5 transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#9CA3A0]">Level</p>
+              <p className="text-sm text-[#CBE9FD]">Level</p>
               <p className={`text-2xl font-bold ${getLevelColor(profile.level)}`}>{profile.level}</p>
             </div>
             <Award className={`w-6 h-6 ${getLevelColor(profile.level)} opacity-60`} />
           </div>
         </div>
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#10B981]/5 transition-shadow">
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#1951FC]/5 transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#9CA3A0]">Streak</p>
-              <p className="text-2xl font-bold text-[#FBBF24]">{profile.streak || 0} days</p>
+              <p className="text-sm text-[#CBE9FD]">Streak</p>
+              <p className="text-2xl font-bold text-[#3781FC]">{profile.streak || 0} days</p>
             </div>
-            <Flame className="w-6 h-6 text-[#FBBF24] opacity-60" />
+            <Flame className="w-6 h-6 text-[#3781FC] opacity-60" />
           </div>
         </div>
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#10B981]/5 transition-shadow">
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-[#1951FC]/5 transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#9CA3A0]">Badges</p>
-              <p className="text-2xl font-bold text-[#60A5FA]">{profile.badges?.length || 0}</p>
+              <p className="text-sm text-[#CBE9FD]">Badges</p>
+              <p className="text-2xl font-bold text-[#5BB8FB]">{profile.badges?.length || 0}</p>
             </div>
-            <Crown className="w-6 h-6 text-[#60A5FA] opacity-60" />
+            <Crown className="w-6 h-6 text-[#5BB8FB] opacity-60" />
           </div>
         </div>
       </div>
@@ -336,40 +336,40 @@ export const Profile: React.FC = () => {
       {/* Progress Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Overall Progress */}
-        <div className="lg:col-span-2 bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Learning Progress</h2>
+        <div className="lg:col-span-2 bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[#FFFFFF] mb-4">Learning Progress</h2>
           <div className="mb-6">
-            <div className="flex justify-between text-sm text-[#9CA3A0] mb-1.5">
+            <div className="flex justify-between text-sm text-[#CBE9FD] mb-1.5">
               <span>Overall Progress</span>
-              <span className="text-[#10B981] font-semibold">{stats?.overallProgress || 0}%</span>
+              <span className="text-[#1951FC] font-semibold">{stats?.overallProgress || 0}%</span>
             </div>
-            <div className="w-full h-2 bg-[#0D0F0F] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-full transition-all duration-500"
+            <div className="w-full h-2 bg-[#000000] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#1951FC] to-[#3781FC] rounded-full transition-all duration-500"
                 style={{ width: `${stats?.overallProgress || 0}%` }}
               />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="text-center p-3 bg-[#0D0F0F] rounded-lg">
-              <p className="text-2xl font-bold text-[#10B981]">{stats?.totalCourses || 0}</p>
-              <p className="text-xs text-[#5C6360]">Enrolled Courses</p>
+            <div className="text-center p-3 bg-[#000000] rounded-lg">
+              <p className="text-2xl font-bold text-[#1951FC]">{stats?.totalCourses || 0}</p>
+              <p className="text-xs text-[#5BB8FB]">Enrolled Courses</p>
             </div>
-            <div className="text-center p-3 bg-[#0D0F0F] rounded-lg">
-              <p className="text-2xl font-bold text-[#60A5FA]">{stats?.totalCompletedLessons || 0}</p>
-              <p className="text-xs text-[#5C6360]">Completed Lessons</p>
+            <div className="text-center p-3 bg-[#000000] rounded-lg">
+              <p className="text-2xl font-bold text-[#5BB8FB]">{stats?.totalCompletedLessons || 0}</p>
+              <p className="text-xs text-[#5BB8FB]">Completed Lessons</p>
             </div>
-            <div className="text-center p-3 bg-[#0D0F0F] rounded-lg">
-              <p className="text-2xl font-bold text-[#FBBF24]">{stats?.totalLessons || 0}</p>
-              <p className="text-xs text-[#5C6360]">Total Lessons</p>
+            <div className="text-center p-3 bg-[#000000] rounded-lg">
+              <p className="text-2xl font-bold text-[#3781FC]">{stats?.totalLessons || 0}</p>
+              <p className="text-xs text-[#5BB8FB]">Total Lessons</p>
             </div>
           </div>
         </div>
 
         {/* Badges */}
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#10B981]" />
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[#FFFFFF] mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-[#1951FC]" />
             Badges
           </h2>
           {profile.badges && profile.badges.length > 0 ? (
@@ -389,33 +389,33 @@ export const Profile: React.FC = () => {
               })}
             </div>
           ) : (
-            <p className="text-[#5C6360] text-sm">No badges yet. Keep learning to earn badges!</p>
+            <p className="text-[#5BB8FB] text-sm">No badges yet. Keep learning to earn badges!</p>
           )}
         </div>
       </div>
 
       {/* Course Progress */}
       {courseProgress.length > 0 && (
-        <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 shadow-sm mb-6 sm:mb-8">
-          <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Course Progress</h2>
+        <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 shadow-sm mb-6 sm:mb-8">
+          <h2 className="text-lg font-semibold text-[#FFFFFF] mb-4">Course Progress</h2>
           <div className="space-y-4">
             {courseProgress.map((course) => (
-              <div key={course.courseId} className="border-b border-[#2A302E] pb-4 last:border-0 last:pb-0">
+              <div key={course.courseId} className="border-b border-[#0B2CB1] pb-4 last:border-0 last:pb-0">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-[#EDEFEE]">{course.title}</span>
-                  <span className="text-sm text-[#10B981]">{course.percentage}%</span>
+                  <span className="text-sm font-medium text-[#FFFFFF]">{course.title}</span>
+                  <span className="text-sm text-[#1951FC]">{course.percentage}%</span>
                 </div>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-[#5C6360]">
+                <div className="flex flex-wrap items-center gap-4 text-xs text-[#5BB8FB]">
                   <span>{course.completedLessons} of {course.totalLessons} lessons</span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3 text-[#10B981]" />
+                    <CheckCircle className="w-3 h-3 text-[#1951FC]" />
                     {course.percentage === 100 ? 'Completed' : 'In Progress'}
                   </span>
                 </div>
-                <div className="w-full h-1.5 bg-[#0D0F0F] rounded-full overflow-hidden mt-1.5">
-                  <div 
-                    className="h-full bg-[#10B981] rounded-full transition-all duration-500"
+                <div className="w-full h-1.5 bg-[#000000] rounded-full overflow-hidden mt-1.5">
+                  <div
+                    className="h-full bg-[#1951FC] rounded-full transition-all duration-500"
                     style={{ width: `${course.percentage}%` }}
                   />
                 </div>
@@ -426,31 +426,31 @@ export const Profile: React.FC = () => {
       )}
 
       {/* Account Info */}
-      <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4 sm:p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Account Information</h2>
+      <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4 sm:p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-[#FFFFFF] mb-4">Account Information</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-[#5C6360]">Email</p>
-            <p className="text-[#EDEFEE]">{profile.email}</p>
+            <p className="text-[#5BB8FB]">Email</p>
+            <p className="text-[#FFFFFF]">{profile.email}</p>
           </div>
           <div>
-            <p className="text-[#5C6360]">Role</p>
-            <p className="text-[#EDEFEE] capitalize">{profile.role}</p>
+            <p className="text-[#5BB8FB]">Role</p>
+            <p className="text-[#FFFFFF] capitalize">{profile.role}</p>
           </div>
           <div>
-            <p className="text-[#5C6360]">Member Since</p>
-            <p className="text-[#EDEFEE]">{new Date(profile.createdAt).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            <p className="text-[#5BB8FB]">Member Since</p>
+            <p className="text-[#FFFFFF]">{new Date(profile.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}</p>
           </div>
           <div>
-            <p className="text-[#5C6360]">Last Updated</p>
-            <p className="text-[#EDEFEE]">{new Date(profile.updatedAt).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            <p className="text-[#5BB8FB]">Last Updated</p>
+            <p className="text-[#FFFFFF]">{new Date(profile.updatedAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}</p>
           </div>
         </div>

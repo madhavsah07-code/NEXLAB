@@ -49,7 +49,7 @@ export const ProblemsList: React.FC = () => {
           .map(s => s.problemId?._id || s.problemId)
       );
 
-      setProblems(prev => 
+      setProblems(prev =>
         prev.map(p => ({
           ...p,
           isSolved: solvedIds.has(p._id),
@@ -81,10 +81,10 @@ export const ProblemsList: React.FC = () => {
       const response = await api.get(
         `/problems?page=${currentPage}&limit=20&search=${encodeURIComponent(search)}&difficulty=${difficultyFilter}`
       );
-      
+
       const data = response.data;
       const problemsData = data.data || [];
-      
+
       const formattedProblems = problemsData.map((p: any) => ({
         _id: p._id || p.id,
         problemNumber: p.problemNumber || 0,
@@ -98,7 +98,7 @@ export const ProblemsList: React.FC = () => {
         isPublished: p.isPublished !== false,
         isSolved: false,
       }));
-      
+
       setProblems(formattedProblems);
       setTotalProblems(data.pagination?.total || formattedProblems.length);
       setTotalPages(Math.ceil((data.pagination?.total || formattedProblems.length) / 20) || 1);
@@ -121,20 +121,20 @@ export const ProblemsList: React.FC = () => {
 
   const getDifficultyBadge = (difficulty: string) => {
     const colors: Record<string, { bg: string; text: string; icon: JSX.Element }> = {
-      easy: { 
-        bg: 'bg-[#10B981]/20', 
-        text: 'text-[#10B981]',
-        icon: <CheckCircle className="w-4 h-4 text-[#10B981]" />
+      easy: {
+        bg: 'bg-[#1951FC]/20',
+        text: 'text-[#1951FC]',
+        icon: <CheckCircle className="w-4 h-4 text-[#1951FC]" />
       },
-      medium: { 
-        bg: 'bg-[#FBBF24]/20', 
-        text: 'text-[#FBBF24]',
-        icon: <Clock className="w-4 h-4 text-[#FBBF24]" />
+      medium: {
+        bg: 'bg-[#3781FC]/20',
+        text: 'text-[#3781FC]',
+        icon: <Clock className="w-4 h-4 text-[#3781FC]" />
       },
-      hard: { 
-        bg: 'bg-[#F87171]/20', 
-        text: 'text-[#F87171]',
-        icon: <AlertCircle className="w-4 h-4 text-[#F87171]" />
+      hard: {
+        bg: 'bg-[#5BB8FB]/20',
+        text: 'text-[#5BB8FB]',
+        icon: <AlertCircle className="w-4 h-4 text-[#5BB8FB]" />
       },
     };
     return colors[difficulty] || colors.easy;
@@ -154,19 +154,19 @@ export const ProblemsList: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0F0F] py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-[#000000] py-4 sm:py-6 lg:py-8">
       <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[#EDEFEE] flex items-center gap-2">
-              <Code2 className="w-6 h-6 sm:w-8 sm:h-8 text-[#10B981]" />
+            <h1 className="text-xl sm:text-2xl font-bold text-[#FFFFFF] flex items-center gap-2">
+              <Code2 className="w-6 h-6 sm:w-8 sm:h-8 text-[#1951FC]" />
               Coding Problems
             </h1>
-            <p className="text-sm sm:text-base text-[#9CA3A0] mt-1">
+            <p className="text-sm sm:text-base text-[#CBE9FD] mt-1">
               Solve coding challenges and improve your skills
               {totalProblems > 0 && (
-                <span className="ml-2 text-[#10B981]">({totalProblems} problems)</span>
+                <span className="ml-2 text-[#1951FC]">({totalProblems} problems)</span>
               )}
             </p>
           </div>
@@ -180,7 +180,7 @@ export const ProblemsList: React.FC = () => {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5BB8FB]" />
             <input
               type="text"
               placeholder="Search problems by title..."
@@ -189,7 +189,7 @@ export const ProblemsList: React.FC = () => {
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-[#1A1D1E] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] text-sm"
+              className="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] text-sm"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -199,7 +199,7 @@ export const ProblemsList: React.FC = () => {
                 setDifficultyFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#1A1D1E] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] text-sm flex-1 sm:flex-none"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] text-sm flex-1 sm:flex-none"
             >
               <option value="">All Difficulties</option>
               <option value="easy">🟢 Easy</option>
@@ -212,7 +212,7 @@ export const ProblemsList: React.FC = () => {
                 setSortBy(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#1A1D1E] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] text-sm flex-1 sm:flex-none"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] text-sm flex-1 sm:flex-none"
             >
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
@@ -232,32 +232,32 @@ export const ProblemsList: React.FC = () => {
 
         {/* Problems Table */}
         {problems.length === 0 ? (
-          <div className="bg-[#1A1D1E] border border-[#2A302E] rounded-xl p-8 sm:p-12 text-center">
-            <Code2 className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C6360] mx-auto mb-4 opacity-40" />
-            <p className="text-[#9CA3A0]">No problems found</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-8 sm:p-12 text-center">
+            <Code2 className="w-10 h-10 sm:w-12 sm:h-12 text-[#5BB8FB] mx-auto mb-4 opacity-40" />
+            <p className="text-[#CBE9FD]">No problems found</p>
           </div>
         ) : (
-          <div className="bg-[#1A1D1E] border border-[#2A302E] rounded-xl overflow-hidden">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden">
             <div className="table-wrapper">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-[#2A302E] bg-[#0D0F0F]">
-                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                  <tr className="border-b border-[#0B2CB1] bg-[#000000]">
+                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       #
                     </th>
-                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Problem
                     </th>
-                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Difficulty
                     </th>
-                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Acceptance
                     </th>
-                    <th className="hidden md:table-cell text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="hidden md:table-cell text-left py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Tags
                     </th>
-                    <th className="text-right py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-right py-2 sm:py-3 px-2 sm:px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Status
                     </th>
                   </tr>
@@ -268,19 +268,19 @@ export const ProblemsList: React.FC = () => {
                     const isSolved = problem.isSolved;
 
                     return (
-                      <tr key={problem._id} className="border-b border-[#2A302E] hover:bg-[#1E2322] transition-colors">
+                      <tr key={problem._id} className="border-b border-[#0B2CB1] hover:bg-[#0B2CB1] transition-colors">
                         <td className="py-2 sm:py-3 px-2 sm:px-4">
-                          <span className="text-sm text-[#5C6360] font-mono">
+                          <span className="text-sm text-[#5BB8FB] font-mono">
                             {problem.problemNumber}
                           </span>
                         </td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4">
-                          <Link 
+                          <Link
                             to={`/problems/${problem.slug}`}
-                            className="text-sm sm:text-base text-[#EDEFEE] hover:text-[#10B981] transition-colors font-medium flex items-center gap-2"
+                            className="text-sm sm:text-base text-[#FFFFFF] hover:text-[#1951FC] transition-colors font-medium flex items-center gap-2"
                           >
                             {isSolved && (
-                              <span className="text-[#10B981]" title="Solved">✅</span>
+                              <span className="text-[#1951FC]" title="Solved">✅</span>
                             )}
                             <span className="truncate max-w-[120px] sm:max-w-none">{problem.title}</span>
                           </Link>
@@ -292,24 +292,24 @@ export const ProblemsList: React.FC = () => {
                         </td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4">
                           <div className="flex items-center gap-1 sm:gap-2">
-                            <div className="w-10 sm:w-16 h-1.5 bg-[#0D0F0F] rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-[#10B981] rounded-full"
+                            <div className="w-10 sm:w-16 h-1.5 bg-[#000000] rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-[#1951FC] rounded-full"
                                 style={{ width: `${problem.acceptanceRate || 0}%` }}
                               />
                             </div>
-                            <span className="text-xs text-[#9CA3A0]">{problem.acceptanceRate || 0}%</span>
+                            <span className="text-xs text-[#CBE9FD]">{problem.acceptanceRate || 0}%</span>
                           </div>
                         </td>
                         <td className="hidden md:table-cell py-2 sm:py-3 px-2 sm:px-4">
                           <div className="flex flex-wrap gap-1">
                             {problem.tags?.slice(0, 2).map((tag, index) => (
-                              <span key={index} className="text-xs px-2 py-0.5 rounded bg-[#2A302E] text-[#5C6360]">
+                              <span key={index} className="text-xs px-2 py-0.5 rounded bg-[#0B2CB1] text-[#5BB8FB]">
                                 {tag}
                               </span>
                             ))}
                             {problem.tags?.length > 2 && (
-                              <span className="text-xs px-2 py-0.5 rounded bg-[#2A302E] text-[#5C6360]">
+                              <span className="text-xs px-2 py-0.5 rounded bg-[#0B2CB1] text-[#5BB8FB]">
                                 +{problem.tags.length - 2}
                               </span>
                             )}
@@ -331,20 +331,20 @@ export const ProblemsList: React.FC = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 sm:px-4 py-3 border-t border-[#2A302E]">
-                <p className="text-sm text-[#5C6360] order-2 sm:order-1">Page {currentPage} of {totalPages}</p>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 sm:px-4 py-3 border-t border-[#0B2CB1]">
+                <p className="text-sm text-[#5BB8FB] order-2 sm:order-1">Page {currentPage} of {totalPages}</p>
                 <div className="flex gap-2 order-1 sm:order-2">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                    className="p-2 rounded-lg text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                    className="p-2 rounded-lg text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                   >
                     Next
                   </button>
@@ -357,8 +357,8 @@ export const ProblemsList: React.FC = () => {
         {/* Recommended Problems */}
         {recommendedProblems.length > 0 && (
           <div className="mt-6 sm:mt-8">
-            <h2 className="text-base sm:text-lg font-semibold text-[#EDEFEE] mb-3 sm:mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#10B981]" />
+            <h2 className="text-base sm:text-lg font-semibold text-[#FFFFFF] mb-3 sm:mb-4 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#1951FC]" />
               Recommended Next Problems
             </h2>
             <div className="space-y-2">
@@ -366,21 +366,21 @@ export const ProblemsList: React.FC = () => {
                 <Link
                   key={p._id}
                   to={`/problems/${p.slug}`}
-                  className="block p-3 bg-[#1A1D1E] border border-[#2A302E] rounded-lg hover:border-[#10B981] transition-colors"
+                  className="block p-3 bg-[#03195B] border border-[#0B2CB1] rounded-lg hover:border-[#1951FC] transition-colors"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-[#5C6360] font-mono">#{p.problemNumber}</span>
+                      <span className="text-sm text-[#5BB8FB] font-mono">#{p.problemNumber}</span>
                       <span className={`text-sm font-medium ${
-                        p.difficulty === 'easy' ? 'text-[#10B981]' :
-                        p.difficulty === 'medium' ? 'text-[#FBBF24]' :
-                        'text-[#F87171]'
+                        p.difficulty === 'easy' ? 'text-[#1951FC]' :
+                        p.difficulty === 'medium' ? 'text-[#3781FC]' :
+                        'text-[#5BB8FB]'
                       }`}>
                         {p.difficulty.charAt(0).toUpperCase() + p.difficulty.slice(1)}
                       </span>
-                      <span className="text-sm text-[#EDEFEE]">{p.title}</span>
+                      <span className="text-sm text-[#FFFFFF]">{p.title}</span>
                     </div>
-                    <span className="text-xs text-[#5C6360] self-end sm:self-auto">→</span>
+                    <span className="text-xs text-[#5BB8FB] self-end sm:self-auto">→</span>
                   </div>
                 </Link>
               ))}

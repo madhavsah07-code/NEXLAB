@@ -61,13 +61,13 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
     try {
       const response = await api.get(`/reviews/course/${courseId}`);
       const data = response.data.data;
-      
+
       setReviews(data.reviews || []);
       setAverageRating(data.averageRating || 0);
       setTotalReviews(data.total || 0);
       setDistribution(data.distribution || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
       setUserReview(data.userReview || null);
-      
+
       if (data.userReview) {
         setRating(data.userReview.rating);
         setComment(data.userReview.comment);
@@ -89,23 +89,23 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
     setSubmitting(true);
     try {
       const sanitizedComment = sanitizeComment(comment);
-      
+
       if (isEditingReview && userReview) {
-        await api.put(`/reviews/${userReview.id}`, { 
-          rating, 
-          comment: sanitizedComment 
+        await api.put(`/reviews/${userReview.id}`, {
+          rating,
+          comment: sanitizedComment
         });
         setIsEditingReview(false);
         addToast('Review updated successfully!', 'success');
       } else {
-        await api.post(`/reviews/course/${courseId}`, { 
-          rating, 
-          comment: sanitizedComment 
+        await api.post(`/reviews/course/${courseId}`, {
+          rating,
+          comment: sanitizedComment
         });
         setIsWritingReview(false);
         addToast('Review submitted successfully!', 'success');
       }
-      
+
       setComment('');
       setRating(5);
       await fetchReviews();
@@ -127,7 +127,7 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
     });
 
     if (!confirmed) return;
-    
+
     try {
       await api.delete(`/reviews/${userReview?.id}`);
       addToast('Review deleted successfully', 'success');
@@ -142,7 +142,7 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#10B981] border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#1951FC] border-t-transparent" />
       </div>
     );
   }
@@ -152,12 +152,12 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
       <ConfirmDialogComponent />
       <div className="space-y-6">
         {/* Rating Summary */}
-        <div className="bg-[#0D0F0F] rounded-xl p-6 border border-[#2A302E]">
+        <div className="bg-[#000000] rounded-xl p-6 border border-[#0B2CB1]">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="text-center">
-              <p className="text-4xl font-bold text-[#EDEFEE]">{averageRating.toFixed(1)}</p>
+              <p className="text-4xl font-bold text-[#FFFFFF]">{averageRating.toFixed(1)}</p>
               <StarRating rating={averageRating} size="md" />
-              <p className="text-sm text-[#5C6360] mt-1">{totalReviews} reviews</p>
+              <p className="text-sm text-[#5BB8FB] mt-1">{totalReviews} reviews</p>
             </div>
 
             <div className="flex-1 w-full space-y-1.5">
@@ -166,14 +166,14 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
                 const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                 return (
                   <div key={ratingValue} className="flex items-center gap-3">
-                    <span className="text-xs text-[#5C6360] w-8">{ratingValue}⭐</span>
-                    <div className="flex-1 h-1.5 bg-[#2A302E] rounded-full overflow-hidden">
+                    <span className="text-xs text-[#5BB8FB] w-8">{ratingValue}⭐</span>
+                    <div className="flex-1 h-1.5 bg-[#0B2CB1] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#FBBF24] rounded-full transition-all duration-500"
+                        className="h-full bg-[#3781FC] rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-xs text-[#5C6360] w-8 text-right">{count}</span>
+                    <span className="text-xs text-[#5BB8FB] w-8 text-right">{count}</span>
                   </div>
                 );
               })}
@@ -183,7 +183,7 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
 
         {/* Write Review Section */}
         {user && (
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-6">
             {!userReview && !isWritingReview ? (
               <Button
                 variant="secondary"
@@ -196,7 +196,7 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
             ) : (isWritingReview || isEditingReview) && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-[#EDEFEE]">
+                  <h3 className="font-semibold text-[#FFFFFF]">
                     {isEditingReview ? 'Edit Your Review' : 'Write a Review'}
                   </h3>
                   <button
@@ -206,14 +206,14 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
                       setRating(userReview?.rating || 5);
                       setComment(userReview?.comment || '');
                     }}
-                    className="text-[#5C6360] hover:text-[#EDEFEE] transition-colors"
+                    className="text-[#5BB8FB] hover:text-[#FFFFFF] transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[#9CA3A0] mb-2">Your Rating</label>
+                  <label className="block text-sm text-[#CBE9FD] mb-2">Your Rating</label>
                   <StarRating
                     rating={rating}
                     size="lg"
@@ -223,12 +223,12 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[#9CA3A0] mb-2">Your Review</label>
+                  <label className="block text-sm text-[#CBE9FD] mb-2">Your Review</label>
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Share your experience with this course..."
-                    className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] resize-none min-h-[100px] transition-all duration-200"
+                    className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] resize-none min-h-[100px] transition-all duration-200"
                   />
                 </div>
 
@@ -261,25 +261,25 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
         {/* Reviews List */}
         <div className="space-y-4">
           {reviews.length === 0 ? (
-            <div className="text-center py-12 text-[#5C6360]">
+            <div className="text-center py-12 text-[#5BB8FB]">
               <p>No reviews yet. Be the first to review this course!</p>
             </div>
           ) : (
             reviews.map((review) => (
               <div
                 key={review.id}
-                className={`bg-[#161A19] border border-[#2A302E] rounded-xl p-5 ${
-                  userReview?.id === review.id ? 'border-[#10B981]/30 bg-[#10B981]/5' : ''
+                className={`bg-[#03195B] border border-[#0B2CB1] rounded-xl p-5 ${
+                  userReview?.id === review.id ? 'border-[#1951FC]/30 bg-[#1951FC]/5' : ''
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#10B981]/20 text-[#10B981] flex items-center justify-center font-semibold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-[#1951FC]/20 text-[#1951FC] flex items-center justify-center font-semibold flex-shrink-0">
                       {review.user.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-medium text-[#EDEFEE]">{review.user.name}</p>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-[#5C6360]">
+                      <p className="font-medium text-[#FFFFFF]">{review.user.name}</p>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-[#5BB8FB]">
                         <StarRating rating={review.rating} size="sm" />
                         <span>•</span>
                         <span className="flex items-center gap-1">
@@ -297,14 +297,14 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
                           setRating(review.rating);
                           setComment(review.comment);
                         }}
-                        className="p-1.5 text-[#5C6360] hover:text-[#60A5FA] hover:bg-[#60A5FA]/10 rounded-lg transition-colors"
+                        className="p-1.5 text-[#5BB8FB] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={handleDeleteReview}
-                        className="p-1.5 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
+                        className="p-1.5 text-[#5BB8FB] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -312,9 +312,9 @@ export const CourseReviews: React.FC<CourseReviewsProps> = ({
                     </div>
                   )}
                 </div>
-                <p className="text-[#9CA3A0] mt-2 text-sm leading-relaxed">{review.comment}</p>
+                <p className="text-[#CBE9FD] mt-2 text-sm leading-relaxed">{review.comment}</p>
                 {userReview?.id === review.id && (
-                  <div className="mt-2 flex items-center gap-1 text-xs text-[#10B981]">
+                  <div className="mt-2 flex items-center gap-1 text-xs text-[#1951FC]">
                     <Check className="w-3 h-3" />
                     <span>Your review</span>
                   </div>

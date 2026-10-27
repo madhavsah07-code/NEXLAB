@@ -5,9 +5,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../../components/ui/Button';
 import { BrandLogo } from '../../components/BrandLogo';
-import { 
-  Sparkles, Mail, Lock, Eye, EyeOff, 
-  CheckCircle, ArrowRight, Shield, 
+import {
+  Sparkles, Mail, Lock, Eye, EyeOff,
+  CheckCircle, ArrowRight, Shield,
   BookOpen, Code2, Users, Trophy,
   ChevronRight, Globe, Zap, Award,
   GraduationCap, Rocket, Star
@@ -39,25 +39,25 @@ export const Login: React.FC = () => {
       icon: <BookOpen className="w-8 h-8" />,
       title: 'Interactive Courses',
       description: 'Learn from 120+ expert-led courses with hands-on projects',
-      color: 'text-[#10B981]'
+      color: 'text-[#1951FC]'
     },
     {
       icon: <Code2 className="w-8 h-8" />,
       title: 'Code Sandbox',
       description: 'Write and test code in 6+ languages with real-time execution',
-      color: 'text-[#60A5FA]'
+      color: 'text-[#5BB8FB]'
     },
     {
       icon: <Trophy className="w-8 h-8" />,
       title: 'Gamification',
       description: 'Earn XP, unlock badges, and compete on the leaderboard',
-      color: 'text-[#FBBF24]'
+      color: 'text-[#3781FC]'
     },
     {
       icon: <Users className="w-8 h-8" />,
       title: 'Community Learning',
       description: 'Join 15,000+ students and collaborate with peers',
-      color: 'text-[#F87171]'
+      color: 'text-[#5BB8FB]'
     },
   ];
 
@@ -148,25 +148,25 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0F0F] flex items-center justify-center p-4 sm:p-6 md:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#000000] flex items-center justify-center p-4 sm:p-6 md:p-8 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#10B981]/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#60A5FA]/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#10B981]/3 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#1951FC]/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#5BB8FB]/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#1951FC]/3 rounded-full blur-3xl" />
       </div>
 
       {/* Main Login Container */}
-      <div className="w-full max-w-5xl bg-[#161A19] rounded-3xl border border-[#2A302E] shadow-2xl shadow-[#10B981]/5 overflow-hidden relative z-10">
+      <div className="w-full max-w-5xl bg-[#03195B] rounded-3xl border border-[#0B2CB1] shadow-2xl shadow-[#1951FC]/5 overflow-hidden relative z-10">
         <div className="flex flex-col md:flex-row">
           {/* LEFT PANEL - Branding & Welcome */}
-          <div className="w-full md:w-1/2 bg-gradient-to-br from-[#10B981]/10 via-[#0D0F0F] to-[#059669]/5 p-8 md:p-10 lg:p-12 flex flex-col relative min-h-[300px] md:min-h-[500px]">
+          <div className="w-full md:w-1/2 bg-gradient-to-br from-[#1951FC]/10 via-[#000000] to-[#03195B]/5 p-8 md:p-10 lg:p-12 flex flex-col relative min-h-[300px] md:min-h-[500px]">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5 pointer-events-none">
-              <div className="absolute top-10 right-10 w-20 h-20 border border-[#10B981]/20 rounded-full" />
-              <div className="absolute bottom-20 left-10 w-32 h-32 border border-[#10B981]/20 rounded-full" />
-              <div className="absolute top-1/2 right-5 w-12 h-12 border border-[#10B981]/20 rounded-full" />
-              <div className="absolute bottom-10 right-20 w-16 h-16 border border-[#10B981]/20 rounded-full" />
+              <div className="absolute top-10 right-10 w-20 h-20 border border-[#1951FC]/20 rounded-full" />
+              <div className="absolute bottom-20 left-10 w-32 h-32 border border-[#1951FC]/20 rounded-full" />
+              <div className="absolute top-1/2 right-5 w-12 h-12 border border-[#1951FC]/20 rounded-full" />
+              <div className="absolute bottom-10 right-20 w-16 h-16 border border-[#1951FC]/20 rounded-full" />
             </div>
 
             {/* Logo */}
@@ -179,17 +179,17 @@ export const Login: React.FC = () => {
               <div className="w-full max-w-sm mx-auto">
                 {/* Feature Icon */}
                 <div className="flex justify-center mb-6">
-                  <div className={`w-20 h-20 rounded-2xl bg-[#161A19] border border-[#2A302E] flex items-center justify-center transition-all duration-500 ${features[currentFeature].color}`}>
+                  <div className={`w-20 h-20 rounded-2xl bg-[#03195B] border border-[#0B2CB1] flex items-center justify-center transition-all duration-500 ${features[currentFeature].color}`}>
                     {features[currentFeature].icon}
                   </div>
                 </div>
 
                 {/* Feature Content */}
                 <div className="text-center transition-all duration-500">
-                  <h3 className="text-xl font-bold text-[#EDEFEE] mb-2">
+                  <h3 className="text-xl font-bold text-[#FFFFFF] mb-2">
                     {features[currentFeature].title}
                   </h3>
-                  <p className="text-sm text-[#9CA3A0] leading-relaxed">
+                  <p className="text-sm text-[#CBE9FD] leading-relaxed">
                     {features[currentFeature].description}
                   </p>
                 </div>
@@ -202,8 +202,8 @@ export const Login: React.FC = () => {
                       onClick={() => setCurrentFeature(index)}
                       className={`w-2 h-2 rounded-full transition-all duration-300 ${
                         index === currentFeature
-                          ? 'w-8 bg-[#10B981]'
-                          : 'bg-[#2A302E] hover:bg-[#5C6360]'
+                          ? 'w-8 bg-[#1951FC]'
+                          : 'bg-[#0B2CB1] hover:bg-[#5BB8FB]'
                       }`}
                       aria-label={`View feature ${index + 1}`}
                     />
@@ -214,7 +214,7 @@ export const Login: React.FC = () => {
 
             {/* Bottom Text */}
             <div className="relative z-10 text-center">
-              <p className="text-xs text-[#5C6360] flex items-center justify-center gap-2">
+              <p className="text-xs text-[#5BB8FB] flex items-center justify-center gap-2">
                 <Shield className="w-3 h-3" />
                 Secure • Trusted • 15,000+ Students
               </p>
@@ -222,17 +222,17 @@ export const Login: React.FC = () => {
           </div>
 
           {/* RIGHT PANEL - Login Form */}
-          <div className="w-full md:w-1/2 p-8 sm:p-10 lg:p-12 bg-[#161A19] flex flex-col justify-center">
+          <div className="w-full md:w-1/2 p-8 sm:p-10 lg:p-12 bg-[#03195B] flex flex-col justify-center">
             {/* Header */}
             <div className="mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#EDEFEE]">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF]">
                 Welcome Back
               </h2>
-              <p className="text-[#9CA3A0] mt-1.5 flex items-center gap-1">
+              <p className="text-[#CBE9FD] mt-1.5 flex items-center gap-1">
                 Don't have an account?{' '}
-                <Link 
-                  to="/register" 
-                  className="text-[#10B981] hover:text-[#34D399] font-medium transition-colors inline-flex items-center gap-0.5 group"
+                <Link
+                  to="/register"
+                  className="text-[#1951FC] hover:text-[#3781FC] font-medium transition-colors inline-flex items-center gap-0.5 group"
                 >
                   Create one
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -242,7 +242,7 @@ export const Login: React.FC = () => {
 
             {/* Error Alert */}
             {error && (
-              <div className="mb-6 p-3.5 bg-[#F87171]/10 border border-[#F87171]/20 rounded-xl text-[#F87171] text-sm flex items-start gap-2.5 animate-in slide-in-from-top-2 duration-200">
+              <div className="mb-6 p-3.5 bg-[#5BB8FB]/10 border border-[#5BB8FB]/20 rounded-xl text-[#5BB8FB] text-sm flex items-start gap-2.5 animate-in slide-in-from-top-2 duration-200">
                 <span className="text-lg mt-0.5">⚠️</span>
                 <span>{error}</span>
               </div>
@@ -252,11 +252,11 @@ export const Login: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5BB8FB]" />
                   <input
                     id="email"
                     type="email"
@@ -264,17 +264,17 @@ export const Login: React.FC = () => {
                     onChange={handleEmailChange}
                     onBlur={() => handleBlur('email')}
                     placeholder="you@example.com"
-                    className={`w-full pl-10 pr-4 py-3 bg-[#0D0F0F] border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10B981]/50 transition-all duration-200 text-[#EDEFEE] placeholder-[#5C6360] ${
+                    className={`w-full pl-10 pr-4 py-3 bg-[#000000] border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1951FC]/50 transition-all duration-200 text-[#FFFFFF] placeholder-[#5BB8FB] ${
                       emailError && isTouched.email
-                        ? 'border-[#F87171] focus:ring-[#F87171]/50'
-                        : 'border-[#2A302E] hover:border-[#10B981]/30'
+                        ? 'border-[#5BB8FB] focus:ring-[#5BB8FB]/50'
+                        : 'border-[#0B2CB1] hover:border-[#1951FC]/30'
                     }`}
                     required
                     autoComplete="email"
                   />
                 </div>
                 {emailError && isTouched.email && (
-                  <p className="mt-1.5 text-xs text-[#F87171] flex items-center gap-1 animate-in slide-in-from-top-1 duration-150">
+                  <p className="mt-1.5 text-xs text-[#5BB8FB] flex items-center gap-1 animate-in slide-in-from-top-1 duration-150">
                     <span>⚠️</span> {emailError}
                   </p>
                 )}
@@ -282,11 +282,11 @@ export const Login: React.FC = () => {
 
               {/* Password Input */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5BB8FB]" />
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -294,10 +294,10 @@ export const Login: React.FC = () => {
                     onChange={handlePasswordChange}
                     onBlur={() => handleBlur('password')}
                     placeholder="Enter your password"
-                    className={`w-full pl-10 pr-12 py-3 bg-[#0D0F0F] border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10B981]/50 transition-all duration-200 text-[#EDEFEE] placeholder-[#5C6360] ${
+                    className={`w-full pl-10 pr-12 py-3 bg-[#000000] border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1951FC]/50 transition-all duration-200 text-[#FFFFFF] placeholder-[#5BB8FB] ${
                       passwordError && isTouched.password
-                        ? 'border-[#F87171] focus:ring-[#F87171]/50'
-                        : 'border-[#2A302E] hover:border-[#10B981]/30'
+                        ? 'border-[#5BB8FB] focus:ring-[#5BB8FB]/50'
+                        : 'border-[#0B2CB1] hover:border-[#1951FC]/30'
                     }`}
                     required
                     autoComplete="current-password"
@@ -305,7 +305,7 @@ export const Login: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5C6360] hover:text-[#9CA3A0] transition-colors p-1"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5BB8FB] hover:text-[#CBE9FD] transition-colors p-1"
                     tabIndex={-1}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
@@ -313,7 +313,7 @@ export const Login: React.FC = () => {
                   </button>
                 </div>
                 {passwordError && isTouched.password && (
-                  <p className="mt-1.5 text-xs text-[#F87171] flex items-center gap-1 animate-in slide-in-from-top-1 duration-150">
+                  <p className="mt-1.5 text-xs text-[#5BB8FB] flex items-center gap-1 animate-in slide-in-from-top-1 duration-150">
                     <span>⚠️</span> {passwordError}
                   </p>
                 )}
@@ -326,15 +326,15 @@ export const Login: React.FC = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 text-[#10B981] border-[#2A302E] rounded focus:ring-[#10B981]/50 bg-[#0D0F0F] cursor-pointer"
+                    className="w-4 h-4 text-[#1951FC] border-[#0B2CB1] rounded focus:ring-[#1951FC]/50 bg-[#000000] cursor-pointer"
                   />
-                  <span className="text-sm text-[#9CA3A0] group-hover:text-[#EDEFEE] transition-colors">
+                  <span className="text-sm text-[#CBE9FD] group-hover:text-[#FFFFFF] transition-colors">
                     Remember me
                   </span>
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-[#10B981] hover:text-[#34D399] transition-colors font-medium"
+                  className="text-sm text-[#1951FC] hover:text-[#3781FC] transition-colors font-medium"
                 >
                   Forgot password?
                 </Link>
@@ -363,20 +363,20 @@ export const Login: React.FC = () => {
 
             {/* Test Credentials (Dev only) */}
             {import.meta.env.DEV && (
-              <div className="mt-6 pt-6 border-t border-[#2A302E]">
-                <p className="text-xs text-[#5C6360] text-center mb-3">Quick Test Login</p>
+              <div className="mt-6 pt-6 border-t border-[#0B2CB1]">
+                <p className="text-xs text-[#5BB8FB] text-center mb-3">Quick Test Login</p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     type="button"
                     onClick={() => fillTestCredentials('student')}
-                    className="flex-1 px-3 py-2 bg-[#0D0F0F] border border-[#2A302E] rounded-lg text-xs text-[#9CA3A0] hover:text-[#EDEFEE] hover:border-[#10B981]/30 transition-colors"
+                    className="flex-1 px-3 py-2 bg-[#000000] border border-[#0B2CB1] rounded-lg text-xs text-[#CBE9FD] hover:text-[#FFFFFF] hover:border-[#1951FC]/30 transition-colors"
                   >
                     🎓 Student
                   </button>
                   <button
                     type="button"
                     onClick={() => fillTestCredentials('admin')}
-                    className="flex-1 px-3 py-2 bg-[#0D0F0F] border border-[#2A302E] rounded-lg text-xs text-[#9CA3A0] hover:text-[#EDEFEE] hover:border-[#10B981]/30 transition-colors"
+                    className="flex-1 px-3 py-2 bg-[#000000] border border-[#0B2CB1] rounded-lg text-xs text-[#CBE9FD] hover:text-[#FFFFFF] hover:border-[#1951FC]/30 transition-colors"
                   >
                     👑 Admin
                   </button>

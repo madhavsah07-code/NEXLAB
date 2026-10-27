@@ -22,14 +22,14 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   const spinner = (
     <div className={`flex flex-col items-center justify-center gap-4 ${className}`}>
-      <div className={`${sizes[size]} animate-spin rounded-full border-4 border-[#10B981] border-t-transparent`} />
-      {text && <p className="text-sm text-[#9CA3A0]">{text}</p>}
+      <div className={`${sizes[size]} animate-spin rounded-full border-4 border-[#1951FC] border-t-transparent`} />
+      {text && <p className="text-sm text-[#CBE9FD]">{text}</p>}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="min-h-screen bg-[#0D0F0F] flex items-center justify-center">
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
         {spinner}
       </div>
     );

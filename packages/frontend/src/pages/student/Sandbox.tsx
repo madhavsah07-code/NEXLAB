@@ -80,7 +80,7 @@ print(f"Sum: {x + y}")`
   const [isPyodideLoaded, setIsPyodideLoaded] = useState(false);
   const [editorWidth, setEditorWidth] = useState(60);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // Monaco loading states
   const [isMonacoReady, setIsMonacoReady] = useState(false);
   const [monacoError, setMonacoError] = useState(false);
@@ -108,20 +108,20 @@ print(f"Sum: {x + y}")`
   // Parse input utility
   const parseInput = (input: string): any => {
     if (!input || !input.trim()) return '';
-    
+
     const trimmed = input.trim();
-    
-    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || 
+
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
         (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
       return trimmed.slice(1, -1);
     }
-    
+
     if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
       const content = trimmed.slice(1, -1).trim();
       if (!content) return [];
       return content.split(',').map((val: string) => {
         const v = val.trim();
-        if ((v.startsWith('"') && v.endsWith('"')) || 
+        if ((v.startsWith('"') && v.endsWith('"')) ||
             (v.startsWith("'") && v.endsWith("'"))) {
           return v.slice(1, -1);
         }
@@ -129,11 +129,11 @@ print(f"Sum: {x + y}")`
         return isNaN(num) ? v : num;
       });
     }
-    
+
     if (trimmed.includes(',')) {
       return trimmed.split(',').map((val: string) => {
         const v = val.trim();
-        if ((v.startsWith('"') && v.endsWith('"')) || 
+        if ((v.startsWith('"') && v.endsWith('"')) ||
             (v.startsWith("'") && v.endsWith("'"))) {
           return v.slice(1, -1);
         }
@@ -141,7 +141,7 @@ print(f"Sum: {x + y}")`
         return isNaN(num) ? v : num;
       });
     }
-    
+
     const num = Number(trimmed);
     return isNaN(num) ? trimmed : num;
   };
@@ -151,23 +151,23 @@ print(f"Sum: {x + y}")`
     const initPyodide = async () => {
       setPyodideLoading(true);
       setPyodideError(null);
-      
+
       try {
         const loadPyodideFn = (window as any).loadPyodide;
-        
+
         if (typeof loadPyodideFn === 'function') {
           console.log('🔄 Loading Pyodide from jsdelivr...');
           const instance = await loadPyodideFn({
             indexURL: PYODIDE_INDEX_URL,
             fullStdLib: true,
           });
-          
+
           setPyodide(instance);
           setIsPyodideLoaded(true);
           console.log('✅ Pyodide loaded successfully');
         } else {
           console.log('⏳ Waiting for Pyodide script to load...');
-          
+
           const waitForPyodide = new Promise((resolve) => {
             const checkInterval = setInterval(() => {
               if (typeof (window as any).loadPyodide === 'function') {
@@ -175,21 +175,21 @@ print(f"Sum: {x + y}")`
                 resolve(true);
               }
             }, 100);
-            
+
             setTimeout(() => {
               clearInterval(checkInterval);
               resolve(false);
             }, 15000);
           });
-          
+
           const loaded = await waitForPyodide;
-          
+
           if (loaded && typeof (window as any).loadPyodide === 'function') {
             const instance = await (window as any).loadPyodide({
               indexURL: PYODIDE_INDEX_URL,
               fullStdLib: true,
             });
-            
+
             setPyodide(instance);
             setIsPyodideLoaded(true);
             console.log('✅ Pyodide loaded successfully (delayed)');
@@ -282,7 +282,7 @@ print(f"Sum: {x + y}")`
         const originalWarn = console.warn;
 
         console.log = (...args) => {
-          capturedOutput += args.map(arg => 
+          capturedOutput += args.map(arg =>
             typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
           ).join(' ') + '\n';
         };
@@ -317,7 +317,7 @@ print(f"Sum: {x + y}")`
         } else {
           const wrapperCode = `
             ${code}
-            
+
             try {
               const result = ${functionName}(${argStr});
               if (result !== undefined && result !== null) {
@@ -500,10 +500,10 @@ sys.stderr = StringIO()
 
   const getLanguageColor = (languageId: string) => {
     const colors: Record<string, string> = {
-      python: 'bg-[#10B981]',
-      javascript: 'bg-[#FBBF24]',
+      python: 'bg-[#1951FC]',
+      javascript: 'bg-[#3781FC]',
     };
-    return colors[languageId] || 'bg-[#10B981]';
+    return colors[languageId] || 'bg-[#1951FC]';
   };
 
   if (isLoading) {
@@ -513,36 +513,36 @@ sys.stderr = StringIO()
   const currentLanguage = languages.find(l => l.id === selectedLanguage);
 
   return (
-    <div className="h-full w-full bg-[#0D0F0F] overflow-hidden">
+    <div className="h-full w-full bg-[#000000] overflow-hidden">
       <div className="h-full w-full flex flex-col px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[1600px] mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 flex-shrink-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#EDEFEE] flex items-center gap-2">
-              <Terminal className="w-8 h-8 text-[#10B981]" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF] flex items-center gap-2">
+              <Terminal className="w-8 h-8 text-[#1951FC]" />
               Code Sandbox
             </h1>
-            <p className="text-[#9CA3A0] mt-1">Write, test, and run code in multiple languages</p>
+            <p className="text-[#CBE9FD] mt-1">Write, test, and run code in multiple languages</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#161A19] border border-[#2A302E] rounded-lg hover:border-[#10B981]/30 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[#03195B] border border-[#0B2CB1] rounded-lg hover:border-[#1951FC]/30 transition-colors"
               >
                 <span className={`w-2 h-2 rounded-full ${getLanguageColor(selectedLanguage)}`} />
-                <span className="font-medium text-[#EDEFEE]">{currentLanguage?.name || 'Select Language'}</span>
-                <ChevronDown className={`w-4 h-4 text-[#9CA3A0] transition-transform ${isLanguageDropdownOpen ? 'rotate-180' : ''}`} />
+                <span className="font-medium text-[#FFFFFF]">{currentLanguage?.name || 'Select Language'}</span>
+                <ChevronDown className={`w-4 h-4 text-[#CBE9FD] transition-transform ${isLanguageDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isLanguageDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-[#161A19] border border-[#2A302E] rounded-lg shadow-lg py-1 z-10 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 mt-1 w-48 bg-[#03195B] border border-[#0B2CB1] rounded-lg shadow-lg py-1 z-10 max-h-60 overflow-y-auto">
                   {languages.map((lang) => (
                     <button
                       key={lang.id}
                       onClick={() => handleLanguageChange(lang.id)}
-                      className={`w-full text-left px-4 py-2 hover:bg-[#1E2322] transition-colors flex items-center gap-2 ${
-                        selectedLanguage === lang.id ? 'bg-[#10B981]/10 text-[#10B981]' : 'text-[#9CA3A0]'
+                      className={`w-full text-left px-4 py-2 hover:bg-[#0B2CB1] transition-colors flex items-center gap-2 ${
+                        selectedLanguage === lang.id ? 'bg-[#1951FC]/10 text-[#1951FC]' : 'text-[#CBE9FD]'
                       }`}
                     >
                       <span className={`w-2 h-2 rounded-full ${getLanguageColor(lang.id)}`} />
@@ -576,7 +576,7 @@ sys.stderr = StringIO()
 
         {/* Main Content */}
         <div ref={containerRef} className="flex-1 flex flex-col min-h-0 gap-0">
-          <div className="flex-1 min-h-[500px] lg:min-h-[700px] min-w-0 flex flex-row bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
+          <div className="flex-1 min-h-[500px] lg:min-h-[700px] min-w-0 flex flex-row bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden shadow-sm">
 
             {/* Editor Section */}
             {!isOutputMaximized && (
@@ -584,22 +584,22 @@ sys.stderr = StringIO()
                 className="flex flex-col min-h-0 min-w-0 overflow-hidden"
                 style={{ width: `${editorWidth}%` }}
               >
-                <div className="px-4 py-2 border-b border-[#2A302E] flex items-center justify-between bg-[#1A1D1E] flex-shrink-0">
+                <div className="px-4 py-2 border-b border-[#0B2CB1] flex items-center justify-between bg-[#03195B] flex-shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getLanguageColor(selectedLanguage)}`} />
-                    <span className="text-sm font-medium text-[#EDEFEE] truncate">
+                    <span className="text-sm font-medium text-[#FFFFFF] truncate">
                       {currentLanguage?.name || 'Code Editor'}
                     </span>
-                    <span className="text-xs text-[#5C6360] flex-shrink-0">
+                    <span className="text-xs text-[#5BB8FB] flex-shrink-0">
                       .{currentLanguage?.extension || 'txt'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-[#5C6360] flex-shrink-0">
+                  <div className="flex items-center gap-2 text-xs text-[#5BB8FB] flex-shrink-0">
                     <span>⌘ + Enter to run</span>
                   </div>
                 </div>
 
-                <div className="flex-1 min-h-0 min-w-0 bg-[#1E1E1E]">
+                <div className="flex-1 min-h-0 min-w-0 bg-[#03195B]">
                   {!monacoError && isMonacoReady ? (
                     <React.Suspense
                       fallback={<LoadingSpinner size="sm" text="Loading editor..." />}
@@ -630,7 +630,7 @@ sys.stderr = StringIO()
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-full bg-[#1E1E1E] text-[#D4D4D4] font-mono text-sm p-4 resize-none focus:outline-none"
+                      className="w-full h-full bg-[#03195B] text-[#CBE9FD] font-mono text-sm p-4 resize-none focus:outline-none"
                       placeholder="// Write your code here"
                       spellCheck={false}
                     />
@@ -649,39 +649,39 @@ sys.stderr = StringIO()
                   e.preventDefault();
                   setIsDragging(true);
                 }}
-                className="group relative flex-shrink-0 w-1.5 bg-[#2A302E] hover:bg-[#10B981] cursor-col-resize transition-colors flex items-center justify-center"
+                className="group relative flex-shrink-0 w-1.5 bg-[#0B2CB1] hover:bg-[#1951FC] cursor-col-resize transition-colors flex items-center justify-center"
               >
-                <div className="h-12 w-1 bg-[#5C6360] group-hover:bg-[#10B981] rounded-full transition-colors" />
+                <div className="h-12 w-1 bg-[#5BB8FB] group-hover:bg-[#1951FC] rounded-full transition-colors" />
               </div>
             )}
 
             {/* Output Section */}
             <div
-              className={`flex flex-col min-h-0 min-w-0 bg-[#1A1D1E] ${
+              className={`flex flex-col min-h-0 min-w-0 bg-[#03195B] ${
                 isOutputMaximized ? 'w-full' : 'flex-1'
               }`}
             >
-              <div className="px-4 py-2 border-b border-[#2A302E] flex items-center justify-between bg-[#0D0F0F] flex-shrink-0">
+              <div className="px-4 py-2 border-b border-[#0B2CB1] flex items-center justify-between bg-[#000000] flex-shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Terminal className="w-4 h-4 text-[#9CA3A0] flex-shrink-0" />
-                  <span className="text-sm font-medium text-[#EDEFEE]">Output</span>
+                  <Terminal className="w-4 h-4 text-[#CBE9FD] flex-shrink-0" />
+                  <span className="text-sm font-medium text-[#FFFFFF]">Output</span>
                   {result && (
                     <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
                       result.success
-                        ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20'
-                        : 'bg-[#F87171]/10 text-[#F87171] border border-[#F87171]/20'
+                        ? 'bg-[#1951FC]/10 text-[#1951FC] border border-[#1951FC]/20'
+                        : 'bg-[#5BB8FB]/10 text-[#5BB8FB] border border-[#5BB8FB]/20'
                     }`}>
                       {result.success ? 'Success' : 'Error'}
                     </span>
                   )}
                   {pyodideLoading && (
-                    <span className="text-xs text-[#60A5FA] flex items-center gap-1">
+                    <span className="text-xs text-[#5BB8FB] flex items-center gap-1">
                       <Loader2 className="w-3 h-3 animate-spin" />
                       Loading Python...
                     </span>
                   )}
                   {pyodideError && (
-                    <span className="text-xs text-[#F87171] flex items-center gap-1">
+                    <span className="text-xs text-[#5BB8FB] flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
                       Python unavailable
                     </span>
@@ -694,18 +694,18 @@ sys.stderr = StringIO()
                     value={stdin}
                     onChange={(e) => setStdin(e.target.value)}
                     placeholder="stdin"
-                    className="w-24 px-2 py-1 text-xs bg-[#0D0F0F] border border-[#2A302E] rounded text-[#EDEFEE] placeholder-[#5C6360] focus:outline-none focus:ring-1 focus:ring-[#10B981]"
+                    className="w-24 px-2 py-1 text-xs bg-[#000000] border border-[#0B2CB1] rounded text-[#FFFFFF] placeholder-[#5BB8FB] focus:outline-none focus:ring-1 focus:ring-[#1951FC]"
                   />
 
                   {result && (
                     <>
                       <button
                         onClick={handleCopyOutput}
-                        className="p-1 text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
+                        className="p-1 text-[#CBE9FD] hover:text-[#FFFFFF] transition-colors"
                         title="Copy output"
                       >
                         {copied ? (
-                          <Check className="w-4 h-4 text-[#10B981]" />
+                          <Check className="w-4 h-4 text-[#1951FC]" />
                         ) : (
                           <Copy className="w-4 h-4" />
                         )}
@@ -713,7 +713,7 @@ sys.stderr = StringIO()
 
                       <button
                         onClick={handleClearOutput}
-                        className="p-1 text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
+                        className="p-1 text-[#CBE9FD] hover:text-[#FFFFFF] transition-colors"
                         title="Clear output"
                       >
                         <X className="w-4 h-4" />
@@ -723,7 +723,7 @@ sys.stderr = StringIO()
 
                   <button
                     onClick={toggleOutputMaximize}
-                    className="p-1 text-[#9CA3A0] hover:text-[#EDEFEE] transition-colors"
+                    className="p-1 text-[#CBE9FD] hover:text-[#FFFFFF] transition-colors"
                     title={isOutputMaximized ? 'Show editor' : 'Maximize output'}
                   >
                     {isOutputMaximized ? (
@@ -737,18 +737,18 @@ sys.stderr = StringIO()
 
               <div
                 ref={outputRef}
-                className="flex-1 p-4 overflow-y-auto font-mono text-sm bg-[#0D0F0F] min-h-0"
+                className="flex-1 p-4 overflow-y-auto font-mono text-sm bg-[#000000] min-h-0"
               >
                 {!result && (
-                  <p className="text-[#5C6360] italic">Run your code to see output here...</p>
+                  <p className="text-[#5BB8FB] italic">Run your code to see output here...</p>
                 )}
 
                 {result && (
                   <div className="space-y-3">
                     {result.output && (
                       <div>
-                        <div className="text-xs text-[#9CA3A0] mb-1">STDOUT:</div>
-                        <pre className="text-[#EDEFEE] whitespace-pre-wrap bg-[#161A19] p-3 rounded-lg">
+                        <div className="text-xs text-[#CBE9FD] mb-1">STDOUT:</div>
+                        <pre className="text-[#FFFFFF] whitespace-pre-wrap bg-[#03195B] p-3 rounded-lg">
                           {result.output}
                         </pre>
                       </div>
@@ -756,8 +756,8 @@ sys.stderr = StringIO()
 
                     {result.error && (
                       <div>
-                        <div className="text-xs text-[#F87171] mb-1">STDERR:</div>
-                        <pre className="text-[#F87171] whitespace-pre-wrap bg-[#161A19] p-3 rounded-lg">
+                        <div className="text-xs text-[#5BB8FB] mb-1">STDERR:</div>
+                        <pre className="text-[#5BB8FB] whitespace-pre-wrap bg-[#03195B] p-3 rounded-lg">
                           {result.error}
                         </pre>
                       </div>
@@ -765,23 +765,23 @@ sys.stderr = StringIO()
 
                     {!result.success && result.executed && (
                       <div className="pt-2">
-                        <div className="text-xs text-[#F87171] mb-1">Error:</div>
-                        <pre className="text-[#F87171] whitespace-pre-wrap bg-[#161A19] p-3 rounded-lg">
+                        <div className="text-xs text-[#5BB8FB] mb-1">Error:</div>
+                        <pre className="text-[#5BB8FB] whitespace-pre-wrap bg-[#03195B] p-3 rounded-lg">
                           {result.error || 'Execution failed'}
                         </pre>
                       </div>
                     )}
 
                     {result.executed && (
-                      <div className="pt-3 border-t border-[#2A302E] flex flex-wrap items-center gap-4 text-xs text-[#9CA3A0]">
+                      <div className="pt-3 border-t border-[#0B2CB1] flex flex-wrap items-center gap-4 text-xs text-[#CBE9FD]">
                         {result.executionTime && (
                           <span>
-                            Time: <span className="text-[#EDEFEE]">{result.executionTime}</span>
+                            Time: <span className="text-[#FFFFFF]">{result.executionTime}</span>
                           </span>
                         )}
                         {result.language && (
                           <span>
-                            Language: <span className="text-[#EDEFEE]">{result.language}</span>
+                            Language: <span className="text-[#FFFFFF]">{result.language}</span>
                           </span>
                         )}
                       </div>
@@ -792,8 +792,8 @@ sys.stderr = StringIO()
             </div>
           </div>
 
-          <div className="text-xs text-[#5C6360] text-center flex-shrink-0 mt-2">
-            <kbd className="px-2.5 py-1 bg-[#161A19] border border-[#2A302E] rounded text-xs">⌘ + Enter</kbd>
+          <div className="text-xs text-[#5BB8FB] text-center flex-shrink-0 mt-2">
+            <kbd className="px-2.5 py-1 bg-[#03195B] border border-[#0B2CB1] rounded text-xs">⌘ + Enter</kbd>
             {' '}to run code • Supports JavaScript and Python
           </div>
         </div>

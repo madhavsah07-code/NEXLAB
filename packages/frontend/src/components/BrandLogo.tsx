@@ -18,10 +18,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 }) => {
   // ✅ Replace this URL with your actual logo URL from ImageKit
   const logoUrl = 'https://ik.imagekit.io/djimomx5ff/NexLab-Logo-100Kb.png';
-  
-  // ✅ Replace with your favicon URL from ImageKit (16x16 or 32x32)
-  const faviconUrl = 'https://ik.imagekit.io/djimomx5ff/favicon.png';
-  
+
   const sizes = {
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
@@ -41,14 +38,14 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       <img
         src={logoUrl}
         alt="NexLab Logo"
-        className={`${sizes[size]} ${roundedClasses[rounded]} object-cover border border-[#2A302E]`}
+        className={`${sizes[size]} ${roundedClasses[rounded]} object-cover border border-white/35 shadow-[0_0_20px_rgba(55,129,252,0.4)]`}
       />
       {showText && (
         <div className="flex items-center">
-          <span className={`font-bold text-[#10B981] ${size === 'sm' ? 'text-xl' : size === 'md' ? 'text-2xl' : 'text-3xl'}`}>
+          <span className={`font-normal tracking-tight text-[#5BB8FB] ${size === 'sm' ? 'text-xl' : size === 'md' ? 'text-2xl' : 'text-3xl'}`}>
             Nex
           </span>
-          <span className={`font-bold text-[#EDEFEE] ${size === 'sm' ? 'text-xl' : size === 'md' ? 'text-2xl' : 'text-3xl'}`}>
+          <span className={`font-normal tracking-tight text-white ${size === 'sm' ? 'text-xl' : size === 'md' ? 'text-2xl' : 'text-3xl'}`}>
             Lab
           </span>
         </div>

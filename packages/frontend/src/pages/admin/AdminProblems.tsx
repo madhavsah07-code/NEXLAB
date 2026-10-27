@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Plus, Edit, Trash2, Eye, EyeOff, Search,
   Code2, CheckCircle, XCircle, AlertCircle,
   ChevronLeft, ChevronRight, FileJson, Download,
@@ -108,7 +108,7 @@ export const AdminProblems: React.FC = () => {
       const response = await api.post('/problems/export', {
         problemIds: problems.map(p => p._id),
       });
-      
+
       const data = response.data.data;
       const blob = new Blob(
         [JSON.stringify(data, null, 2)],
@@ -133,22 +133,22 @@ export const AdminProblems: React.FC = () => {
 
   const getDifficultyBadge = (difficulty: string) => {
     const colors: Record<string, { bg: string; text: string; border: string; label: string }> = {
-      easy: { 
-        bg: 'bg-[#10B981]/20', 
-        text: 'text-[#10B981]', 
-        border: 'border-[#10B981]/30',
+      easy: {
+        bg: 'bg-[#1951FC]/20',
+        text: 'text-[#1951FC]',
+        border: 'border-[#1951FC]/30',
         label: '🟢 Easy'
       },
-      medium: { 
-        bg: 'bg-[#FBBF24]/20', 
-        text: 'text-[#FBBF24]', 
-        border: 'border-[#FBBF24]/30',
+      medium: {
+        bg: 'bg-[#3781FC]/20',
+        text: 'text-[#3781FC]',
+        border: 'border-[#3781FC]/30',
         label: '🟡 Medium'
       },
-      hard: { 
-        bg: 'bg-[#F87171]/20', 
-        text: 'text-[#F87171]', 
-        border: 'border-[#F87171]/30',
+      hard: {
+        bg: 'bg-[#5BB8FB]/20',
+        text: 'text-[#5BB8FB]',
+        border: 'border-[#5BB8FB]/30',
         label: '🔴 Hard'
       },
     };
@@ -181,16 +181,16 @@ export const AdminProblems: React.FC = () => {
       <ConfirmDialogComponent />
       <div className="py-8 max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#2A302E]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#0B2CB1]">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#EDEFEE] flex items-center gap-2">
-              <Code2 className="w-8 h-8 text-[#10B981]" />
+            <h1 className="text-2xl md:text-3xl font-bold text-[#FFFFFF] flex items-center gap-2">
+              <Code2 className="w-8 h-8 text-[#1951FC]" />
               Coding Problems
             </h1>
-            <p className="text-[#9CA3A0] mt-1">
+            <p className="text-[#CBE9FD] mt-1">
               Create, edit, and manage coding challenges
               {totalProblems > 0 && (
-                <span className="ml-2 text-[#10B981]">({totalProblems} total)</span>
+                <span className="ml-2 text-[#1951FC]">({totalProblems} total)</span>
               )}
             </p>
           </div>
@@ -228,28 +228,28 @@ export const AdminProblems: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-            <p className="text-sm text-[#9CA3A0]">Total</p>
-            <p className="text-2xl font-bold text-[#EDEFEE]">{problems.length}</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+            <p className="text-sm text-[#CBE9FD]">Total</p>
+            <p className="text-2xl font-bold text-[#FFFFFF]">{problems.length}</p>
           </div>
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-            <p className="text-sm text-[#9CA3A0]">Published</p>
-            <p className="text-2xl font-bold text-[#10B981]">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+            <p className="text-sm text-[#CBE9FD]">Published</p>
+            <p className="text-2xl font-bold text-[#1951FC]">
               {problems.filter(p => p.isPublished).length}
             </p>
           </div>
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-            <p className="text-sm text-[#9CA3A0]">Drafts</p>
-            <p className="text-2xl font-bold text-[#FBBF24]">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+            <p className="text-sm text-[#CBE9FD]">Drafts</p>
+            <p className="text-2xl font-bold text-[#3781FC]">
               {problems.filter(p => !p.isPublished).length}
             </p>
           </div>
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-4">
-            <p className="text-sm text-[#9CA3A0]">Difficulty</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-4">
+            <p className="text-sm text-[#CBE9FD]">Difficulty</p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-[#10B981]">🟢 {getDifficultyCount('easy')}</span>
-              <span className="text-xs text-[#FBBF24]">🟡 {getDifficultyCount('medium')}</span>
-              <span className="text-xs text-[#F87171]">🔴 {getDifficultyCount('hard')}</span>
+              <span className="text-xs text-[#1951FC]">🟢 {getDifficultyCount('easy')}</span>
+              <span className="text-xs text-[#3781FC]">🟡 {getDifficultyCount('medium')}</span>
+              <span className="text-xs text-[#5BB8FB]">🔴 {getDifficultyCount('hard')}</span>
             </div>
           </div>
         </div>
@@ -257,20 +257,20 @@ export const AdminProblems: React.FC = () => {
         {/* Filters */}
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6360]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5BB8FB]" />
             <input
               type="text"
               placeholder="Search problems by title, description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
             />
           </div>
           <div className="flex flex-wrap gap-2">
             <select
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
-              className="px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE]"
+              className="px-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF]"
             >
               <option value="">All Difficulties</option>
               <option value="easy">🟢 Easy</option>
@@ -308,9 +308,9 @@ export const AdminProblems: React.FC = () => {
 
         {/* Problems Table */}
         {problems.length === 0 ? (
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-12 text-center">
-            <Code2 className="w-12 h-12 text-[#5C6360] mx-auto mb-4 opacity-40" />
-            <p className="text-[#9CA3A0]">No problems found</p>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-12 text-center">
+            <Code2 className="w-12 h-12 text-[#5BB8FB] mx-auto mb-4 opacity-40" />
+            <p className="text-[#CBE9FD]">No problems found</p>
             <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
               <Button
                 variant="primary"
@@ -331,33 +331,33 @@ export const AdminProblems: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
                 <thead>
-                  <tr className="border-b border-[#2A302E] bg-[#0D0F0F]">
-                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                  <tr className="border-b border-[#0B2CB1] bg-[#000000]">
+                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       #
                     </th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Problem
                     </th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Difficulty
                     </th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-left py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Tags
                     </th>
-                    <th className="text-center py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-center py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Test Cases
                     </th>
-                    <th className="text-center py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-center py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="text-center py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-center py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Created
                     </th>
-                    <th className="text-right py-3 px-4 text-xs font-medium text-[#5C6360] uppercase tracking-wider">
+                    <th className="text-right py-3 px-4 text-xs font-medium text-[#5BB8FB] uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -370,19 +370,19 @@ export const AdminProblems: React.FC = () => {
                     return (
                       <tr
                         key={problem._id}
-                        className="border-b border-[#2A302E] hover:bg-[#1E2322] transition-colors group"
+                        className="border-b border-[#0B2CB1] hover:bg-[#0B2CB1] transition-colors group"
                       >
                         <td className="py-3 px-4">
-                          <span className="text-sm text-[#5C6360] font-mono">
+                          <span className="text-sm text-[#5BB8FB] font-mono">
                             #{problem.problemNumber}
                           </span>
                         </td>
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-[#EDEFEE] group-hover:text-[#10B981] transition-colors">
+                            <p className="font-medium text-[#FFFFFF] group-hover:text-[#1951FC] transition-colors">
                               {problem.title}
                             </p>
-                            <p className="text-xs text-[#5C6360]">/{problem.slug}</p>
+                            <p className="text-xs text-[#5BB8FB]">/{problem.slug}</p>
                           </div>
                         </td>
                         <td className="py-3 px-4">
@@ -393,38 +393,38 @@ export const AdminProblems: React.FC = () => {
                         <td className="py-3 px-4">
                           <div className="flex flex-wrap gap-1">
                             {problem.tags?.slice(0, 2).map((tag, index) => (
-                              <span key={index} className="text-xs px-2 py-0.5 rounded bg-[#2A302E] text-[#5C6360]">
+                              <span key={index} className="text-xs px-2 py-0.5 rounded bg-[#0B2CB1] text-[#5BB8FB]">
                                 {tag}
                               </span>
                             ))}
                             {problem.tags?.length > 2 && (
-                              <span className="text-xs px-2 py-0.5 rounded bg-[#2A302E] text-[#5C6360]">
+                              <span className="text-xs px-2 py-0.5 rounded bg-[#0B2CB1] text-[#5BB8FB]">
                                 +{problem.tags.length - 2}
                               </span>
                             )}
                             {(!problem.tags || problem.tags.length === 0) && (
-                              <span className="text-xs text-[#5C6360]">-</span>
+                              <span className="text-xs text-[#5BB8FB]">-</span>
                             )}
                           </div>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className="text-sm text-[#EDEFEE]">{testCaseCount}</span>
+                          <span className="text-sm text-[#FFFFFF]">{testCaseCount}</span>
                         </td>
                         <td className="py-3 px-4 text-center">
                           {problem.isPublished ? (
-                            <span className="text-xs px-2.5 py-1 rounded-full bg-[#10B981]/20 text-[#10B981] flex items-center justify-center gap-1">
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-[#1951FC]/20 text-[#1951FC] flex items-center justify-center gap-1">
                               <CheckCircle className="w-3 h-3" />
                               Published
                             </span>
                           ) : (
-                            <span className="text-xs px-2.5 py-1 rounded-full bg-[#FBBF24]/20 text-[#FBBF24] flex items-center justify-center gap-1">
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-[#3781FC]/20 text-[#3781FC] flex items-center justify-center gap-1">
                               <XCircle className="w-3 h-3" />
                               Draft
                             </span>
                           )}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className="text-xs text-[#5C6360]">
+                          <span className="text-xs text-[#5BB8FB]">
                             {new Date(problem.createdAt).toLocaleDateString()}
                           </span>
                         </td>
@@ -434,9 +434,9 @@ export const AdminProblems: React.FC = () => {
                               onClick={() => handleTogglePublish(problem._id, problem.isPublished)}
                               disabled={actionLoading === problem._id}
                               className={`p-1.5 rounded-lg transition-colors ${
-                                problem.isPublished 
-                                  ? 'text-[#FBBF24] hover:bg-[#FBBF24]/10' 
-                                  : 'text-[#10B981] hover:bg-[#10B981]/10'
+                                problem.isPublished
+                                  ? 'text-[#3781FC] hover:bg-[#3781FC]/10'
+                                  : 'text-[#1951FC] hover:bg-[#1951FC]/10'
                               }`}
                               title={problem.isPublished ? 'Unpublish' : 'Publish'}
                             >
@@ -450,7 +450,7 @@ export const AdminProblems: React.FC = () => {
                             </button>
                             <button
                               onClick={() => navigate(`/admin/problems/edit/${problem._id}`)}
-                              className="p-1.5 text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] rounded-lg transition-colors"
+                              className="p-1.5 text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] rounded-lg transition-colors"
                               title="Edit"
                             >
                               <Edit className="w-4 h-4" />
@@ -458,7 +458,7 @@ export const AdminProblems: React.FC = () => {
                             <button
                               onClick={() => handleDelete(problem._id, problem.title)}
                               disabled={actionLoading === problem._id}
-                              className="p-1.5 text-[#9CA3A0] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
+                              className="p-1.5 text-[#CBE9FD] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -474,25 +474,25 @@ export const AdminProblems: React.FC = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-[#2A302E]">
-                <p className="text-sm text-[#5C6360] order-2 sm:order-1">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-[#0B2CB1]">
+                <p className="text-sm text-[#5BB8FB] order-2 sm:order-1">
                   Showing {problems.length} of {totalProblems} problems
                 </p>
                 <div className="flex items-center gap-2 order-1 sm:order-2">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-sm text-[#9CA3A0]">
+                  <span className="text-sm text-[#CBE9FD]">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -503,22 +503,22 @@ export const AdminProblems: React.FC = () => {
         )}
 
         {/* Quick Actions Footer */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-[#5C6360]">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-[#5BB8FB]">
           <div className="flex items-center gap-2">
-            <span className="text-[#10B981]">🟢</span>
+            <span className="text-[#1951FC]">🟢</span>
             <span>Easy</span>
-            <span className="text-[#FBBF24]">🟡</span>
+            <span className="text-[#3781FC]">🟡</span>
             <span>Medium</span>
-            <span className="text-[#F87171]">🔴</span>
+            <span className="text-[#5BB8FB]">🔴</span>
             <span>Hard</span>
           </div>
           <span>•</span>
           <div className="flex items-center gap-1">
-            <CheckCircle className="w-3 h-3 text-[#10B981]" />
+            <CheckCircle className="w-3 h-3 text-[#1951FC]" />
             <span>Published</span>
           </div>
           <div className="flex items-center gap-1">
-            <XCircle className="w-3 h-3 text-[#FBBF24]" />
+            <XCircle className="w-3 h-3 text-[#3781FC]" />
             <span>Draft</span>
           </div>
           <span>•</span>

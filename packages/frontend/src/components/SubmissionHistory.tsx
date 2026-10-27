@@ -19,12 +19,12 @@ export const SubmissionHistory: React.FC<SubmissionHistoryProps> = ({
 }) => {
   if (submissions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center text-[#5C6360] py-8">
+      <div className="flex flex-col items-center justify-center h-full text-center text-[#5BB8FB] py-8">
         <FileText className="w-12 h-12 mb-4 opacity-40" />
-        <p className="font-medium text-[#9CA3A0]">No submissions yet</p>
+        <p className="font-medium text-[#CBE9FD]">No submissions yet</p>
         <p className="text-sm">
-          {problemTitle 
-            ? `You haven't submitted any solutions for "${problemTitle}" yet.` 
+          {problemTitle
+            ? `You haven't submitted any solutions for "${problemTitle}" yet.`
             : 'Submit your solution to see it here.'}
         </p>
       </div>
@@ -46,32 +46,32 @@ export const SubmissionHistory: React.FC<SubmissionHistoryProps> = ({
 
   const getStatusBadgeColor = (status: string) => {
     const map: Record<string, string> = {
-      accepted: 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30',
-      wrong_answer: 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30',
-      time_limit: 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30',
-      memory_limit: 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30',
-      runtime_error: 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30',
-      compile_error: 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30',
-      pending: 'bg-[#5C6360]/20 text-[#5C6360] border-[#5C6360]/30',
+      accepted: 'bg-[#1951FC]/20 text-[#1951FC] border-[#1951FC]/30',
+      wrong_answer: 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30',
+      time_limit: 'bg-[#3781FC]/20 text-[#3781FC] border-[#3781FC]/30',
+      memory_limit: 'bg-[#3781FC]/20 text-[#3781FC] border-[#3781FC]/30',
+      runtime_error: 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30',
+      compile_error: 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30',
+      pending: 'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30',
     };
-    return map[status] || 'bg-[#2A302E] text-[#9CA3A0]';
+    return map[status] || 'bg-[#0B2CB1] text-[#CBE9FD]';
   };
 
   return (
     <div className="space-y-2">
       {problemTitle && (
-        <div className="text-xs text-[#5C6360] mb-3">
-          Showing submissions for: <span className="text-[#EDEFEE] font-medium">{problemTitle}</span>
+        <div className="text-xs text-[#5BB8FB] mb-3">
+          Showing submissions for: <span className="text-[#FFFFFF] font-medium">{problemTitle}</span>
         </div>
       )}
-      
+
       {submissions.slice(0, 20).map((sub, index) => {
         const status = sub.status || 'pending';
-        
+
         return (
           <div
             key={index}
-            className="flex items-center justify-between p-3 bg-[#1A1D1E] border border-[#2A302E] rounded-lg hover:bg-[#1E2322] transition-colors"
+            className="flex items-center justify-between p-3 bg-[#03195B] border border-[#0B2CB1] rounded-lg hover:bg-[#0B2CB1] transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
               {getStatusIcon(status)}
@@ -80,25 +80,25 @@ export const SubmissionHistory: React.FC<SubmissionHistoryProps> = ({
                   {getStatusDisplay(status)}
                 </span>
                 {!problemTitle && sub.problemId?.title && (
-                  <p className="text-xs text-[#5C6360] truncate">{sub.problemId.title}</p>
+                  <p className="text-xs text-[#5BB8FB] truncate">{sub.problemId.title}</p>
                 )}
-                <div className="flex items-center gap-3 text-xs text-[#5C6360] mt-0.5">
+                <div className="flex items-center gap-3 text-xs text-[#5BB8FB] mt-0.5">
                   <span>Runtime: {sub.runtime || 0}ms</span>
                   <span>Memory: {sub.memory || 0}MB</span>
                   <span>{sub.passedTests || 0}/{sub.totalTests || 0} tests</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col items-end text-xs text-[#5C6360] flex-shrink-0 ml-3">
+            <div className="flex flex-col items-end text-xs text-[#5BB8FB] flex-shrink-0 ml-3">
               {/* ✅ Use IST format */}
               <span>{formatSubmissionDate(sub.createdAt || sub.submittedAt)}</span>
             </div>
           </div>
         );
       })}
-      
+
       {submissions.length > 20 && (
-        <div className="text-center text-xs text-[#5C6360] pt-2">
+        <div className="text-center text-xs text-[#5BB8FB] pt-2">
           Showing 20 of {submissions.length} submissions
         </div>
       )}

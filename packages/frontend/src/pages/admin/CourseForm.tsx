@@ -370,96 +370,96 @@ export const CourseForm: React.FC = () => {
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate('/admin/courses')}
-            className="p-2 hover:bg-[#1E2322] rounded-lg transition-colors"
+            className="p-2 hover:bg-[#0B2CB1] rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-[#9CA3A0]" />
+            <ArrowLeft className="w-5 h-5 text-[#CBE9FD]" />
           </button>
-          <h1 className="text-2xl font-bold text-[#EDEFEE]">
+          <h1 className="text-2xl font-bold text-[#FFFFFF]">
             {id ? 'Edit Course' : 'Create New Course'}
           </h1>
         </div>
 
         <form className="space-y-6">
           {/* Basic Info - Same as before */}
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-[#EDEFEE] mb-4">Basic Information</h2>
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-[#FFFFFF] mb-4">Basic Information</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                   Title *
                 </label>
                 <input
                   {...register('title')}
-                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                   placeholder="e.g., React Mastery 2025"
                 />
                 {errors.title && (
-                  <p className="text-[#F87171] text-xs mt-1">{errors.title.message}</p>
+                  <p className="text-[#5BB8FB] text-xs mt-1">{errors.title.message}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                   Category *
                 </label>
                 <input
                   {...register('category')}
-                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                   placeholder="e.g., Programming, Design"
                 />
                 {errors.category && (
-                  <p className="text-[#F87171] text-xs mt-1">{errors.category.message}</p>
+                  <p className="text-[#5BB8FB] text-xs mt-1">{errors.category.message}</p>
                 )}
               </div>
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+              <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                 Description *
               </label>
               <textarea
                 {...register('description')}
                 rows={4}
-                className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                 placeholder="Describe what students will learn..."
               />
               {errors.description && (
-                <p className="text-[#F87171] text-xs mt-1">{errors.description.message}</p>
+                <p className="text-[#5BB8FB] text-xs mt-1">{errors.description.message}</p>
               )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
-                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                   Level *
                 </label>
                 <select
                   {...register('level')}
-                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] transition-all duration-200"
                 >
                   <option value="beginner">Beginner</option>
                   <option value="intermediate">Intermediate</option>
                   <option value="advanced">Advanced</option>
                 </select>
                 {errors.level && (
-                  <p className="text-[#F87171] text-xs mt-1">{errors.level.message}</p>
+                  <p className="text-[#5BB8FB] text-xs mt-1">{errors.level.message}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                   Price (₹) *
                 </label>
                 <input
                   {...register('price', { valueAsNumber: true })}
                   type="number"
                   step="0.01"
-                  className="w-full px-4 py-2.5 bg-[#0D0F0F] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-[#000000] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                   placeholder="499"
                 />
                 {errors.price && (
-                  <p className="text-[#F87171] text-xs mt-1">{errors.price.message}</p>
+                  <p className="text-[#5BB8FB] text-xs mt-1">{errors.price.message}</p>
                 )}
               </div>
             </div>
@@ -476,7 +476,7 @@ export const CourseForm: React.FC = () => {
                 aspectRatio="square"
               />
               {errors.thumbnail && (
-                <p className="text-[#F87171] text-xs mt-1">{errors.thumbnail.message}</p>
+                <p className="text-[#5BB8FB] text-xs mt-1">{errors.thumbnail.message}</p>
               )}
             </div>
 
@@ -492,12 +492,12 @@ export const CourseForm: React.FC = () => {
                 aspectRatio="16:9"
               />
               {errors.coverImage && (
-                <p className="text-[#F87171] text-xs mt-1">{errors.coverImage.message}</p>
+                <p className="text-[#5BB8FB] text-xs mt-1">{errors.coverImage.message}</p>
               )}
             </div>
 
-            <div className="mt-4 p-4 bg-[#0D0F0F] rounded-lg border border-[#2A302E]">
-              <p className="text-xs text-[#5C6360]">
+            <div className="mt-4 p-4 bg-[#000000] rounded-lg border border-[#0B2CB1]">
+              <p className="text-xs text-[#5BB8FB]">
                 💡 <strong>Pro Tip:</strong> Upload a cover image (16:9 ratio) for the course banner and a thumbnail (square) for course cards.
                 Images will be automatically uploaded to ImageKit CDN.
               </p>
@@ -505,9 +505,9 @@ export const CourseForm: React.FC = () => {
           </div>
 
           {/* Lessons */}
-          <div className="bg-[#161A19] border border-[#2A302E] rounded-xl p-6">
+          <div className="bg-[#03195B] border border-[#0B2CB1] rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-[#EDEFEE]">Lessons</h2>
+              <h2 className="text-lg font-semibold text-[#FFFFFF]">Lessons</h2>
               <Button
                 type="button"
                 variant="secondary"
@@ -528,79 +528,79 @@ export const CourseForm: React.FC = () => {
             </div>
 
             {fields.map((field, index) => (
-              <div key={field.id} className="bg-[#0D0F0F] border border-[#2A302E] rounded-lg p-4 mb-4 relative">
+              <div key={field.id} className="bg-[#000000] border border-[#0B2CB1] rounded-lg p-4 mb-4 relative">
                 <button
                   type="button"
                   onClick={() => handleRemoveLesson(index)}
-                  className="absolute top-2 right-2 p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors"
+                  className="absolute top-2 right-2 p-1 text-[#5BB8FB] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                    <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                       Lesson Title *
                     </label>
                     <input
                       {...register(`lessons.${index}.title`)}
-                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      className="w-full px-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                       placeholder="Lesson title"
                     />
                     {errors.lessons?.[index]?.title && (
-                      <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.title?.message}</p>
+                      <p className="text-[#5BB8FB] text-xs mt-1">{errors.lessons?.[index]?.title?.message}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                    <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                       Video URL *
                     </label>
                     <input
                       {...register(`lessons.${index}.videoUrl`)}
-                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      className="w-full px-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                       placeholder="https://youtube.com/..."
                     />
                     {errors.lessons?.[index]?.videoUrl && (
-                      <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.videoUrl?.message}</p>
+                      <p className="text-[#5BB8FB] text-xs mt-1">{errors.lessons?.[index]?.videoUrl?.message}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                    <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                       Duration (minutes)
                     </label>
                     <input
                       {...register(`lessons.${index}.duration`, { valueAsNumber: true })}
                       type="number"
-                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      className="w-full px-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                       placeholder="10"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+                    <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
                       Order *
                     </label>
                     <input
                       {...register(`lessons.${index}.order`, { valueAsNumber: true })}
                       type="number"
-                      className="w-full px-4 py-2.5 bg-[#161A19] border border-[#2A302E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-[#EDEFEE] placeholder-[#5C6360] transition-all duration-200"
+                      className="w-full px-4 py-2.5 bg-[#03195B] border border-[#0B2CB1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1951FC] focus:border-[#1951FC] text-[#FFFFFF] placeholder-[#5BB8FB] transition-all duration-200"
                       placeholder="1"
                     />
                     {errors.lessons?.[index]?.order && (
-                      <p className="text-[#F87171] text-xs mt-1">{errors.lessons?.[index]?.order?.message}</p>
+                      <p className="text-[#5BB8FB] text-xs mt-1">{errors.lessons?.[index]?.order?.message}</p>
                     )}
                   </div>
 
                   <div className="flex items-center mt-6">
-                    <label className="flex items-center gap-2 text-sm text-[#9CA3A0]">
+                    <label className="flex items-center gap-2 text-sm text-[#CBE9FD]">
                       <input
                         {...register(`lessons.${index}.isFree`)}
                         type="checkbox"
-                        className="w-4 h-4 text-[#10B981] border-[#2A302E] rounded focus:ring-[#10B981] bg-[#0D0F0F]"
+                        className="w-4 h-4 text-[#1951FC] border-[#0B2CB1] rounded focus:ring-[#1951FC] bg-[#000000]"
                       />
                       Free Lesson
                     </label>
@@ -608,11 +608,11 @@ export const CourseForm: React.FC = () => {
                 </div>
 
                 {/* Coding Problems Section */}
-                <div className="mt-4 pt-4 border-t border-[#2A302E]">
+                <div className="mt-4 pt-4 border-t border-[#0B2CB1]">
                   <div className="flex items-center gap-2 mb-3">
-                    <Code2 className="w-4 h-4 text-[#10B981]" />
-                    <h4 className="text-sm font-medium text-[#EDEFEE]">Coding Problems</h4>
-                    <span className="text-xs text-[#5C6360]">
+                    <Code2 className="w-4 h-4 text-[#1951FC]" />
+                    <h4 className="text-sm font-medium text-[#FFFFFF]">Coding Problems</h4>
+                    <span className="text-xs text-[#5BB8FB]">
                       ({selectedProblems[index]?.length || 0} added)
                     </span>
                   </div>
@@ -628,25 +628,25 @@ export const CourseForm: React.FC = () => {
                       {selectedProblems[index]?.map((problem) => (
                         <div
                           key={problem._id}
-                          className="flex items-center justify-between p-3 bg-[#161A19] border border-[#2A302E] rounded-lg hover:border-[#10B981]/30 transition-colors group"
+                          className="flex items-center justify-between p-3 bg-[#03195B] border border-[#0B2CB1] rounded-lg hover:border-[#1951FC]/30 transition-colors group"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-xs text-[#5C6360] font-mono flex-shrink-0">
+                            <span className="text-xs text-[#5BB8FB] font-mono flex-shrink-0">
                               #{problem.problemNumber}
                             </span>
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-[#EDEFEE] truncate">
+                              <p className="text-sm font-medium text-[#FFFFFF] truncate">
                                 {problem.title}
                               </p>
                               <div className="flex items-center gap-2 text-xs">
-                                <span className={`px-1.5 py-0.5 rounded-full border ${problem.difficulty === 'easy' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' :
-                                    problem.difficulty === 'medium' ? 'bg-[#FBBF24]/20 text-[#FBBF24] border-[#FBBF24]/30' :
-                                      'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
+                                <span className={`px-1.5 py-0.5 rounded-full border ${problem.difficulty === 'easy' ? 'bg-[#1951FC]/20 text-[#1951FC] border-[#1951FC]/30' :
+                                    problem.difficulty === 'medium' ? 'bg-[#3781FC]/20 text-[#3781FC] border-[#3781FC]/30' :
+                                      'bg-[#5BB8FB]/20 text-[#5BB8FB] border-[#5BB8FB]/30'
                                   }`}>
                                   {problem.difficulty}
                                 </span>
                                 {problem.tags?.slice(0, 2).map((tag) => (
-                                  <span key={tag} className="text-[#5C6360]">
+                                  <span key={tag} className="text-[#5BB8FB]">
                                     {tag}
                                   </span>
                                 ))}
@@ -656,7 +656,7 @@ export const CourseForm: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleRemoveProblem(index, problem._id, problem.title)}
-                            className="p-1 text-[#5C6360] hover:text-[#F87171] hover:bg-[#F87171]/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                            className="p-1 text-[#5BB8FB] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -667,11 +667,11 @@ export const CourseForm: React.FC = () => {
                 </div>
 
                 {/* Quiz Management Section */}
-                <div className="mt-4 pt-4 border-t border-[#2A302E]">
+                <div className="mt-4 pt-4 border-t border-[#0B2CB1]">
                   <div className="flex items-center gap-2 mb-3">
-                    <Zap className="w-4 h-4 text-[#FBBF24]" />
-                    <h4 className="text-sm font-medium text-[#EDEFEE]">Quiz</h4>
-                    <span className="text-xs text-[#5C6360]">
+                    <Zap className="w-4 h-4 text-[#3781FC]" />
+                    <h4 className="text-sm font-medium text-[#FFFFFF]">Quiz</h4>
+                    <span className="text-xs text-[#5BB8FB]">
                       {quizCount[index] ? '✅ Added' : 'Not added'}
                     </span>
                   </div>
@@ -686,7 +686,7 @@ export const CourseForm: React.FC = () => {
             ))}
 
             {fields.length === 0 && (
-              <p className="text-[#5C6360] text-sm text-center py-4">
+              <p className="text-[#5BB8FB] text-sm text-center py-4">
                 No lessons yet. Click "Add Lesson" to get started.
               </p>
             )}

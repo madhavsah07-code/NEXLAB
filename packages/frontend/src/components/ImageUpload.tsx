@@ -50,18 +50,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
-      
+
       if (aspectRatio !== 'free') {
         const [ratioW, ratioH] = aspectRatio.split(':').map(Number);
         const imgRatio = img.width / img.height;
         const targetRatio = ratioW / ratioH;
-        
+
         if (Math.abs(imgRatio - targetRatio) > 0.1) {
           setError(`Image should be approximately ${aspectRatio} ratio. Current: ${img.width}x${img.height}`);
           return;
         }
       }
-      
+
       // Proceed with upload
       processImage(file);
     };
@@ -132,18 +132,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   return (
     <div className={`${className}`}>
-      <label className="block text-sm font-medium text-[#9CA3A0] mb-1.5">
+      <label className="block text-sm font-medium text-[#CBE9FD] mb-1.5">
         {label}
       </label>
 
       {error && (
-        <div className="mb-2 p-2 bg-[#F87171]/10 border border-[#F87171]/20 rounded-lg text-[#F87171] text-xs">
+        <div className="mb-2 p-2 bg-[#5BB8FB]/10 border border-[#5BB8FB]/20 rounded-lg text-[#5BB8FB] text-xs">
           {error}
         </div>
       )}
 
       {preview ? (
-        <div className={`relative w-full ${getAspectRatioClass()} bg-[#0D0F0F] rounded-lg border border-[#2A302E] overflow-hidden group`}>
+        <div className={`relative w-full ${getAspectRatioClass()} bg-[#000000] rounded-lg border border-[#0B2CB1] overflow-hidden group`}>
           <img
             src={preview}
             alt="Uploaded preview"
@@ -153,19 +153,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 bg-[#161A19] border border-[#2A302E] rounded-lg text-[#9CA3A0] hover:text-[#EDEFEE] hover:bg-[#1E2322] transition-colors"
+              className="p-2 bg-[#03195B] border border-[#0B2CB1] rounded-lg text-[#CBE9FD] hover:text-[#FFFFFF] hover:bg-[#0B2CB1] transition-colors"
             >
               <Upload className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={handleRemove}
-              className="p-2 bg-[#161A19] border border-[#2A302E] rounded-lg text-[#9CA3A0] hover:text-[#F87171] hover:bg-[#F87171]/10 transition-colors"
+              className="p-2 bg-[#03195B] border border-[#0B2CB1] rounded-lg text-[#CBE9FD] hover:text-[#5BB8FB] hover:bg-[#5BB8FB]/10 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="absolute bottom-2 right-2 px-2 py-1 bg-[#161A19]/80 border border-[#2A302E] rounded text-xs text-[#5C6360]">
+          <div className="absolute bottom-2 right-2 px-2 py-1 bg-[#03195B]/80 border border-[#0B2CB1] rounded text-xs text-[#5BB8FB]">
             Click to change
           </div>
         </div>
@@ -173,8 +173,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         <div
           className={`relative w-full ${getAspectRatioClass()} border-2 border-dashed rounded-lg transition-all duration-200 flex flex-col items-center justify-center cursor-pointer ${
             isDragging
-              ? 'border-[#10B981] bg-[#10B981]/5'
-              : 'border-[#2A302E] hover:border-[#10B981]/30 bg-[#0D0F0F]'
+              ? 'border-[#1951FC] bg-[#1951FC]/5'
+              : 'border-[#0B2CB1] hover:border-[#1951FC]/30 bg-[#000000]'
           }`}
           onClick={() => fileInputRef.current?.click()}
           onDrop={handleDrop}
@@ -193,19 +193,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               }
             }}
           />
-          
+
           {isUploading ? (
             <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#10B981] border-t-transparent" />
-              <p className="text-sm text-[#5C6360] mt-2">Uploading...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#1951FC] border-t-transparent" />
+              <p className="text-sm text-[#5BB8FB] mt-2">Uploading...</p>
             </div>
           ) : (
             <>
-              <ImageIcon className="w-12 h-12 text-[#5C6360] opacity-40" />
-              <p className="text-sm font-medium text-[#9CA3A0] mt-2">{placeholder}</p>
-              <p className="text-xs text-[#5C6360] mt-1">PNG, JPG, WEBP up to {maxSizeMB}MB</p>
+              <ImageIcon className="w-12 h-12 text-[#5BB8FB] opacity-40" />
+              <p className="text-sm font-medium text-[#CBE9FD] mt-2">{placeholder}</p>
+              <p className="text-xs text-[#5BB8FB] mt-1">PNG, JPG, WEBP up to {maxSizeMB}MB</p>
               {aspectRatio !== 'free' && (
-                <p className="text-xs text-[#5C6360] mt-0.5">Recommended: {aspectRatio} ratio</p>
+                <p className="text-xs text-[#5BB8FB] mt-0.5">Recommended: {aspectRatio} ratio</p>
               )}
             </>
           )}
