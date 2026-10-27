@@ -304,7 +304,7 @@ try {
 
     try {
       const result = await execAsync(`node "${filePath}"`, {
-        timeout: 5000,
+        timeout: 5001,
         env: { ...process.env, PATH: process.env.PATH },
         maxBuffer: 1024 * 1024 * 10,
       });
